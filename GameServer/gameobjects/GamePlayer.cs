@@ -1674,7 +1674,7 @@ namespace DOL.GS
                         break;
                     }
 
-                    if (Properties.EVENT_THIDRANKI && player.CurrentRegionID == 252)
+                    if (Properties.EVENT_THIDRANKI && player.CurrentRegionID == 238)
                     {
                         switch (player.Realm)
                         {

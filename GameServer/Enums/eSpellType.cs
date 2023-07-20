@@ -211,6 +211,7 @@ namespace DOL.GS
         SummonJuggernaut = 205,
         SummonAnimistAmbusher = 206,
         StrikingTheSoul = 207,
-        Null = 208
+        OmniLifedrain = 208,
+        Null = 209
     }
 }

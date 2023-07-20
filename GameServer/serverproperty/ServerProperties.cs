@@ -1863,7 +1863,7 @@ namespace DOL.GS.ServerProperties
 		/// <summary>
 		/// Should players that exceed BG level cap be moved out of BG when logging in?
 		/// </summary>
-		[ServerProperty("keeps", "teleport_login_bg_level_exceeded", "Should players that exceed BG level cap be moved out of BG when logging in?", true)]
+		[ServerProperty("keeps", "teleport_login_bg_level_exceeded", "Should players that exceed BG level cap be moved out of BG when logging in?", false)]
 		public static bool TELEPORT_LOGIN_BG_LEVEL_EXCEEDED;
 
 		/// <summary>
@@ -2744,7 +2744,7 @@ namespace DOL.GS.ServerProperties
 		/// <summary>
 		/// Allow claiming of BG keeps
 		/// </summary>
-		[ServerProperty("atlas", "allow_bg_claim", "Allow claiming of BG keeps", false)]
+		[ServerProperty("atlas", "allow_bg_claim", "Allow claiming of BG keeps", true)]
 		public static bool ALLOW_BG_CLAIM;
 		
 		/// <summary>
