@@ -5269,10 +5269,10 @@ namespace DOL.GS
                 this.TempProperties.setProperty(CURRENT_LOYALTY_KEY, numCurrentLoyalDays);
             }
 
-            if (xpSource == eXPSource.Player && !this.CurrentZone.IsBG)
-            {
-               LoyaltyManager.HandlePVPKill(this);
-            }
+            // if (xpSource == eXPSource.Player && !this.CurrentZone.IsBG)
+            // {
+            //   LoyaltyManager.HandlePVPKill(this);
+            // }
 
             long RealmLoyaltyBonus = 0;
             long baseXp = 0;
@@ -6978,21 +6978,21 @@ namespace DOL.GS
                         publicMessage = LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.Die.KilledBy", GetName(0, true), killer.GetName(1, false));
                     }
 
-                    if(ConquestService.ConquestManager.IsPlayerInConquestArea(this) && killer.Realm != this.Realm && killer is GamePlayer && killer != this.DuelTarget)
-                        ConquestService.ConquestManager.AddContributor(this);
+                    // if(ConquestService.ConquestManager.IsPlayerInConquestArea(this) && killer.Realm != this.Realm && killer is GamePlayer && killer != this.DuelTarget)
+                    //     ConquestService.ConquestManager.AddContributor(this);
                 }
             }
 
-            if (HCFlag)
-            {
-                playerMessage = "[HC Lv" + Level + "] " + playerMessage;
-                publicMessage = "[HC Lv" + Level + "] " + publicMessage;
+            // if (HCFlag)
+            // {
+            //     playerMessage = "[HC Lv" + Level + "] " + playerMessage;
+            //     publicMessage = "[HC Lv" + Level + "] " + publicMessage;
 
-                if (Properties.DISCORD_ACTIVE && !string.IsNullOrEmpty(Properties.DISCORD_WEBHOOK_ID))
-                {
-                    BroadcastDeathOnDiscord(publicMessage, Name, LastName, CharacterClass.Name, Level, PlayedTime);
-                }
-            }
+            //     if (Properties.DISCORD_ACTIVE && !string.IsNullOrEmpty(Properties.DISCORD_WEBHOOK_ID))
+            //     {
+                    //         BroadcastDeathOnDiscord(publicMessage, Name, LastName, CharacterClass.Name, Level, PlayedTime);
+                    //     }
+            // }
 
             KillStreak = 0;
 
@@ -7215,18 +7215,18 @@ namespace DOL.GS
 
             IsSwimming = false;
 
-            if (PredatorManager.PlayerIsActive(this))
-            {
-                PredatorManager.RemoveActivePlayer(this);
-            }
+            // if (PredatorManager.PlayerIsActive(this))
+            // {
+            //     PredatorManager.RemoveActivePlayer(this);
+            // }
 
-            if (HCFlag)
-            {
-                DOLCharacters cha = DOLDB<DOLCharacters>.SelectObject(DB.Column("Name").IsEqualTo(Name));
-                if (cha == null) return;
-                Client.Out.SendPlayerQuit(true);
-                GameServer.Database.DeleteObject(cha);
-            }
+            // if (HCFlag)
+            // {
+            //     DOLCharacters cha = DOLDB<DOLCharacters>.SelectObject(DB.Column("Name").IsEqualTo(Name));
+            //     if (cha == null) return;
+            //     Client.Out.SendPlayerQuit(true);
+            //     GameServer.Database.DeleteObject(cha);
+            // }
         }
 
         public override void EnemyKilled(GameLiving enemy)
@@ -7255,22 +7255,22 @@ namespace DOL.GS
 
             if (CurrentZone.IsRvR)
             {
-                var activeConquest = ConquestService.ConquestManager.ActiveObjective;
+                // var activeConquest = ConquestService.ConquestManager.ActiveObjective;
                 int baseContribution = enemy.RealmPointsValue / 2; //todo turn it into a server prop?
 
-                if (activeConquest != null && this.GetDistance(new Point2D(activeConquest.Keep.X, activeConquest.Keep.Y)) <=
-                    ServerProperties.Properties.MAX_CONQUEST_RANGE)
-                {
+                // if (activeConquest != null && this.GetDistance(new Point2D(activeConquest.Keep.X, activeConquest.Keep.Y)) <=
+                //     ServerProperties.Properties.MAX_CONQUEST_RANGE)
+                // {
                     //TODO: add something here
-                    if (Group != null)
-                    {
+                    //     if (Group != null)
+                    //     {
                         //activeConquest.Contribute(this, (baseContribution/Group.MemberCount) + 20); //offset to minimize the grouping penalty by a bit
-                    }
-                    else
-                    {
+                        //     }
+                        //     else
+                        //     {
                         //activeConquest.Contribute(this, baseContribution); 
-                    }
-                }
+                        //     }
+                        // }
             }
 
             base.EnemyKilled(enemy);
@@ -8448,11 +8448,11 @@ namespace DOL.GS
                     return;
                 }
 
-                if (LoyaltyManager.GetPlayerRealmLoyalty(this).Days > 30 && SelfBuffChargeIDs.Contains(spell.ID))
-                {
-                    spell.Duration = 0;
-                    spell.Concentration = 1;
-                }
+                // if (LoyaltyManager.GetPlayerRealmLoyalty(this).Days > 30 && SelfBuffChargeIDs.Contains(spell.ID))
+                // {
+                //     spell.Duration = 0;
+                //     spell.Concentration = 1;
+                // }
 
                 ISpellHandler spellHandler = ScriptMgr.CreateSpellHandler(this, spell, chargeEffectLine);
                 if (spellHandler != null)
@@ -11796,6 +11796,7 @@ namespace DOL.GS
                 return;
             m_dbCharacter = (DOLCharacters)obj;
 
+            /*
             LoyaltyManager.CachePlayer(this);
             List<AccountXRealmLoyalty> realmLoyaltyList = DOLDB<AccountXRealmLoyalty>.SelectObjects(DB.Column("AccountID").IsEqualTo(this.Client.Account.ObjectId)) as List<AccountXRealmLoyalty>;
             DateTime lastRealmLoyaltyUpdateTime = DateTime.UnixEpoch;
@@ -11813,10 +11814,12 @@ namespace DOL.GS
                         loyaltyDays = rloy.LoyalDays;
                 }
             }
+            
 
             //set that date as our temp property for reference on kill
             this.TempProperties.setProperty(REALM_LOYALTY_KEY, lastRealmLoyaltyUpdateTime);
             this.TempProperties.setProperty(CURRENT_LOYALTY_KEY, loyaltyDays);
+            */
 
             AccountXMoney MoneyForRealm = DOLDB<AccountXMoney>.SelectObject(DB.Column("AccountID").IsEqualTo(this.Client.Account.ObjectId).And(DB.Column("Realm").IsEqualTo(this.Realm)));
 
@@ -12640,10 +12643,10 @@ namespace DOL.GS
                 range = levelDiff * 20 + 125; 
             }
 
-            if (ConquestService.ConquestManager.IsPlayerNearFlag(this))
-            {
-                range += 50;
-            }
+            // if (ConquestService.ConquestManager.IsPlayerNearFlag(this))
+            // {
+            //     range += 50;
+            // }
 
             // Mastery of Stealth Bonus
             /*
