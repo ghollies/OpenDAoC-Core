@@ -19,6 +19,7 @@
 
 using System;
 
+/* Disabled for Ariadolis Reloaded
 namespace DOL.GS.Commands
 {
     [CmdAttribute(
@@ -49,3 +50,4 @@ namespace DOL.GS.Commands
         }
     }
 }
+*/

@@ -4,6 +4,7 @@ using ECS.Debug;
 
 namespace DOL.GS;
 
+/* Disabled for Ariadolis Reloaded
 public class PredatorService
 {
     private const string SERVICE_NAME = "PredatorService";
@@ -82,3 +83,4 @@ public class PredatorService
         Diagnostics.StopPerfCounter(SERVICE_NAME);
     }
 }
+*/

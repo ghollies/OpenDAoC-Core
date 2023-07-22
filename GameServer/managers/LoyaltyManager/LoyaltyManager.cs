@@ -8,6 +8,7 @@ using DOL.GS.ServerProperties;
 
 namespace DOL.GS;
 
+/* Disabled for Ariadolis Reloaded
 public class LoyaltyManager
 
 {
@@ -124,25 +125,24 @@ public class LoyaltyManager
             Percent = percent
         };
         
-        /*
-        List<AccountXRealmLoyalty> Loyalty = new List<AccountXRealmLoyalty>(DOLDB<AccountXRealmLoyalty>.SelectObjects(DB.Column("AccountID").IsEqualTo(player.Client.Account.ObjectId)));
+        // List<AccountXRealmLoyalty> Loyalty = new List<AccountXRealmLoyalty>(DOLDB<AccountXRealmLoyalty>.SelectObjects(DB.Column("AccountID").IsEqualTo(player.Client.Account.ObjectId)));
 
-        int days = 0;
-        double percent = 0;
+        // int days = 0;
+        // double percent = 0;
 
-        foreach (var realm in Loyalty)
-        {
-            if (realm.Realm != (int) player.Realm) continue;
-            days = realm.LoyalDays;
-            percent = realm.LoyalDays > 30 ? 30 / 30.0 : realm.LoyalDays / 30.0;
-        }
+        // foreach (var realm in Loyalty)
+        // {
+        //     if (realm.Realm != (int) player.Realm) continue;
+        //     days = realm.LoyalDays;
+        //     percent = realm.LoyalDays > 30 ? 30 / 30.0 : realm.LoyalDays / 30.0;
+        // }
 
-        var realmLoyalty = new RealmLoyalty()
-        {
-            Days = days,
-            Percent = percent
-        };
-        */
+        // var realmLoyalty = new RealmLoyalty()
+        // {
+        //     Days = days,
+        //     Percent = percent
+        // };
+        
 
         return realmLoyalty;
     }
@@ -196,3 +196,4 @@ public class LoyaltyManager
     }
 
 }
+*/

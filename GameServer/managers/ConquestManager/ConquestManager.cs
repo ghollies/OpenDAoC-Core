@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Components.Server;
 
 namespace DOL.GS;
 
+/* Disabled for Ariadolis Reloaded
 public class ConquestManager
 {
     private List<DBKeep> DBKeeps;
@@ -693,14 +694,15 @@ public class ConquestManager
         temp.Add("Capture and hold field objectives around the keep to gain periodic realm point rewards and kill players near the keep or field objectives to contribute to the conquest.\n");
         temp.Add(
             "Capture the keep objective to gain an immediate orb and RP reward, or defend the keep to earn a 10% bonus to RP gains as well as increased periodic rewards.");
-        /*
-        temp.Add("Killing players within the area of any conquest target will contribute towards the objective. Every 5 minutes, the global contribution will be tallied and updated.\n");
-        temp.Add("The conquest target will change if any of the objectives are captured, or if the conquest time expires. " +
+        
+        // temp.Add("Killing players within the area of any conquest target will contribute towards the objective. Every 5 minutes, the global contribution will be tallied and updated.\n");
+        // temp.Add("The conquest target will change if any of the objectives are captured, or if the conquest time expires. " +
                  "If any of the objectives are captured, the attacking realm is immediately awarded an RP bonus based off of the total accumulated contribution.");
-        */
+        
 
         temp.Add("");
 
         return temp;
     }
 }
+*/

@@ -360,11 +360,11 @@ namespace DOL.GS.Spells
             }
             
             //check for conquest activity
-            if (target is GamePlayer tp)
-            {
-                if(ConquestService.ConquestManager.IsPlayerInConquestArea(tp))
-                    ConquestService.ConquestManager.AddContributor(tp);
-            }
+            // if (target is GamePlayer tp)
+            // {
+            //     if(ConquestService.ConquestManager.IsPlayerInConquestArea(tp))
+            //         ConquestService.ConquestManager.AddContributor(tp);
+            // }
 
             var attackers = target.attackComponent.Attackers;
 

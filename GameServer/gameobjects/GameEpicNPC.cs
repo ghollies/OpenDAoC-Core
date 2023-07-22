@@ -40,14 +40,14 @@ namespace DOL.GS
                 int amount = Util.Random(Level / 10, Level * 2 / 10);
                 int baseChance = 80;
                 double carapaceChance = Properties.CARAPACE_DROPCHANCE;
-                int realmLoyalty = 0;
-                double numCurrentLoyalDays = LoyaltyManager.GetPlayerRealmLoyalty(playerKiller)?.Days ?? 0;
+                // int realmLoyalty = 0;
+                // double numCurrentLoyalDays = LoyaltyManager.GetPlayerRealmLoyalty(playerKiller)?.Days ?? 0;
 
-                if (numCurrentLoyalDays > 30)
-                    numCurrentLoyalDays = 30;
+                // if (numCurrentLoyalDays > 30)
+                //     numCurrentLoyalDays = 30;
 
-                if (numCurrentLoyalDays >= 1)
-                    realmLoyalty = (int)Math.Round(20 * (numCurrentLoyalDays / 30.0));
+                // if (numCurrentLoyalDays >= 1)
+                //     realmLoyalty = (int)Math.Round(20 * (numCurrentLoyalDays / 30.0));
 
                 string achievementMob = Regex.Replace(Name, @"\s+", "");
                 BattleGroup killerBG = (BattleGroup)playerKiller?.TempProperties.getProperty<object>(BattleGroup.BATTLEGROUP_PROPERTY, null);
@@ -70,8 +70,8 @@ namespace DOL.GS
                                 if (bgPlayer.Level < 45)
                                     continue;
 
-                                if (Util.Chance(baseChance + realmLoyalty))
-                                    AtlasROGManager.GenerateReward(bgPlayer, amount);
+                                // if (Util.Chance(baseChance + realmLoyalty))
+                                //     AtlasROGManager.GenerateReward(bgPlayer, amount);
 
                                 if (Util.ChanceDouble(carapaceChance))
                                     AtlasROGManager.GenerateBeetleCarapace(bgPlayer);
@@ -90,8 +90,8 @@ namespace DOL.GS
                             if (groupPlayer.Level < 45)
                                 continue;
 
-                            if (Util.Chance(baseChance + realmLoyalty))
-                                AtlasROGManager.GenerateReward(groupPlayer, amount);
+                            // if (Util.Chance(baseChance + realmLoyalty))
+                            //     AtlasROGManager.GenerateReward(groupPlayer, amount);
 
                             if (Util.ChanceDouble(carapaceChance))
                                 AtlasROGManager.GenerateBeetleCarapace(groupPlayer);
@@ -104,8 +104,8 @@ namespace DOL.GS
                 {
                     if (playerKiller.Level >= 45)
                     {
-                        if (Util.Chance(baseChance + realmLoyalty))
-                            AtlasROGManager.GenerateReward(playerKiller, amount);
+                        // if (Util.Chance(baseChance + realmLoyalty))
+                        //     AtlasROGManager.GenerateReward(playerKiller, amount);
 
                         if (Util.ChanceDouble(carapaceChance))
                             AtlasROGManager.GenerateBeetleCarapace(playerKiller);

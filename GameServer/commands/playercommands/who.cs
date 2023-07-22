@@ -178,6 +178,7 @@ namespace DOL.GS.Commands
 						filters.Add(new RPFilter());
 						break;
 					}
+				/* Disabled for Ariadolis Reloaded
 				case "hc":
 				case "hardcore":
 				{
@@ -192,6 +193,7 @@ namespace DOL.GS.Commands
 					filters.Add(new NoHelpFilter());
 					break;
 				}
+				*/
 				case "frontiers":
 				{
 					filters = new ArrayList();

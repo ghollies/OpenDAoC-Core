@@ -142,23 +142,23 @@ namespace DOL.GS {
                 var player = living as GamePlayer;
                 
 
-                double numCurrentLoyalDays = LoyaltyManager.GetPlayerRealmLoyalty(player) != null ? LoyaltyManager.GetPlayerRealmLoyalty(player).Days : 0;
+                // double numCurrentLoyalDays = LoyaltyManager.GetPlayerRealmLoyalty(player) != null ? LoyaltyManager.GetPlayerRealmLoyalty(player).Days : 0;
 
-                if(numCurrentLoyalDays >= 30)
-                {
-                    numCurrentLoyalDays = 30;
-                }
+                // if(numCurrentLoyalDays >= 30)
+                // {
+                //     numCurrentLoyalDays = 30;
+                // }
 
-                var loyaltyBonus = ((amount * .2) * (numCurrentLoyalDays / 30));
+                // var loyaltyBonus = ((amount * .2) * (numCurrentLoyalDays / 30));
                 
                 double relicBonus = (amount * (0.025 * RelicMgr.GetRelicCount(player.Realm)));
 
-                var totBPs = amount + Convert.ToInt32(loyaltyBonus) + Convert.ToInt32(relicBonus);
+                var totBPs = amount + Convert.ToInt32(relicBonus);
                 
                 player.GainBountyPoints(totBPs, false);
                 
-                if (loyaltyBonus > 0)
-                    player.Out.SendMessage($"You gained an additional {Convert.ToInt32(loyaltyBonus)} BPs due to your realm loyalty!", eChatType.CT_Important, eChatLoc.CL_SystemWindow);
+                // if (loyaltyBonus > 0)
+                //     player.Out.SendMessage($"You gained an additional {Convert.ToInt32(loyaltyBonus)} BPs due to your realm loyalty!", eChatType.CT_Important, eChatLoc.CL_SystemWindow);
                 if (relicBonus > 0)
                     player.Out.SendMessage($"You gained an additional {Convert.ToInt32(relicBonus)} BPs due to your realm's relic ownership!", eChatType.CT_Important, eChatLoc.CL_SystemWindow);
 
@@ -183,25 +183,25 @@ namespace DOL.GS {
 
                 InventoryItem item = GameInventoryItem.Create(orbs);
 
-                double numCurrentLoyalDays = LoyaltyManager.GetPlayerRealmLoyalty(player) != null ? LoyaltyManager.GetPlayerRealmLoyalty(player).Days : 0;
+                // double numCurrentLoyalDays = LoyaltyManager.GetPlayerRealmLoyalty(player) != null ? LoyaltyManager.GetPlayerRealmLoyalty(player).Days : 0;
 
-                if(numCurrentLoyalDays >= 30)
-                {
-                    numCurrentLoyalDays = 30;
-                }
+                // if(numCurrentLoyalDays >= 30)
+                // {
+                //     numCurrentLoyalDays = 30;
+                // }
 
-                var loyaltyBonus = ((amount * .2) * (numCurrentLoyalDays / 30));
+                // var loyaltyBonus = ((amount * .2) * (numCurrentLoyalDays / 30));
                 
                 double relicOrbBonus = (amount * (0.025 * RelicMgr.GetRelicCount(player.Realm)));
 
-                var totOrbs = amount + Convert.ToInt32(loyaltyBonus) + Convert.ToInt32(relicOrbBonus);
+                var totOrbs = amount + Convert.ToInt32(relicOrbBonus);
 
                 item.OwnerID = player.InternalID;
 
                 player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "GamePlayer.PickupObject.YouGetAmount", amount ,item.Name), eChatType.CT_Loot, eChatLoc.CL_SystemWindow);
                 
-                if (loyaltyBonus > 0)
-                    player.Out.SendMessage($"You gained an additional {Convert.ToInt32(loyaltyBonus)} orb(s) due to your realm loyalty!", eChatType.CT_Loot, eChatLoc.CL_SystemWindow);
+                // if (loyaltyBonus > 0)
+                //     player.Out.SendMessage($"You gained an additional {Convert.ToInt32(loyaltyBonus)} orb(s) due to your realm loyalty!", eChatType.CT_Loot, eChatLoc.CL_SystemWindow);
                 if (relicOrbBonus > 0)
                     player.Out.SendMessage($"You gained an additional {Convert.ToInt32(relicOrbBonus)} orb(s) due to your realm's relic ownership!", eChatType.CT_Loot, eChatLoc.CL_SystemWindow);
 

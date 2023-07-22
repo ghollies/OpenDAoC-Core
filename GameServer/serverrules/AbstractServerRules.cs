@@ -1849,6 +1849,7 @@ namespace DOL.GS.ServerRules
 				playerBPValue = killedPlayer.BountyPointsValue;
 			long playerMoneyValue = killedPlayer.MoneyValue;
 			
+			/* Disabled for Ariadolis Reloaded
 			//check for conquest activity
 			if (killer is GamePlayer kp)
 			{
@@ -1859,6 +1860,7 @@ namespace DOL.GS.ServerRules
 					ConquestService.ConquestManager.AwardDefenders(playerRPValue, kp);
 				}
 			}
+			*/
 
 			List<KeyValuePair<GamePlayer, int>> playerKillers = new List<KeyValuePair<GamePlayer, int>>();
             List<Group> groupsToAward = new List<Group>();
@@ -1881,6 +1883,7 @@ namespace DOL.GS.ServerRules
 				//if (!living.Alive) continue;
 				if (!living.IsWithinRadius(killedPlayer, WorldMgr.MAX_EXPFORKILL_DISTANCE)) continue;
 				
+				/* Disabled for Ariadolis Reloaded
 				//check for conquest activity
 				if (living is GamePlayer lp)
 				{
@@ -1897,6 +1900,7 @@ namespace DOL.GS.ServerRules
 						killedPlayer.GainRealmPoints(reward);
 					}
 				}
+				*/
 
 				double damagePercent = (float)de.Value / totalDamage;
 

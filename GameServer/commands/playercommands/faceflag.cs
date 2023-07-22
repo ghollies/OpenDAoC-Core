@@ -27,6 +27,7 @@
 using System;
 using DOL.GS.PacketHandler;
 
+/* Disabled for Ariadolis Reloaded
 namespace DOL.GS.Commands
 {
 	[CmdAttribute(
@@ -90,3 +91,4 @@ namespace DOL.GS.Commands
 		}
 	}
 }
+*/

@@ -1,5 +1,6 @@
 namespace DOL.GS;
 
+/* Disabled for Ariadolis Reloaded
 public class PlayerLoyalty
 {
     public int AlbLoyaltyDays;
@@ -19,3 +20,4 @@ public class PlayerLoyalty
         HibPercent = 0;
     }
 }
+*/

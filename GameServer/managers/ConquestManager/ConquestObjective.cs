@@ -8,6 +8,7 @@ using DOL.GS.PacketHandler;
 
 namespace DOL.GS;
 
+/* Disabled for Ariadolis Reloaded
 public class ConquestObjective
 {
     public AbstractGameKeep Keep;
@@ -329,3 +330,4 @@ public class ConquestObjective
         ObjectiveFour.ResetContributors();
     }
 }
+*/

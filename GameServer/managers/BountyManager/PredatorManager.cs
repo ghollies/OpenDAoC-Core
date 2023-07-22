@@ -43,6 +43,8 @@ A -> B -> F -> G -> H -> D -> E -> A
 
 Ideally the loop and queue check/calculation would happen pretty frequently to keep queue times low. After every 30m we do a big reshuffle and refresh every target/completely reconstruct the loop to keep it fresh
  */
+
+/* Disabled for Ariadolis Reloaded
 public class PredatorManager
 {
     public static List<PredatorBounty> ActiveBounties;
@@ -338,7 +340,7 @@ public class PredatorManager
         } while (moreTargets);
         
     }*/
-
+/*
     private static void ConstructNewList()
     {
         Stack<GamePlayer> AlbPlayers = new Stack<GamePlayer>();
@@ -646,3 +648,4 @@ public class PredatorBounty
         Reward += contributionValue;
     }
 }
+*/

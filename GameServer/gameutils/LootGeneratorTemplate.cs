@@ -397,6 +397,8 @@ namespace DOL.GS
                                                 DOLDB<AccountXRealmLoyalty>.SelectObject(DB.Column("AccountID")
                                                     .IsEqualTo(player.Client.Account.ObjectId)
                                                     .And(DB.Column("Realm").IsEqualTo(player.Realm)));*/
+                                            
+                                            /* Disabled for Ariadolis Reloaded
                                             var realmLoyalty = LoyaltyManager.GetPlayerRealmLoyalty(player);
                                             if (realmLoyalty != null && realmLoyalty.Days > 0)
                                             {
@@ -407,6 +409,7 @@ namespace DOL.GS
                                                     tmpLoyal *
                                                     1000; //reduce cooldown by 1s per loyalty day up to 30s cap
                                             }
+                                            */
 
                                             var numRelics = RelicMgr.GetRelicCount(player.Realm);
                                             if (numRelics > 0) nextDropTime -= 10000 * numRelics;
@@ -425,6 +428,8 @@ namespace DOL.GS
                                                 DOLDB<AccountXRealmLoyalty>.SelectObject(DB.Column("AccountID")
                                                     .IsEqualTo(GroupedTimerToUse.Client.Account.ObjectId)
                                                     .And(DB.Column("Realm").IsEqualTo(player.Realm)));*/
+                                            
+                                            /* Disabled for Ariadolis Reloaded
                                             var realmLoyalty = LoyaltyManager.GetPlayerRealmLoyalty(GroupedTimerToUse);
                                             if (realmLoyalty != null && realmLoyalty.Days > 0)
                                             {
@@ -435,6 +440,7 @@ namespace DOL.GS
                                                     tmpLoyal *
                                                     1000; //reduce cooldown by 1s per loyalty day up to 30s cap
                                             }
+                                            */
 
                                             loot.AddFixed(drop, lootTemplate.Count);
                                             GroupedTimerToUse.TempProperties.setProperty(XPItemKey, nextDropTime);
@@ -547,6 +553,8 @@ namespace DOL.GS
                                                 DOLDB<AccountXRealmLoyalty>.SelectObject(DB.Column("AccountID")
                                                     .IsEqualTo(player.Client.Account.ObjectId)
                                                     .And(DB.Column("Realm").IsEqualTo(player.Realm)));*/
+                                            
+                                            /* Disabled for Ariadolis Reloaded
                                             var realmLoyalty = LoyaltyManager.GetPlayerRealmLoyalty(player);
                                             if (realmLoyalty != null && realmLoyalty.Days > 0)
                                             {
@@ -557,6 +565,7 @@ namespace DOL.GS
                                                     tmpLoyal *
                                                     1000; //reduce cooldown by 1s per loyalty day up to 30s cap
                                             }
+                                            */
                                             
                                             var numRelics = RelicMgr.GetRelicCount(player.Realm);
                                             if (numRelics > 0) nextDropTime -= 10000 * numRelics;
@@ -574,6 +583,8 @@ namespace DOL.GS
                                                 DOLDB<AccountXRealmLoyalty>.SelectObject(DB.Column("AccountID")
                                                     .IsEqualTo(GroupedTimerToUse.Client.Account.ObjectId)
                                                     .And(DB.Column("Realm").IsEqualTo(player.Realm)));*/
+                                            
+                                            /* Disabled for Ariadolis Reloaded
                                             var realmLoyalty = LoyaltyManager.GetPlayerRealmLoyalty(GroupedTimerToUse);
                                             if (realmLoyalty != null && realmLoyalty.Days > 0)
                                             {
@@ -584,6 +595,7 @@ namespace DOL.GS
                                                     tmpLoyal *
                                                     1000; //reduce cooldown by 1s per loyalty day up to 30s cap
                                             }
+                                            */
 
                                             loot.AddFixed(drop, lootTemplate.Count);
                                             GroupedTimerToUse.TempProperties.setProperty(XPItemKey, nextDropTime);

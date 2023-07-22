@@ -11,6 +11,7 @@ using DOL.Database;
 using DOL.GS.PacketHandler;
 using DOL.GS.PlayerTitles;
 
+/* Disabled for Ariadolis Reloaded
 namespace DOL.GS.Commands
 {
 	[CmdAttribute(
@@ -247,3 +248,4 @@ namespace DOL.GS.PlayerTitles
 		}
 	}
 }
+*/

@@ -1,5 +1,6 @@
 using ECS.Debug;
 
+/* Disabled for Ariadolis Reloaded
 namespace DOL.GS
 {
     public class BountyService
@@ -28,3 +29,4 @@ namespace DOL.GS
         }
     }
 }
+*/

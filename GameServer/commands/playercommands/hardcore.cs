@@ -15,6 +15,7 @@ using DOL.GS.PlayerTitles;
 using log4net;
 using log4net.Repository.Hierarchy;
 
+/* Disabled for Ariadolis Reloaded
 #region LoginEvent
 namespace DOL.GS.GameEvents
 {
@@ -287,3 +288,4 @@ namespace DOL.GS.PlayerTitles
     }
 }
 #endregion
+*/

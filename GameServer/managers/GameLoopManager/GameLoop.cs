@@ -61,9 +61,9 @@ namespace DOL.GS
             ReaperService.Tick();
             DailyQuestService.Tick();
             WeeklyQuestService.Tick();
-            ConquestService.Tick();
-            BountyService.Tick(GameLoopTime);
-            PredatorService.Tick(GameLoopTime);
+            // ConquestService.Tick();
+            // BountyService.Tick(GameLoopTime);
+            // PredatorService.Tick(GameLoopTime);
 
             if (ZoneBonusRotator._lastPvEChangeTick == 0)
                 ZoneBonusRotator._lastPvEChangeTick = GameLoopTime;

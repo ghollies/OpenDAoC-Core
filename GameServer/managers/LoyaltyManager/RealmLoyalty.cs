@@ -1,5 +1,6 @@
 namespace DOL.GS;
 
+/* Disabled for Ariadolis Reloaded
 public class RealmLoyalty
 {
     public int Days;
@@ -11,3 +12,4 @@ public class RealmLoyalty
         Percent = 0;
     }
 }
+*/

@@ -1,6 +1,6 @@
 ﻿using DOL.GS.Commands;
 
-
+/* Disabled for Ariadolis Reloaded
 namespace DOL.GS.Scripts
 {
     [CmdAttribute(
@@ -18,3 +18,4 @@ namespace DOL.GS.Scripts
         }
     }
 }
+*/

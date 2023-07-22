@@ -4,7 +4,7 @@ using DOL.GS.Commands;
 using DOL.GS.PacketHandler;
 using DOL.GS.ServerProperties;
 
-
+/* Disabled for Ariadolis Reloaded
 namespace DOL.GS.Scripts
 {
     [CmdAttribute(
@@ -120,3 +120,4 @@ namespace DOL.GS.Scripts
         }
     }
 }
+*/
