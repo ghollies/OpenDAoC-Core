@@ -11,6 +11,7 @@ using DOL.GS.PlayerTitles;
 using DOL.GS.Quests;
 using log4net;
 
+/*
 namespace DOL.GS.DailyQuest.Hibernia
 {
 	public class CaleKillQuestMid : Quests.DailyQuest
@@ -117,7 +118,7 @@ namespace DOL.GS.DailyQuest.Hibernia
 			GameEventMgr.AddHandler(PazzMid, GameObjectEvent.Interact, new DOLEventHandler(TalkToRey));
 			GameEventMgr.AddHandler(PazzMid, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToRey));
 
-			/* Now we bring to Dean the possibility to give this quest to players */
+			// Now we bring to Dean the possibility to give this quest to players
 			PazzMid.AddQuestToGive(typeof (CaleKillQuestMid));
 
 			if (log.IsInfoEnabled)
@@ -137,7 +138,7 @@ namespace DOL.GS.DailyQuest.Hibernia
 			GameEventMgr.RemoveHandler(PazzMid, GameObjectEvent.Interact, new DOLEventHandler(TalkToRey));
 			GameEventMgr.RemoveHandler(PazzMid, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToRey));
 
-			/* Now we remove to Dean the possibility to give this quest to players */
+			// Now we remove to Dean the possibility to give this quest to players
 			PazzMid.RemoveQuestToGive(typeof (CaleKillQuestMid));
 		}
 
@@ -363,3 +364,4 @@ namespace DOL.GS.DailyQuest.Hibernia
 		}
 	}
 }
+*/

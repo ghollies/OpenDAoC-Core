@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
  
+/*
 namespace DOL.GS.Scripts
 {
     static class ZoneBonusRotator
@@ -285,12 +286,12 @@ namespace DOL.GS.Scripts
         /// </summary>
         private static void GetNextRvRZone()
         {
-            /*
-            if (currentRvRRealm < 3)
-                currentRvRRealm += 1; // currentRvRRealm++;// currentRealm + 1;
-            else
-                currentRvRRealm = 1;
-            */
+            
+            // if (currentRvRRealm < 3)
+            //     currentRvRRealm += 1; // currentRvRRealm++;// currentRealm + 1;
+            // else
+            //     currentRvRRealm = 1;
+            
             //get random int from 1-3 to decide realm
             //if realm is undefined or current realm, reroll to new result
             //set new realm
@@ -335,7 +336,7 @@ namespace DOL.GS.Scripts
             else
                 currentHiberniaZoneSI = 0;
             */
-            bool UseClassicAlbHighZones = Util.Chance(50);
+            /*
             if (UseClassicAlbHighZones)
             {
                 List<int> ClassicHighZones = new List<int>();
@@ -707,14 +708,14 @@ namespace DOL.GS.Scripts
             foreach (var zone in hiberniaSIZones)
                 WorldMgr.Zones[(ushort)zone].BonusExperience = 0;
 
-            /*
-            WorldMgr.Zones[(ushort)albionClassicZones[currentAlbionZone]].BonusExperience = 0;
-            WorldMgr.Zones[(ushort)albionSIZones[currentAlbionZoneSI]].BonusExperience = 0;
-            WorldMgr.Zones[(ushort)midgardClassicZones[currentMidgardZone]].BonusExperience = 0;
-            WorldMgr.Zones[(ushort)midgardSIZones[currentMidgardZoneSI]].BonusExperience = 0;
-            WorldMgr.Zones[(ushort)hiberniaClassicZones[currentHiberniaZone]].BonusExperience = 0;
-            WorldMgr.Zones[(ushort)hiberniaSIZones[currentHiberniaZoneSI]].BonusExperience = 0;
-            */
+            // WorldMgr.Zones[(ushort)albionClassicZones[currentAlbionZone]].BonusExperience = 0;
+            // WorldMgr.Zones[(ushort)albionSIZones[currentAlbionZoneSI]].BonusExperience = 0;
+            // WorldMgr.Zones[(ushort)midgardClassicZones[currentMidgardZone]].BonusExperience = 0;
+            // WorldMgr.Zones[(ushort)midgardSIZones[currentMidgardZoneSI]].BonusExperience = 0;
+            // WorldMgr.Zones[(ushort)hiberniaClassicZones[currentHiberniaZone]].BonusExperience = 0;
+            // WorldMgr.Zones[(ushort)hiberniaSIZones[currentHiberniaZoneSI]].BonusExperience = 0;
+            
         }
     }
 }
+*/

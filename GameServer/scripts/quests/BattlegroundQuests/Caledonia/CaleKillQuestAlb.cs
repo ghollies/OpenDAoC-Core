@@ -12,6 +12,7 @@ using DOL.GS.PlayerTitles;
 using DOL.GS.Quests;
 using log4net;
 
+/*
 namespace DOL.GS.DailyQuest.Albion
 {
 	public class CaleKillQuestAlb : Quests.DailyQuest
@@ -118,7 +119,7 @@ namespace DOL.GS.DailyQuest.Albion
 			GameEventMgr.AddHandler(PazzAlb, GameObjectEvent.Interact, new DOLEventHandler(TalkToRey));
 			GameEventMgr.AddHandler(PazzAlb, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToRey));
 
-			/* Now we bring to Dean the possibility to give this quest to players */
+			// Now we bring to Dean the possibility to give this quest to players
 			PazzAlb.AddQuestToGive(typeof (CaleKillQuestAlb));
 
 			if (log.IsInfoEnabled)
@@ -138,7 +139,7 @@ namespace DOL.GS.DailyQuest.Albion
 			GameEventMgr.RemoveHandler(PazzAlb, GameObjectEvent.Interact, new DOLEventHandler(TalkToRey));
 			GameEventMgr.RemoveHandler(PazzAlb, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToRey));
 
-			/* Now we remove to Dean the possibility to give this quest to players */
+			// Now we remove to Dean the possibility to give this quest to players
 			PazzAlb.RemoveQuestToGive(typeof (CaleKillQuestAlb));
 		}
 
@@ -371,3 +372,4 @@ namespace DOL.GS.DailyQuest.Albion
 		}
 	}
 }
+*/

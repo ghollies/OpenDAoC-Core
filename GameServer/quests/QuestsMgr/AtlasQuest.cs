@@ -2,6 +2,7 @@ using DOL.Database;
 
 namespace DOL.GS.Quests;
 
+/*
 public abstract class AtlasQuest : BaseQuest
 {
     public abstract string QuestPropertyKey { get; set; }
@@ -32,3 +33,4 @@ public abstract class AtlasQuest : BaseQuest
     public abstract void LoadQuestParameters();
     public abstract void SaveQuestParameters();
 }
+*/

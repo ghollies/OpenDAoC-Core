@@ -12,6 +12,7 @@ using DOL.GS.PlayerTitles;
 using DOL.GS.Quests;
 using log4net;
 
+/*
 namespace DOL.GS.DailyQuest.Hibernia
 {
 	public class ThidKeepCaptureHib : Quests.DailyQuest
@@ -119,7 +120,7 @@ namespace DOL.GS.DailyQuest.Hibernia
 			GameEventMgr.AddHandler(PazzHib, GameObjectEvent.Interact, new DOLEventHandler(TalkToCola));
 			GameEventMgr.AddHandler(PazzHib, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToCola));
 
-			/* Now we bring to Dean the possibility to give this quest to players */
+			// Now we bring to Dean the possibility to give this quest to players
 			PazzHib.AddQuestToGive(typeof (ThidKeepCaptureHib));
 
 			if (log.IsInfoEnabled)
@@ -139,7 +140,7 @@ namespace DOL.GS.DailyQuest.Hibernia
 			GameEventMgr.RemoveHandler(PazzHib, GameObjectEvent.Interact, new DOLEventHandler(TalkToCola));
 			GameEventMgr.RemoveHandler(PazzHib, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToCola));
 
-			/* Now we remove to Dean the possibility to give this quest to players */
+			// Now we remove to Dean the possibility to give this quest to players
 			PazzHib.RemoveQuestToGive(typeof (ThidKeepCaptureHib));
 		}
 
@@ -366,3 +367,4 @@ namespace DOL.GS.DailyQuest.Hibernia
 		}
 	}
 }
+*/

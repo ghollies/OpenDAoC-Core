@@ -2,6 +2,7 @@ using DOL.Database;
 
 namespace DOL.GS.Quests;
 
+/*
 public abstract class DailyQuest : BaseQuest
 {
     public abstract string QuestPropertyKey { get; set; }
@@ -33,3 +34,4 @@ public abstract class DailyQuest : BaseQuest
     public abstract void SaveQuestParameters();
 
 }
+*/

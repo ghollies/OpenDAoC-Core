@@ -59,16 +59,16 @@ namespace DOL.GS
             CraftingService.Tick(GameLoopTime);
             TimerService.Tick(GameLoopTime);
             ReaperService.Tick();
-            DailyQuestService.Tick();
-            WeeklyQuestService.Tick();
+            // DailyQuestService.Tick();
+            // WeeklyQuestService.Tick();
             // ConquestService.Tick();
             // BountyService.Tick(GameLoopTime);
             // PredatorService.Tick(GameLoopTime);
 
-            if (ZoneBonusRotator._lastPvEChangeTick == 0)
-                ZoneBonusRotator._lastPvEChangeTick = GameLoopTime;
-            if (ZoneBonusRotator._lastRvRChangeTick == 0)
-                ZoneBonusRotator._lastRvRChangeTick = GameLoopTime;
+            // if (ZoneBonusRotator._lastPvEChangeTick == 0)
+            //     ZoneBonusRotator._lastPvEChangeTick = GameLoopTime;
+            // if (ZoneBonusRotator._lastRvRChangeTick == 0)
+            //     ZoneBonusRotator._lastRvRChangeTick = GameLoopTime;
 
             ECS.Debug.Diagnostics.Tick();
             CurrentServiceTick = "";

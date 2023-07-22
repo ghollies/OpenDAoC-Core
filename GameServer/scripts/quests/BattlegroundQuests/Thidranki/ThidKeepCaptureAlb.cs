@@ -12,6 +12,7 @@ using DOL.GS.PlayerTitles;
 using DOL.GS.Quests;
 using log4net;
 
+/*
 namespace DOL.GS.DailyQuest.Albion
 {
 	public class ThidKeepCaptureAlb : Quests.DailyQuest
@@ -117,7 +118,7 @@ namespace DOL.GS.DailyQuest.Albion
 			GameEventMgr.AddHandler(PazzAlb, GameObjectEvent.Interact, new DOLEventHandler(TalkToHaszan));
 			GameEventMgr.AddHandler(PazzAlb, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToHaszan));
 
-			/* Now we bring to Haszan the possibility to give this quest to players */
+			// Now we bring to Haszan the possibility to give this quest to players
 			PazzAlb.AddQuestToGive(typeof (ThidKeepCaptureAlb));
 
 			if (log.IsInfoEnabled)
@@ -137,7 +138,7 @@ namespace DOL.GS.DailyQuest.Albion
 			GameEventMgr.RemoveHandler(PazzAlb, GameObjectEvent.Interact, new DOLEventHandler(TalkToHaszan));
 			GameEventMgr.RemoveHandler(PazzAlb, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToHaszan));
 
-			/* Now we remove to Haszan the possibility to give this quest to players */
+			// Now we remove to Haszan the possibility to give this quest to players
 			PazzAlb.RemoveQuestToGive(typeof (ThidKeepCaptureAlb));
 		}
 
@@ -365,3 +366,4 @@ namespace DOL.GS.DailyQuest.Albion
 		}
 	}
 }
+*/

@@ -4,6 +4,7 @@ using DOL.Database;
 using DOL.GS.Quests;
 using ECS.Debug;
 
+/*
 namespace DOL.GS
 {
     public class DailyQuestService
@@ -90,3 +91,4 @@ namespace DOL.GS
         }
     }
 }
+*/

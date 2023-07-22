@@ -12,6 +12,7 @@ using DOL.GS.PlayerTitles;
 using DOL.GS.Quests;
 using log4net;
 
+/*
 namespace DOL.GS.DailyQuest.Midgard
 {
 	public class CaleKeepCaptureMid : Quests.DailyQuest
@@ -119,7 +120,7 @@ namespace DOL.GS.DailyQuest.Midgard
 			GameEventMgr.AddHandler(PazzMid, GameObjectEvent.Interact, new DOLEventHandler(TalkToHerou));
 			GameEventMgr.AddHandler(PazzMid, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToHerou));
 
-			/* Now we bring to Herou the possibility to give this quest to players */
+			// Now we bring to Herou the possibility to give this quest to players
 			PazzMid.AddQuestToGive(typeof (CaleKeepCaptureMid));
 
 			if (log.IsInfoEnabled)
@@ -139,7 +140,7 @@ namespace DOL.GS.DailyQuest.Midgard
 			GameEventMgr.RemoveHandler(PazzMid, GameObjectEvent.Interact, new DOLEventHandler(TalkToHerou));
 			GameEventMgr.RemoveHandler(PazzMid, GameLivingEvent.WhisperReceive, new DOLEventHandler(TalkToHerou));
 
-			/* Now we remove to Herou the possibility to give this quest to players */
+			// Now we remove to Herou the possibility to give this quest to players
 			PazzMid.RemoveQuestToGive(typeof (CaleKeepCaptureMid));
 		}
 
@@ -363,3 +364,4 @@ namespace DOL.GS.DailyQuest.Midgard
 		}
 	}
 }
+*/

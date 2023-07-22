@@ -2185,6 +2185,7 @@ namespace DOL.GS.ServerRules
 	                AtlasROGManager.GenerateOrbAmount(player, Util.Random(50, 150));
                 }
 
+                /*
                 int bonusRegion = 0;
                 switch (ZoneBonusRotator.GetCurrentBonusRealm())
                 {
@@ -2209,6 +2210,7 @@ namespace DOL.GS.ServerRules
                 {
 	                AtlasROGManager.GenerateBeetleCarapace(player);
                 }
+                */
             }
 
             if (ServerProperties.Properties.LOG_PVP_KILLS && playerKillers.Count > 0)
