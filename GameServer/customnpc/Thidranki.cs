@@ -41,7 +41,7 @@ namespace DOL.GS
                 case "Main Setup":    
                     if (!t.InCombat)
                     {
-                        Say("I'm now teleporting you to the Main Setup area");
+                        // Say("I'm now teleporting you to the Main Setup area");
                         t.MoveTo(91, 31885, 32181, 15844, 2049);
                     }
                     else { t.Client.Out.SendMessage("You can't port while in combat.", eChatType.CT_Say, eChatLoc.CL_PopupWindow); }
