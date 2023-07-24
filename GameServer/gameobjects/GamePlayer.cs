@@ -12158,6 +12158,7 @@ namespace DOL.GS
                     cachedCharacter = DBCharacter;
                 }
 
+                /*
                 foreach (var quest in this.QuestList)
                 {
                     if(quest is Quests.DailyQuest dq)
@@ -12178,7 +12179,7 @@ namespace DOL.GS
                     if(quest is Quests.AtlasQuest aq)
                         aq.SaveQuestParameters();
                 }
-
+                */
 
                 if (m_mlSteps != null)
                     GameServer.Database.SaveObject(m_mlSteps.OfType<DBCharacterXMasterLevel>());
@@ -12781,6 +12782,7 @@ namespace DOL.GS
                     else
                         m_questList.Add(quest);
 
+                    /*
                     if (quest is Quests.DailyQuest dq)
                         dq.LoadQuestParameters();
 
@@ -12798,6 +12800,7 @@ namespace DOL.GS
                         lqm.LoadQuestParameters();
                     if(quest is Quests.AtlasQuest aq)
                         aq.LoadQuestParameters();
+                    */
                 }
             }
 
