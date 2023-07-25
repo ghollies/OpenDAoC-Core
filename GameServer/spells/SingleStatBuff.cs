@@ -31,6 +31,8 @@ namespace DOL.GS.Spells
     {
         public override eBuffBonusCategory BonusCategory1 { get { return eBuffBonusCategory.BaseBuff; } }
 
+        protected bool m_isShearable = false;
+        
         protected override void SendUpdates(GameLiving target)
         {
             target.UpdateHealthManaEndu();
@@ -169,6 +171,8 @@ namespace DOL.GS.Spells
     [SpellHandlerAttribute("StrengthBuff")]
     public class StrengthBuff : SingleStatBuff
     {
+        protected bool m_isShearable = true;
+        
         public override void ApplyEffectOnTarget(GameLiving target, double effectiveness)
         {
             if (target.HasAbility(Abilities.VampiirStrength))
@@ -190,6 +194,8 @@ namespace DOL.GS.Spells
     [SpellHandlerAttribute("DexterityBuff")]
     public class DexterityBuff : SingleStatBuff
     {
+        protected bool m_isShearable = true;
+        
         public override void ApplyEffectOnTarget(GameLiving target, double effectiveness)
         {
             if (target.HasAbility(Abilities.VampiirDexterity))
@@ -211,6 +217,8 @@ namespace DOL.GS.Spells
     [SpellHandlerAttribute("ConstitutionBuff")]
     public class ConstitutionBuff : SingleStatBuff
     {
+        protected bool m_isShearable = true;
+        
         public override void ApplyEffectOnTarget(GameLiving target, double effectiveness)
         {
             if (target.HasAbility(Abilities.VampiirConstitution))
@@ -375,6 +383,8 @@ namespace DOL.GS.Spells
     [SpellHandlerAttribute("AcuityBuff")]
     public class AcuityBuff : SingleStatBuff
     {
+        protected bool m_isShearable = true;
+        
         public override eProperty Property1 { get { return eProperty.Acuity; } }
 
         // constructor

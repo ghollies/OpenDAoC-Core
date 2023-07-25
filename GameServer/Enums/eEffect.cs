@@ -87,6 +87,15 @@ namespace DOL.GS
         ArmorFactorDebuff,
         ArmorAbsorptionDebuff,
 
+        // Buff shears
+        StrengthShear,
+        ConstitutionShear,
+        DexterityShear,
+        StrengthConstitutionShear,
+        DexterityQuicknessShear,
+        AcuityShear,
+        RandomShear,
+        
         //resist debuffs
         BodyResistDebuff,
         SpiritResistDebuff,
