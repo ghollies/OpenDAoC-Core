@@ -27,6 +27,7 @@
         public override bool AddToWorld()
         {
             Name = "Hitback Dummy - Right Click to Reset";
+            GuildName = "Dummy";
             Model = 34;
             Strength = 10;
             ScalingFactor = 4;
