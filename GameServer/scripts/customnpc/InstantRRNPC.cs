@@ -50,7 +50,7 @@ namespace DOL.GS
         public override bool AddToWorld()
         {
 			Name = "Free Realm Ranks";
-            GuildName = "Atlas Alpha";
+            GuildName = "Ariadolis Reloaded";
             Model = 1194;
             Size = 70;
 			Flags |= eFlags.PEACE;
@@ -69,7 +69,7 @@ namespace DOL.GS
 
             if (freeRR > 0)
             {
-                player.Out.SendMessage("Greetings, " + player.Name + ", during the alpha test I can give you free [Realmrank " + freeRR + "]!", eChatType.CT_System, eChatLoc.CL_PopupWindow);
+                player.Out.SendMessage("Greetings, " + player.Name + ", during the closed beta test I can give you free [Realmrank " + freeRR + "]!", eChatType.CT_System, eChatLoc.CL_PopupWindow);
             }
             if (freeRR == 0)
             {
