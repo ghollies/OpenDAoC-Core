@@ -212,6 +212,13 @@ namespace DOL.GS
         SummonAnimistAmbusher = 206,
         StrikingTheSoul = 207,
         OmniLifedrain = 208,
-        Null = 209
+        StrengthShear = 209,
+        DexterityShear = 210,
+        ConstitutionShear = 211,
+        AcuityShear = 212,
+        StrengthConstitutionShear = 213,
+        DexterityQuicknessShear = 214,
+        RandomBuffShear = 215,
+        Null = 216
     }
 }

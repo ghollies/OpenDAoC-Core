@@ -38,16 +38,14 @@ namespace DOL.GS.Spells
 		public override string ShearSpellType { get	{ return "StrengthBuff"; } }
 		public override string DelveSpellType { get { return "Strength"; } }
 
-        public override void OnDirectEffect(GameLiving target, double effectiveness)
+		public override void ApplyEffectOnTarget(GameLiving target, double effectiveness)
         {
-            base.OnDirectEffect(target, effectiveness);
-            GameSpellEffect effect;
-            effect = SpellHandler.FindEffectOnTarget(target, "Mesmerize");
-            if (effect != null)
-            {
-                effect.Cancel(false);
-                return;
-            }
+	        if (target.HasAbility(Abilities.VampiirStrength))
+	        {
+		        MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_Spell);
+		        return;
+	        }
+	        base.ApplyEffectOnTarget(target, effectiveness);
         }
 
 		// constructor
@@ -62,6 +60,17 @@ namespace DOL.GS.Spells
 	{
 		public override string ShearSpellType { get	{ return "DexterityBuff"; } }
 		public override string DelveSpellType { get { return "Dexterity"; } }
+		
+		public override void ApplyEffectOnTarget(GameLiving target, double effectiveness)
+		{
+			if (target.HasAbility(Abilities.VampiirDexterity))
+			{
+				MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_Spell);
+				return;
+			}
+			base.ApplyEffectOnTarget(target, effectiveness);
+		}
+		
 		// constructor
 		public DexterityShear(GameLiving caster, Spell spell, SpellLine line) : base(caster, spell, line) {}
 	}
@@ -74,6 +83,17 @@ namespace DOL.GS.Spells
 	{
 		public override string ShearSpellType { get	{ return "ConstitutionBuff"; } }
 		public override string DelveSpellType { get { return "Constitution"; } }
+		
+		public override void ApplyEffectOnTarget(GameLiving target, double effectiveness)
+		{
+			if (target.HasAbility(Abilities.VampiirConstitution))
+			{
+				MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_Spell);
+				return;
+			}
+			base.ApplyEffectOnTarget(target, effectiveness);
+		}
+		
 		// constructor
 		public ConstitutionShear(GameLiving caster, Spell spell, SpellLine line) : base(caster, spell, line) {}
 	}
@@ -134,6 +154,42 @@ namespace DOL.GS.Spells
 		/// </summary>
 		public override void FinishSpellCast(GameLiving target)
 		{
+			if (Caster == null)
+				return;
+			
+			if (target == null) 
+				return;
+
+			if (Caster == target)
+			{
+				MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
+				return;
+			}
+			
+			if (target is not GamePlayer or GameNPC || (target is GamePlayer playerTarget && playerTarget.Client.Account.PrivLevel > 1))
+			{
+				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
+				return;
+			}
+
+			if (target.Realm == Caster.Realm)
+			{
+				MessageToCaster("You can't attack a member of your realm!", eChatType.CT_Spell);
+				return;
+			}
+
+			if (EffectListService.GetSpellEffectOnTarget(target, eEffect.Shade) != null)
+			{
+				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
+				return;
+			}
+			
+			if (!target.IsAlive)
+			{
+				MessageToCaster("Your target is already dead!", eChatType.CT_Spell);
+				return;
+			}
+			
 			m_caster.Mana -= PowerCost(target);
 			base.FinishSpellCast(target);
 		}
@@ -145,57 +201,56 @@ namespace DOL.GS.Spells
 		/// <param name="effectiveness"></param>
 		public override void OnDirectEffect(GameLiving target, double effectiveness)
 		{
-			base.OnDirectEffect(target, effectiveness);
-			if (target == null) return;
-			if (!target.IsAlive || target.ObjectState!=GameLiving.eObjectState.Active) return;
+			if (target.ObjectState != GameObject.eObjectState.Active) 
+			{
+				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
+				return;
+			}
 
+			base.OnDirectEffect(target, effectiveness);
 			target.StartInterruptTimer(target.SpellInterruptDuration, AttackData.eAttackType.Spell, Caster);
-			GameSpellEffect mez = SpellHandler.FindEffectOnTarget(target, "Mesmerize");
-            if (mez != null)
-            {
-                mez.Cancel(false);
-                return;
-            }
+			
+			ECSGameSpellEffect mezEffect = EffectListService.GetSpellEffectOnTarget(target, eEffect.Mez);
+			
+			if (mezEffect != null)
+			{
+				EffectService.RequestCancelEffect(mezEffect);
+			}
+			
 			if (target is GameNPC)
 			{
 				GameNPC npc = (GameNPC)target;
-				IOldAggressiveBrain aggroBrain = npc.Brain as IOldAggressiveBrain;
-				if (aggroBrain != null)
+				if (npc.Brain is IOldAggressiveBrain aggroBrain)
 					aggroBrain.AddToAggroList(Caster, 1);
 			}
 
-			//check for spell.
-			foreach (GameSpellEffect effect in target.EffectList.GetAllOfType<GameSpellEffect>())
+			// Check for spell
+			foreach (ECSGameSpellEffect effect in target.effectListComponent.GetSpellEffects())
 			{
-				if (effect.Spell.SpellType.ToString() == ShearSpellType)
+				if (effect.Owner == effect.SpellHandler.Caster)
 				{
-					if ((effect.Owner != effect.SpellHandler.Caster || effect.Spell.IsShearable) && effect.Spell.Value <= Spell.Value)
-					{
-						SendEffectAnimation(target, 0, false, 1);
-						effect.Cancel(false);
-						MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
-						MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
-					}
-					else
-					{
-						SendEffectAnimation(target, 0, false, 0);
-						MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
-					}
-
+					MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
 					return;
+				}
+
+				if (effect.SpellHandler.Spell.Value > Spell.Value)
+				{
+					SendEffectAnimation(target, 0, false, 0);
+					MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
+					break;
+				}
+				
+				if (effect.SpellHandler.Spell.SpellType.ToString() == ShearSpellType && effect.SpellHandler.Spell.IsShearable)
+				{
+					SendEffectAnimation(target, 0, false, 1);
+					EffectService.RequestCancelEffect(effect);
+					MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
+					MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
 				}
 			}
 
 			SendEffectAnimation(target, 0, false, 0);
 			MessageToCaster("No enhancement of that type found on the target.", eChatType.CT_SpellResisted);
-
-			/*
-			if (!noMessages) 
-			{
-				MessageToLiving(effect.Owner, effect.Spell.Message3, eChatType.CT_SpellExpires);
-				Message.SystemToArea(effect.Owner, Util.MakeSentence(effect.Spell.Message4, effect.Owner.GetName(0, false)), eChatType.CT_SpellExpires, effect.Owner);
-			}
-			*/
 		}
 
 		/// <summary>
@@ -206,9 +261,7 @@ namespace DOL.GS.Spells
 		{
 			base.OnSpellResisted(target);
 			if (Spell.Damage == 0 && Spell.CastTime == 0)
-			{
 				target.StartInterruptTimer(target.SpellInterruptDuration, AttackData.eAttackType.Spell, Caster);
-			}
 		}
 
 		/// <summary>
@@ -260,12 +313,47 @@ namespace DOL.GS.Spells
 	[SpellHandlerAttribute("RandomBuffShear")]
 	public class RandomBuffShear : SpellHandler
 	{
-
 		/// <summary>
 		/// called after normal spell cast is completed and effect has to be started
 		/// </summary>
 		public override void FinishSpellCast(GameLiving target)
 		{
+			if (Caster == null)
+				return;
+			
+			if (target == null) 
+				return;
+
+			if (Caster == target)
+			{
+				MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
+				return;
+			}
+			
+			if (target is not GamePlayer or GameNPC || (target is GamePlayer playerTarget && playerTarget.Client.Account.PrivLevel > 1))
+			{
+				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
+				return;
+			}
+
+			if (target.Realm == Caster.Realm)
+			{
+				MessageToCaster("You can't attack a member of your realm!", eChatType.CT_Spell);
+				return;
+			}
+
+			if (EffectListService.GetSpellEffectOnTarget(target, eEffect.Shade) != null)
+			{
+				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
+				return;
+			}
+			
+			if (!target.IsAlive)
+			{
+				MessageToCaster("Your target is already dead!", eChatType.CT_Spell);
+				return;
+			}
+			
 			m_caster.Mana -= PowerCost(target);
 			base.FinishSpellCast(target);
 		}
@@ -277,45 +365,54 @@ namespace DOL.GS.Spells
 		/// <param name="effectiveness"></param>
 		public override void OnDirectEffect(GameLiving target, double effectiveness)
 		{
-			base.OnDirectEffect(target, effectiveness);
-			if (target == null) return;
-			if (!target.IsAlive || target.ObjectState != GameLiving.eObjectState.Active) return;
+			if (target.ObjectState != GameObject.eObjectState.Active) 
+			{
+				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
+				return;
+			}
 
+			base.OnDirectEffect(target, effectiveness);
 			target.StartInterruptTimer(target.SpellInterruptDuration, AttackData.eAttackType.Spell, Caster);
+			
+			ECSGameSpellEffect mezEffect = EffectListService.GetSpellEffectOnTarget(target, eEffect.Mez);
+			
+			if (mezEffect != null)
+			{
+				EffectService.RequestCancelEffect(mezEffect);
+			}
+			
 			if (target is GameNPC)
 			{
 				GameNPC npc = (GameNPC)target;
-				IOldAggressiveBrain aggroBrain = npc.Brain as IOldAggressiveBrain;
-				if (aggroBrain != null)
+				if (npc.Brain is IOldAggressiveBrain aggroBrain)
 					aggroBrain.AddToAggroList(Caster, 1);
 			}
 
-			//check for spell.
-			foreach (GameSpellEffect effect in target.EffectList.GetAllOfType<GameSpellEffect>())
+			// Check for spell
+			foreach (ECSGameSpellEffect effect in target.effectListComponent.GetSpellEffects())
 			{
-				foreach (Type buffType in buffs)
+				if (effect.Owner == effect.SpellHandler.Caster)
 				{
-					if (effect.SpellHandler.GetType().Equals(buffType))
-					{
-						SendEffectAnimation(target, 0, false, 1);
-						effect.Cancel(false);
-						MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
-						MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
-						return;
-					}
+					MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
+					return;
 				}
+
+				if (effect.SpellHandler.Spell.Value > Spell.Value)
+				{
+					SendEffectAnimation(target, 0, false, 0);
+					MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
+					break;
+				}
+				
+				SendEffectAnimation(target, 0, false, 1);
+				EffectService.RequestCancelEffect(effect);
+				MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
+				MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
+				return;
 			}
 
 			SendEffectAnimation(target, 0, false, 0);
 			MessageToCaster("No enhancement of that type found on the target.", eChatType.CT_SpellResisted);
-
-			/*
-			if (!noMessages) 
-			{
-				MessageToLiving(effect.Owner, effect.Spell.Message3, eChatType.CT_SpellExpires);
-				Message.SystemToArea(effect.Owner, Util.MakeSentence(effect.Spell.Message4, effect.Owner.GetName(0, false)), eChatType.CT_SpellExpires, effect.Owner);
-			}
-			*/
 		}
 
 		private static Type[] buffs = new Type[] { typeof(AcuityBuff), typeof(StrengthBuff), typeof(DexterityBuff), typeof(ConstitutionBuff), typeof(StrengthConBuff), typeof(DexterityQuiBuff),
