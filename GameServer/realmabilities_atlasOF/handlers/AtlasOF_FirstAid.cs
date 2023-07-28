@@ -17,7 +17,7 @@ namespace DOL.GS.RealmAbilities
 		public AtlasOF_FirstAid(DBAbility dba, int level) : base(dba, level) { }
 
 		public override int MaxLevel { get { return 3; } }
-        public override int CostForUpgrade(int currentLevel) { return AtlasRAHelpers.GetCommonUpgradeCostFor3LevelsRA(currentLevel); }
+        public override int CostForUpgrade(int currentLevel, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor3LevelsRA(currentLevel); }
 		
         /// <summary>
         /// Action

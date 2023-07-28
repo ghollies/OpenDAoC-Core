@@ -14,7 +14,7 @@ namespace DOL.GS.RealmAbilities
 
         public override int MaxLevel { get { return 1; } }
         public override int GetReUseDelay(int level) { return 900; } // 15 min
-        public override int CostForUpgrade(int level) { return 10; }
+        public override int CostForUpgrade(int level, GamePlayer player) { return 10; }
         public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugAcuityLevel(player) >= 3; }
 
         public override void Execute(GameLiving living)

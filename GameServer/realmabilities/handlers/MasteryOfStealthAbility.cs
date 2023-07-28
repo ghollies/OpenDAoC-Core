@@ -23,8 +23,8 @@ namespace DOL.GS.RealmAbilities
 
 		public override int MaxLevel => 3;
 
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			return level switch
 			{
 				1 => 6,

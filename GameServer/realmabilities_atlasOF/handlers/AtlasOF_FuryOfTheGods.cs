@@ -18,7 +18,7 @@ namespace DOL.GS.RealmAbilities
 
         protected override string SpellName { get { return "Fury of the Gods"; } }
         public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level) { return 14; }
+        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
         public override int GetReUseDelay(int level) { return 1800; } // 30 mins
 
         public override void AddEffectsInfo(IList<string> list)

@@ -19,7 +19,7 @@ namespace DOL.GS.RealmAbilities
 
         public override int MaxLevel { get { return 1; } }
 
-		public override int CostForUpgrade(int level) { return 10; }
+		public override int CostForUpgrade(int level, GamePlayer player) { return 10; }
 
 		public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugConLevel(player) >= 3; }
 

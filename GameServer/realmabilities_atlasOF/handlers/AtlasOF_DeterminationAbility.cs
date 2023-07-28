@@ -14,8 +14,8 @@ namespace DOL.GS.RealmAbilities
 		public AtlasOF_DeterminationAbility(DBAbility dba, int level) : base(dba, level) { }
 
 		public override int MaxLevel { get { return 5; } }
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			// OF Det circa 2003 has lower cost than the usual 1/3/6/10/14.
 			switch (level)
 			{

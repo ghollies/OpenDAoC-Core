@@ -138,8 +138,8 @@ namespace DOL.GS.RealmAbilities
 		{ 
 		}
 
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
 			{
 				switch(level)

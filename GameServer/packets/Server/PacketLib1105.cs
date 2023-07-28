@@ -90,7 +90,7 @@ namespace DOL.GS.PacketHandler
 					int level = player.GetAbilityLevel(ra.KeyName);
 					pak.WriteByte((byte)i++);
 					pak.WriteByte((byte)level);
-					pak.WriteByte((byte)ra.CostForUpgrade(level));
+					pak.WriteByte((byte)ra.CostForUpgrade(level, player));
 					bool canBeUsed = ra.CheckRequirement(player);
 					pak.WritePascalString(canBeUsed ? ra.Name : string.Format("[{0}]", ra.Name));
 				}
@@ -286,7 +286,7 @@ namespace DOL.GS.PacketHandler
 					pak.WriteByte((byte)ra.MaxLevel);
 
 					for (int i = 0; i < ra.MaxLevel; i++)
-						pak.WriteByte((byte)ra.CostForUpgrade(i));
+						pak.WriteByte((byte)ra.CostForUpgrade(i, player));
 
 					if (ra.CheckRequirement(m_gameClient.Player))
 						pak.WritePascalString(ra.Name);

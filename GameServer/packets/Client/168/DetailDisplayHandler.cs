@@ -2251,7 +2251,7 @@ namespace DOL.GS.PacketHandler.Client.v168
 			
             if (ra is RealmAbility)
             {
-           		((RealmAbility)ra).AddDelve(ref dw);
+           		((RealmAbility)ra).AddDelve(ref dw, clt.Player);
             }
             else if (ra != null)
             {

@@ -45,7 +45,7 @@ namespace DOL.GS.RealmAbilities
             return (int) maxAttackRange;
         }
 
-        public override int CostForUpgrade(int level)
+        public override int CostForUpgrade(int level, GamePlayer player)
         {
             return 8;
         }

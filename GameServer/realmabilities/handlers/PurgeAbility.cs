@@ -15,6 +15,35 @@ namespace DOL.GS.RealmAbilities
     {
         public PurgeAbility(DBAbility dba, int level) : base(dba, level) { }
 
+        public override int CostForUpgrade(int level, GamePlayer player)
+        {
+            if (ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
+            {
+                bool halfCost = player.CharacterClass.ID == (int)eCharacterClass.Mercenary ||
+                player.CharacterClass.ID == (int)eCharacterClass.Blademaster ||
+                player.CharacterClass.ID == (int)eCharacterClass.Berserker;
+
+                switch (level)
+                {
+                    case 0:
+                        return halfCost ? 2 : 5;
+                    case 1:
+                        return halfCost ? 2 : 5;
+                    case 2:
+                        return halfCost ? 3 : 5;
+                    case 3:
+                        return halfCost ? 4 : 7;
+                    case 4:
+                        return halfCost ? 4 : 8;
+                    default: return 1000;
+                }
+            }
+            else
+            {
+                return (level + 1) * 5;
+            }
+        }
+
         /// <summary>
         /// Action
         /// </summary>

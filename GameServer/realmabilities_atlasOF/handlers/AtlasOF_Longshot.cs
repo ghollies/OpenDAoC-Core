@@ -32,7 +32,7 @@ namespace DOL.GS.RealmAbilities
 	{
 		
 		public override int MaxLevel { get { return 1; } }
-		public override int CostForUpgrade(int level) { return 6; }
+		public override int CostForUpgrade(int level, GamePlayer player) { return 6; }
 		public override int GetReUseDelay(int level) { return 300; } // 5 mins
 		
 		public override void Execute(GameLiving living)

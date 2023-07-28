@@ -17,7 +17,7 @@ namespace DOL.GS.RealmAbilities
 
 		public override bool CheckRequirement(GamePlayer player) { return true; }
 
-		public override int CostForUpgrade(int level) { return 8; }
+		public override int CostForUpgrade(int level, GamePlayer player) { return 8; }
 	}
 	
 }
