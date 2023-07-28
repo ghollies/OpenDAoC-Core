@@ -13,8 +13,8 @@ namespace DOL.GS.RealmAbilities
 		private int m_value = 25; // 25% bonus to hit (aka -25% spell resist)
 		public override int MaxLevel { get { return 1; } }
 		public override int GetReUseDelay(int level) { return 1800; } // 30 mins
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			return 10;
 		}
 

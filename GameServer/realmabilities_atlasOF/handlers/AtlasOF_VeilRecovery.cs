@@ -27,6 +27,6 @@ namespace DOL.GS.RealmAbilities
             }
 		}
 		
-		public override int CostForUpgrade(int level) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(level); }
+		public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(level); }
 	}
 }

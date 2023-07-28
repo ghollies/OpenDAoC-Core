@@ -42,7 +42,7 @@ namespace DOL.GS.RealmAbilities
 				return list;
 			}
 		}
-		public override int CostForUpgrade(int level)
+		public override int CostForUpgrade(int level, GamePlayer player)
 		{
 				switch (level)
 				{

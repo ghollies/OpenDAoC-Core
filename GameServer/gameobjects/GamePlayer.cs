@@ -4254,7 +4254,7 @@ namespace DOL.GS
         {
             get { return GameServer.ServerRules.GetPlayerRealmPointsTotal(this) 
                          - GetRealmAbilities().Where(ab => !(ab is RR5RealmAbility))
-                             .Sum(ab => Enumerable.Range(0, ab.Level).Sum(i => ab.CostForUpgrade(i))); }
+                             .Sum(ab => Enumerable.Range(0, ab.Level).Sum(i => ab.CostForUpgrade(i, this))); }
         }
 
         /// <summary>

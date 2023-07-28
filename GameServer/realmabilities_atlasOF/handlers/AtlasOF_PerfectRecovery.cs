@@ -19,7 +19,7 @@ namespace DOL.GS.RealmAbilities
         private const string RESURRECT_CASTER_PROPERTY = "RESURRECT_CASTER";
 
         public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level) { return 14; }
+        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
         public override int GetReUseDelay(int level) { return 1800; } // 30 mins
 
         private void CreateRezSpell(GamePlayer caster)

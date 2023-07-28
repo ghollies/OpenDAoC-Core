@@ -13,8 +13,8 @@ namespace DOL.GS.RealmAbilities
 	{
 		public XEtherealBondAbility(DBAbility dba, int level) : base(dba, level, eProperty.MaxMana) { }
 
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			switch (level)
 			{
 				case 0: return 1;

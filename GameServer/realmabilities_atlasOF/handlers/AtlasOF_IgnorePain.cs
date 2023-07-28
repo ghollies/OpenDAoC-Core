@@ -16,7 +16,7 @@ namespace DOL.GS.RealmAbilities
 
 		public override int GetReUseDelay(int level) { return 1800; } // 900 = 15 min / 1800 = 30 min
 
-		public override int CostForUpgrade(int level) { return 14; }
+		public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
 
 		public override bool CheckRequirement(GamePlayer player) { 
 				return AtlasRAHelpers.GetFirstAidLevel(player) >= 2;
@@ -65,8 +65,8 @@ namespace DOL.GS.RealmAbilities
 	public class AtlasOF_IgnorePainTank : AtlasOF_IgnorePain
 	{
 		public AtlasOF_IgnorePainTank(DBAbility dba, int level) : base(dba, level) { }
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			return 8;
 		}
 

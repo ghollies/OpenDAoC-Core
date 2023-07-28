@@ -154,8 +154,9 @@ namespace DOL.GS.PacketHandler.Client.v168
 						if (ra != null)
 						{
 							ra.Level = client.Player.GetAbilityLevel(ra.KeyName);
-							int cost = ra.CostForUpgrade(ra.Level);
-							ra.Level++;
+
+                            int cost = ra.CostForUpgrade(ra.Level, client.Player);
+                            ra.Level++;
 							
 							if (client.Player.RealmSpecialtyPoints < cost)
 							{
@@ -286,7 +287,7 @@ namespace DOL.GS.PacketHandler.Client.v168
 						
 						int cost = 0;
 						for (int i = playerRA != null ? playerRA.Level : 0; i < kv.Value; i++)
-							cost += ra.CostForUpgrade(i);
+							cost += ra.CostForUpgrade(i, client.Player);
 						
 						if (client.Player.RealmSpecialtyPoints < cost)
 						{

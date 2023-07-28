@@ -12,7 +12,7 @@ namespace DOL.GS.RealmAbilities
 	{
 		public AtlasOF_MysticCrystalLoreAbility(DBAbility dba, int level) : base(dba, level) { }
 
-        public override int CostForUpgrade(int currentLevel) { return AtlasRAHelpers.GetCommonUpgradeCostFor3LevelsRA(currentLevel); }
+        public override int CostForUpgrade(int currentLevel, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor3LevelsRA(currentLevel); }
         
         public override int GetReUseDelay(int level)
         {

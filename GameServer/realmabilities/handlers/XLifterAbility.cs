@@ -12,8 +12,8 @@ namespace DOL.GS.RealmAbilities
 		}
 
 		protected override string ValueUnit { get { return "%"; } }
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			switch (level)
 			{
 				case 0: return 1;

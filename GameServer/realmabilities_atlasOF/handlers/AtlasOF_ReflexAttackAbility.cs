@@ -15,7 +15,7 @@ namespace DOL.GS.RealmAbilities
         public const int duration = 30000; // 30 seconds
         public override int MaxLevel { get { return 1; } }
         public override int GetReUseDelay(int level) { return 1800; } // 30 mins
-        public override int CostForUpgrade(int level) { return 14; }
+        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
 
         public override void Execute(GameLiving living)
         {

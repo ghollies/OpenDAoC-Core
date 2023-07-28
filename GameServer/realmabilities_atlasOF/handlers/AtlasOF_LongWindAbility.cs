@@ -18,7 +18,7 @@ namespace DOL.GS.RealmAbilities
 
         protected override string ValueUnit { get { return "%"; } }
 
-        public override int CostForUpgrade(int currentLevel) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(currentLevel); }
+        public override int CostForUpgrade(int currentLevel, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(currentLevel); }
 
         public override int GetAmountForLevel(int level)
         {

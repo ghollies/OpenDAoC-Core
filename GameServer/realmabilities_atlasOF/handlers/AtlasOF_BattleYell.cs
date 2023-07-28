@@ -22,7 +22,7 @@ namespace DOL.GS.RealmAbilities
         private int m_tauntValue = 0;
 
         public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level) { return 14; }
+        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
         public override int GetReUseDelay(int level) { return 900; } // 15 mins
         public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugConLevel(player) >= 3; }
 

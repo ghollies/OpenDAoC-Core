@@ -33,7 +33,7 @@ namespace DOL.GS.RealmAbilities
 		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 		public RealmAbility(DBAbility ability, int level) : base(ability, level) { }
 
-		public virtual int CostForUpgrade(int currentLevel)
+		public virtual int CostForUpgrade(int currentLevel, GamePlayer player)
 		{
 			return 1000;
 		}
@@ -60,7 +60,8 @@ namespace DOL.GS.RealmAbilities
 		/// Delve for this RA
 		/// </summary>
 		/// <param name="w"></param>
-		public virtual void AddDelve(ref MiniDelveWriter w)
+		/// <param name="player"></param>
+		public virtual void AddDelve(ref MiniDelveWriter w, GamePlayer player)
 		{
 			w.AddKeyValuePair("Name", Name);
 			if (Icon > 0)
@@ -68,8 +69,8 @@ namespace DOL.GS.RealmAbilities
 
 			for (int i = 0; i <= MaxLevel - 1; i++)
 			{
-				if (CostForUpgrade(i) > 0)
-					w.AddKeyValuePair(string.Format("TrainingCost_{0}", (i + 1)), CostForUpgrade(i));
+				if (CostForUpgrade(i, player) > 0)
+					w.AddKeyValuePair(string.Format("TrainingCost_{0}", (i + 1)), CostForUpgrade(i, player));
 			}
 		}
 
@@ -101,7 +102,7 @@ namespace DOL.GS.RealmAbilities
 
 		public TimedRealmAbility(DBAbility ability, int level) : base(ability, level) { }
 
-		public override int CostForUpgrade(int level)
+		public override int CostForUpgrade(int level, GamePlayer player)
 		{
 			if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
 			{
@@ -173,9 +174,9 @@ namespace DOL.GS.RealmAbilities
 			}
 		}
 
-		public override void AddDelve(ref MiniDelveWriter w)
+		public override void AddDelve(ref MiniDelveWriter w, GamePlayer player)
 		{
-			base.AddDelve(ref w);
+			base.AddDelve(ref w, player);
 
 			for (int i = 1; i <= MaxLevel; i++)
 			{
@@ -384,7 +385,7 @@ namespace DOL.GS.RealmAbilities
 			get { return 1; }
 		}
 
-		public override int CostForUpgrade(int currentLevel)
+		public override int CostForUpgrade(int currentLevel, GamePlayer player)
 		{
 			return 10;
 		}
@@ -415,7 +416,7 @@ namespace DOL.GS.RealmAbilities
 	{
 		public L5RealmAbility(DBAbility ability, int level) : base(ability, level) { }
 
-		public override int CostForUpgrade(int level)
+		public override int CostForUpgrade(int level, GamePlayer player)
 		{
 			if (ServerProperties.Properties.USE_NEW_PASSIVES_RAS_SCALING)
 			{
@@ -492,7 +493,7 @@ namespace DOL.GS.RealmAbilities
 			return player.RealmLevel >= 40;
 		}
 
-		public override int CostForUpgrade(int level)
+		public override int CostForUpgrade(int level, GamePlayer player)
 		{
 			return 0;
 		}

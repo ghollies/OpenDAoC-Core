@@ -105,8 +105,8 @@ namespace DOL.GS.RealmAbilities
 			return player.Level >= 45;
 		}
 
-		public override void AddDelve(ref MiniDelveWriter w)
-		{
+		public override void AddDelve(ref MiniDelveWriter w, GamePlayer player)
+        {
 			w.AddKeyValuePair("Charge: ", "Target does not consume endurance while sprinting for the duration.");
 		}
 		

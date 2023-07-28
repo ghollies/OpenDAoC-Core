@@ -17,7 +17,7 @@ namespace DOL.GS.RealmAbilities
 		public AtlasOF_AmelioratingMelodies(DBAbility dba, int level) : base(dba, level) { }
 
         public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level) { return 14; }
+        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
         public override int GetReUseDelay(int level) { return 1800; } // 30 mins
         protected override int GetHealAmountPerTick() { return 100; } // 100hp per tick @ 1.5s tick rate over 30s = 2000 total.
 

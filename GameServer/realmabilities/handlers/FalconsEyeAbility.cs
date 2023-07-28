@@ -14,8 +14,8 @@ namespace DOL.GS.RealmAbilities
 			: base(dba, level, eProperty.CriticalSpellHitChance)
 		{
 		}
-		public override int CostForUpgrade(int level)
-		{
+		public override int CostForUpgrade(int level, GamePlayer player)
+        {
 			switch (level)
 			{
 				case 0: return 1;

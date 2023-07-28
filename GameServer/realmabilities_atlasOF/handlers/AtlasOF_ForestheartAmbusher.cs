@@ -14,7 +14,7 @@ namespace DOL.GS.RealmAbilities
 
         public override int MaxLevel => 1;
 
-        public override int CostForUpgrade(int level)
+        public override int CostForUpgrade(int level, GamePlayer player)
         {
             return 10;
         }
@@ -26,7 +26,7 @@ namespace DOL.GS.RealmAbilities
 
         public override ushort Icon => 4268;
 
-        public override void AddDelve(ref MiniDelveWriter w)
+        public override void AddDelve(ref MiniDelveWriter w, GamePlayer player)
         {
             w.AddKeyValuePair("Name", Name);
             if (Icon > 0)
