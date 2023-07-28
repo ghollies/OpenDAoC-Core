@@ -223,11 +223,11 @@ namespace DOL.GS.Spells
 				if (npc.Brain is IOldAggressiveBrain aggroBrain)
 					aggroBrain.AddToAggroList(Caster, 1);
 			}
-
+			
 			// Check for spell
 			foreach (ECSGameSpellEffect effect in target.effectListComponent.GetSpellEffects())
 			{
-				if (effect.Owner == effect.SpellHandler.Caster)
+				if (effect.Owner == Caster)
 				{
 					MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
 					return;
@@ -240,15 +240,16 @@ namespace DOL.GS.Spells
 					break;
 				}
 				
-				if (effect.SpellHandler.Spell.SpellType.ToString() == ShearSpellType && effect.SpellHandler.Spell.IsShearable)
+				if (effect.SpellHandler.Spell.SpellType.ToString().Equals(ShearSpellType))
 				{
 					SendEffectAnimation(target, 0, false, 1);
 					EffectService.RequestCancelEffect(effect);
 					MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
 					MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
+					return;
 				}
 			}
-
+			
 			SendEffectAnimation(target, 0, false, 0);
 			MessageToCaster("No enhancement of that type found on the target.", eChatType.CT_SpellResisted);
 		}
