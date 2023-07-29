@@ -14,10 +14,9 @@ namespace DOL.GS.Effects
             EffectService.RequestStartEffect(this);
         }
 
-        // removed handler as OF SOS doesn't break on attack - yay minstrels..
-        // DOLEventHandler m_attackFinished = new DOLEventHandler(AttackFinished);
+         DOLEventHandler m_attackFinished = new DOLEventHandler(AttackFinished);
 
-        /*
+        
         /// <summary>
         /// Called when the effectowner attacked an enemy
         /// </summary>
@@ -40,11 +39,11 @@ namespace DOL.GS.Effects
                     EffectService.RequestCancelEffect(player.effectListComponent.GetAllEffects().FirstOrDefault(x => x.Name.Equals("Speed Of Sound")));
                 }
             }
-        }*/
+        }
 
         public override ushort Icon
         {
-            get { return 4249; }
+            get { return 3020; }
         }
 
         public override string Name
@@ -62,8 +61,7 @@ namespace DOL.GS.Effects
             if (OwnerPlayer == null)
                 return;
             
-            // removed handler as OF SOS doesn't break on attack - yay minstrels..
-            // GameEventMgr.AddHandler(OwnerPlayer, GameLivingEvent.CastFinished, m_attackFinished);
+            GameEventMgr.AddHandler(OwnerPlayer, GameLivingEvent.CastFinished, m_attackFinished);
             foreach (var speedBuff in OwnerPlayer.effectListComponent.GetSpellEffects(eEffect.MovementSpeedBuff))
             {
                 if(speedBuff.GetType() != typeof(SpeedOfSoundECSEffect))
@@ -120,8 +118,7 @@ namespace DOL.GS.Effects
             
             OwnerPlayer.Out.SendUpdateMaxSpeed();
             
-            // removed handler as OF SOS doesn't break on attack - yay minstrels..
-            // GameEventMgr.RemoveHandler(OwnerPlayer, GameLivingEvent.CastFinished, m_attackFinished);
+            GameEventMgr.RemoveHandler(OwnerPlayer, GameLivingEvent.CastFinished, m_attackFinished);
         }
     }
 }

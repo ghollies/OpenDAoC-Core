@@ -16,17 +16,14 @@ namespace DOL.GS.RealmAbilities
 		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		int m_range = 2000;
-		int m_duration = 30000; // Your group moves at twice normal speed for 30 seconds
 
-		public override int MaxLevel { get { return 1; } }
-		public override int GetReUseDelay(int level) { return 1800; } // 1800 = 30 min
-		public override int CostForUpgrade(int level, GamePlayer player) { return 10; }
-
+		public override int GetReUseDelay(int level) { return 600; } // 10 minutes
 		public override ushort Icon { get { return 3020; } }
 
 		public override void Execute(GameLiving living)
 		{
 			if (CheckPreconditions(living, DEAD | SITTING | MEZZED | STUNNED)) return;
+
 			GamePlayer player = living as GamePlayer;
 			/* if (player.IsSpeedWarped)
 			 {
@@ -42,8 +39,18 @@ namespace DOL.GS.RealmAbilities
 			}
 
 			DisableSkill(living);
+			int m_duration = 0;
+            switch (Level)
+            {
+                case 1: m_duration = 10000; break;
+                case 2: m_duration = 20000; break;
+                case 3: m_duration = 30000; break;
+                case 4: m_duration = 45000; break;
+                case 5: m_duration = 60000; break;
+                default: return;
+            }
 
-			ArrayList targets = new ArrayList();
+            ArrayList targets = new ArrayList();
 
 			if (player.Group == null)
 				targets.Add(player);
