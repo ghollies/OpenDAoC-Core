@@ -6,7 +6,7 @@ namespace DOL.Database
 	/// <summary>
 	/// Class => Realm abilities collection
 	/// </summary>
-	[DataTable(TableName = "ClassXRealmAbility_Atlas")]
+	[DataTable(TableName = "ClassXRealmAbility")]
 	public class ClassXRealmAbility : DataObject
 	{
 		protected string m_abilityKey;
