@@ -18,7 +18,17 @@ namespace DOL.GS.RealmAbilities
 
         protected override string ValueUnit { get { return "%"; } }
 
-        public override int CostForUpgrade(int currentLevel, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(currentLevel); }
+        public override int CostForUpgrade(int currentLevel, GamePlayer player) {
+             switch (currentLevel)
+            {
+                case 0: return 1;
+                case 1: return 3;
+                case 2: return 6;
+                case 3: return 10;
+                case 4: return 14;
+                default: return 1000;
+            }
+        }
 
         public override int GetAmountForLevel(int level)
         {
@@ -33,6 +43,13 @@ namespace DOL.GS.RealmAbilities
                 default: return 0;
             }
         }
+        public override int MaxLevel
+        {
+            get
+            { 
+                    return 5;
+            }
+        }
 
-	}
+    }
 }
