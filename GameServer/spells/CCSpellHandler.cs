@@ -21,6 +21,7 @@ using DOL.AI.Brain;
 using DOL.Events;
 using DOL.GS.Effects;
 using DOL.GS.PacketHandler;
+using DOL.GS.RealmAbilities;
 
 namespace DOL.GS.Spells
 {
@@ -82,17 +83,14 @@ namespace DOL.GS.Spells
         protected override int CalculateEffectDuration(GameLiving target, double effectiveness)
         {
             double duration = base.CalculateEffectDuration(target, effectiveness);
-
-            // [Atlas - Takii] Disabling MOC effectiveness scaling in OF.
-            // double mocFactor = 1.0;
-            // MasteryofConcentrationEffect moc = Caster.EffectList.GetOfType<MasteryofConcentrationEffect>();
-            // if (moc != null)
-            // {
-            //     AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
-            //     if (ra != null)
-            //         mocFactor = System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
-            //     duration = (double)Math.Round(duration * mocFactor);
-            // }
+            double mocFactor = 1.0;
+            if ( Caster.effectListComponent.ContainsEffectForEffectType(eEffect.MasteryOfConcentration))
+            {
+                AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
+                 if (ra != null)
+                     mocFactor = System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
+                 duration = (double)Math.Round(duration * mocFactor);
+             }
 
             if (Spell.SpellType != eSpellType.StyleStun)
             {

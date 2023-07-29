@@ -149,17 +149,14 @@ namespace DOL.GS.Spells
                 }
             }
 
-            /// [Atlas - Takii] Disabling MOC effectiveness scaling in OF.
-//             double mocFactor = 1.0;
-//         	MasteryofConcentrationEffect moc = Caster.EffectList.GetOfType<MasteryofConcentrationEffect>();
-//             if (moc != null)
-//             {
-//                 GamePlayer playerCaster = Caster as GamePlayer;
-//                 AtlasOF_MasteryofConcentration ra = playerCaster.GetAbility<AtlasOF_MasteryofConcentration>();
-//                 if (ra != null)
-//                 	mocFactor = (double)ra.GetAmountForLevel(ra.Level) / 100.0;
-//                 amount = amount * mocFactor;
-//             }
+            double mocFactor = 1.0;
+            if (Caster.effectListComponent.ContainsEffectForEffectType(eEffect.MasteryOfConcentration))
+            {
+                AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
+                if (ra != null)
+                    mocFactor = System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
+                amount = (double)Math.Round(amount * mocFactor);
+            }
 
             double criticalvalue = 0;
             int criticalchance = Caster.GetModified(eProperty.CriticalHealHitChance);

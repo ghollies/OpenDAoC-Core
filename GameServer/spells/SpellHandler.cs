@@ -29,6 +29,7 @@ using DOL.Events;
 using DOL.GS.Effects;
 using DOL.GS.PacketHandler;
 using DOL.GS.PlayerClass;
+using DOL.GS.RealmAbilities;
 using DOL.GS.ServerProperties;
 using DOL.GS.SkillHandler;
 using DOL.Language;
@@ -2263,31 +2264,29 @@ namespace DOL.GS.Spells
 
 			if (SpellLine.KeyName == "OffensiveProc" &&  Caster is GameSummonedPet gpet && !Spell.ScaledToPetLevel)
 				gpet.ScalePetSpell(Spell);
+			
+            if (Caster.effectListComponent.ContainsEffectForEffectType(eEffect.MasteryOfConcentration))
+            {
 
-			/// [Atlas - Takii] No effectiveness drop in OF MOC.
-// 			if (Caster.EffectList.GetOfType<MasteryofConcentrationEffect>() != null)
-// 			{
-// 				AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
-// 				if (ra != null && ra.Level > 0)
-// 				{
-// 					effectiveness *= System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
-// 				}
-// 			}
+                AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
+                if (ra != null)
+                    effectiveness *= System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
+            }
 
-			//[StephenxPimentel] Reduce Damage if necro is using MoC
-// 			if (Caster is NecromancerPet)
-// 			{
-// 				if ((Caster as NecromancerPet).Owner.EffectList.GetOfType<MasteryofConcentrationEffect>() != null)
-// 				{
-// 					AtlasOF_MasteryofConcentration necroRA = (Caster as NecromancerPet).Owner.GetAbility<AtlasOF_MasteryofConcentration>();
-// 					if (necroRA != null && necroRA.Level > 0)
-// 					{
-// 						effectiveness *= System.Math.Round((double)necroRA.GetAmountForLevel(necroRA.Level) / 100, 2);
-// 					}
-// 				}
-// 			}
+            //[StephenxPimentel] Reduce Damage if necro is using MoC
+            if (Caster is NecromancerPet)
+            {
+             	if ((Caster as NecromancerPet).Owner.effectListComponent.ContainsEffectForEffectType(eEffect.MasteryOfConcentration))
+             	{
+             		AtlasOF_MasteryofConcentration necroRA = (Caster as NecromancerPet).Owner.GetAbility<AtlasOF_MasteryofConcentration>();
+             		if (necroRA != null && necroRA.Level > 0)
+             		{
+             			effectiveness *= System.Math.Round((double)necroRA.GetAmountForLevel(necroRA.Level) / 100, 2);
+             		}
+             	}
+            }
 
-			if (Caster is GamePlayer && (Caster as GamePlayer).CharacterClass.ID == (int)eCharacterClass.Warlock && m_spell.IsSecondary)
+            if (Caster is GamePlayer && (Caster as GamePlayer).CharacterClass.ID == (int)eCharacterClass.Warlock && m_spell.IsSecondary)
 			{
 				Spell uninterruptibleSpell = Caster.TempProperties.getProperty<Spell>(UninterruptableSpellHandler.WARLOCK_UNINTERRUPTABLE_SPELL);
 

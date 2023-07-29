@@ -34,14 +34,8 @@ namespace DOL.GS.RealmAbilities
 	public class AtlasOF_MasteryofConcentration : TimedRealmAbility
 	{
 		public AtlasOF_MasteryofConcentration(DBAbility dba, int level) : base(dba, level) { }
-		public const Int32 Duration = 15000; // 15s in ms
-
-		public override int MaxLevel { get { return 1; } }
-		public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
-		public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugAcuityLevel(player) >= 3; }
-		public override int GetReUseDelay(int level) { return 1800; } // 30 mins
-		public virtual int GetAmountForLevel(int level) { return 100; } // OF MoC = always 100% effectiveness.
-
+		public const Int32 Duration = 30000; // 30s in ms
+		public override int GetReUseDelay(int level) { return 600; } // 10 mins
 		public override void Execute(GameLiving living)
 		{
 			if (CheckPreconditions(living, DEAD | SITTING | MEZZED | STUNNED)) return;
@@ -74,5 +68,30 @@ namespace DOL.GS.RealmAbilities
 
 			new MasteryOfConcentrationECSEffect(new ECSGameEffectInitParams(caster, Duration, 1));
 		}
-	}
+
+        public virtual int GetAmountForLevel(int level)
+        {
+            if (ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
+            {
+                switch (level)
+                {
+                    case 1: return 25;
+                    case 2: return 35;
+                    case 3: return 50;
+                    case 4: return 60;
+                    case 5: return 75;
+                }
+            }
+            else
+            {
+                switch (level)
+                {
+                    case 1: return 25;
+                    case 2: return 50;
+                    case 3: return 75;
+                }
+            }
+            return 25;
+        }
+    }
 }

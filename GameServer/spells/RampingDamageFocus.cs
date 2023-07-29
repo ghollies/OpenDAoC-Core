@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using DOL.Database;
 using DOL.GS.Effects;
 using DOL.GS.PacketHandler;
+using DOL.GS.RealmAbilities;
 using DOL.Language;
 
 namespace DOL.GS.Spells
@@ -62,16 +63,15 @@ namespace DOL.GS.Spells
 			get
 			{
 				double effectiveness = Caster.Effectiveness;
+                if (Caster.effectListComponent.ContainsEffectForEffectType(eEffect.MasteryOfConcentration))
+                {
 
-// 				if (Caster.EffectList.GetOfType<MasteryofConcentrationEffect>() != null)
-// 				{
-// 					AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
-// 					if (ra != null && ra.Level > 0)
-// 					{
-// 						effectiveness *= System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
-// 					}
-// 				}
-				return effectiveness;
+                    AtlasOF_MasteryofConcentration ra = Caster.GetAbility<AtlasOF_MasteryofConcentration>();
+                    if (ra != null)
+                        effectiveness *= System.Math.Round((double)ra.GetAmountForLevel(ra.Level) / 100, 2);
+                }
+
+                return effectiveness;
 			}
 		}
 
