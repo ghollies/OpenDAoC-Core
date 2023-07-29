@@ -73,21 +73,6 @@ namespace DOL.GS.RealmAbilities
 		{
 			return 180;
 		}
-		
-		public override int CostForUpgrade(int level, GamePlayer player)
-        {
-			switch (level)
-			{
-				case 1:
-					return 3;
-				case 2:
-					return 6;
-				case 3:
-					return 10;
-				default:	// default must return value for lvl 1
-					return 3;
-			}
-		}
 
 		public override void AddEffectsInfo(IList<string> list)
 		{
