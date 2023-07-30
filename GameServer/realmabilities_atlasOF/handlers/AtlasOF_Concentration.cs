@@ -13,7 +13,32 @@ namespace DOL.GS.RealmAbilities
 		public AtlasOF_Concentration(DBAbility dba, int level) : base(dba, level) { }
 
         public override int MaxLevel { get { return 1; } }
-        public override int GetReUseDelay(int level) { return 900; } // 15 min
+        public override int GetReUseDelay(int level)
+        {
+            if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
+            {
+                switch (level)
+                {
+                    case 1: return 900;
+                    case 2: return 540;
+                    case 3: return 180;
+                    case 4: return 90;
+                    case 5: return 30;
+                }
+            }
+            else
+            {
+                switch (level)
+                {
+                    case 1: return 15 * 60;
+                    case 2: return 3 * 60;
+                    case 3: return 30;
+                }
+            }
+
+            return 0;
+        }
+        
         public override int CostForUpgrade(int level, GamePlayer player) { return 10; }
         public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugAcuityLevel(player) >= 3; }
 
