@@ -60,8 +60,26 @@ namespace DOL.GS.RealmAbilities
     public class AtlasOF_WildMinionAbility : RAPropertyEnhancer
     {
         public AtlasOF_WildMinionAbility(DBAbility dba, int level) : base(dba, level, eProperty.Undefined) { }
-        public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugAcuityLevel(player) >= 2; }
-        public override int GetAmountForLevel(int level) { return AtlasRAHelpers.GetPropertyEnhancer5AmountForLevel(level); }
+        public override int GetAmountForLevel(int level)
+        {
+            {
+                if (level < 1) return 0;
+
+                switch (level)
+                {
+                    case 1: return 3;
+                    case 2: return 6;
+                    case 3: return 9;
+                    case 4: return 13;
+                    case 5: return 17;
+                    case 6: return 22;
+                    case 7: return 27;
+                    case 8: return 33;
+                    case 9: return 39;
+                    default: return 39;
+                }
+            }
+        }
         public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(level); }
     }
 
@@ -71,8 +89,25 @@ namespace DOL.GS.RealmAbilities
     public class AtlasOF_FalconsEye : RAPropertyEnhancer // We don't want to piggyback on the NF FalconsEye because it increases spell crit chance and not archery for some reason...
     {
         public AtlasOF_FalconsEye(DBAbility dba, int level) : base(dba, level, eProperty.CriticalArcheryHitChance) { }
-        public override bool CheckRequirement(GamePlayer player) { return AtlasRAHelpers.GetAugDexLevel(player) >= 2; }
-        public override int GetAmountForLevel(int level) { return AtlasRAHelpers.GetPropertyEnhancer5AmountForLevel(level); }
+        public override int GetAmountForLevel(int level) {
+            {
+                if (level < 1) return 0;
+
+                switch (level)
+                {
+                    case 1: return 3;
+                    case 2: return 6;
+                    case 3: return 9;
+                    case 4: return 13;
+                    case 5: return 17;
+                    case 6: return 22;
+                    case 7: return 27;
+                    case 8: return 33;
+                    case 9: return 39;
+                    default: return 39;
+                }
+            }
+        }
         public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetCommonUpgradeCostFor5LevelsRA(level); }
     }
 }
