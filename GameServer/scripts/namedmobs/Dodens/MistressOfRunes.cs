@@ -1,14 +1,10 @@
-﻿/*
-Mistress of Runes.
-<author>Kelt</author>
- */
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using DOL.AI.Brain;
 using DOL.Database;
 using DOL.Events;
 using DOL.GS;
-using System.Collections;
-using DOL.AI.Brain;
 using DOL.GS.Effects;
 using DOL.GS.PacketHandler;
 using DOL.GS.Scripts;
@@ -90,32 +86,18 @@ namespace DOL.GS.Scripts
 		/// Return to spawn point, Mistress of Runes can't be attacked while it's
 		/// on it's way.
 		/// </summary>
-		public override void ReturnToSpawnPoint()
+		public override void ReturnToSpawnPoint(short speed)
 		{
-			EvadeChance = 100;
-			ReturnToSpawnPoint(MaxSpeed);
+			base.ReturnToSpawnPoint(MaxSpeed);
 		}
 
 		public override void OnAttackedByEnemy(AttackData ad)
 		{
-			if (EvadeChance == 100)
+			if (IsReturningToSpawnPoint)
 				return;
 
 			base.OnAttackedByEnemy(ad);
 		}
-		/// <summary>
-		/// Handle event notifications.
-		/// </summary>
-		/// <param name="e">The event that occured.</param>
-		/// <param name="sender">The sender of the event.</param>
-		public override void Notify(DOLEvent e, object sender)
-		{
-			base.Notify(e, sender);
-			// When Mistress of Runes arrives at its spawn point, make it vulnerable again.
-
-			if (e == GameNPCEvent.ArriveAtTarget)
-				EvadeChance = 0;
-		}	
 		/// <summary>
 		/// Broadcast relevant messages to the raid.
 		/// </summary>
@@ -147,7 +129,7 @@ namespace DOL.GS.Scripts
 }
 namespace DOL.AI.Brain
 {
-	public class MistressOfRunesBrain : StandardMobBrain
+    public class MistressOfRunesBrain : StandardMobBrain
 	{
 		protected String[] m_SpearAnnounce;
 		protected String m_NearsightAnnounce;

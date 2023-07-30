@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using DOL.Database;
 using DOL.GS.Housing;
 
@@ -37,7 +38,7 @@ namespace DOL.GS.PacketHandler.Client.v168
 		/// <summary>
 		/// Handles item apprise actions
 		/// </summary>
-		protected class AppraiseActionHandler : RegionECSAction
+		protected class AppraiseActionHandler : ECSGameTimerWrapperBase
 		{
 			/// <summary>
 			/// The item slot
@@ -59,7 +60,7 @@ namespace DOL.GS.PacketHandler.Client.v168
 			/// </summary>
 			protected override int OnTick(ECSGameTimer timer)
 			{
-				var player = (GamePlayer) m_actionSource;
+				GamePlayer player = (GamePlayer) timer.Owner;
 
 				if (player.TargetObject == null)
 					return 0;

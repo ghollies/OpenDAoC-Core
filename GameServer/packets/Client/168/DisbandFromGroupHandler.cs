@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 namespace DOL.GS.PacketHandler.Client.v168
 {
 	/// <summary>
@@ -32,7 +33,7 @@ namespace DOL.GS.PacketHandler.Client.v168
 		/// <summary>
 		/// Handles players disband actions
 		/// </summary>
-		protected class PlayerDisbandAction : RegionECSAction
+		protected class PlayerDisbandAction : ECSGameTimerWrapperBase
 		{
 			/// <summary>
 			/// Constructs a new PlayerDisbandAction
@@ -47,7 +48,7 @@ namespace DOL.GS.PacketHandler.Client.v168
 			/// </summary>
 			protected override int OnTick(ECSGameTimer timer)
 			{
-				var player = (GamePlayer) m_actionSource;
+				GamePlayer player = (GamePlayer) timer.Owner;
 
 				if (player.Group == null)
 					return 0;

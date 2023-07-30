@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using DOL.Database;
 using DOL.GS.Styles;
 using static DOL.GS.GameLiving;
@@ -139,23 +138,38 @@ namespace DOL.GS
 
         protected virtual bool PrepareMeleeAttack()
         {
-            if (_attackData != null && _attackData.AttackResult is eAttackResult.Fumbled)
+            bool clearOldStyles = false;
+
+            if (_attackData != null)
             {
-                // Skip this attack if the last one fumbled.
-                _styleComponent.NextCombatStyle = null;
-                _styleComponent.NextCombatBackupStyle = null;
-                _attackData.AttackResult = eAttackResult.Missed;
-                _interval = _attackComponent.AttackSpeed(_weapon) * 2;
-                StartTime = _interval;
-                return false;
+                switch (_attackData.AttackResult)
+                {
+                    case eAttackResult.Fumbled:
+                    {
+                        // Skip this attack if the last one fumbled.
+                        _styleComponent.NextCombatStyle = null;
+                        _styleComponent.NextCombatBackupStyle = null;
+                        _attackData.AttackResult = eAttackResult.Missed;
+                        _interval = _attackComponent.AttackSpeed(_weapon) * 2;
+                        return false;
+                    }
+                    case eAttackResult.OutOfRange:
+                    case eAttackResult.TargetNotVisible:
+                    case eAttackResult.NotAllowed_ServerRules:
+                    case eAttackResult.TargetDead:
+                    {
+                        clearOldStyles = true;
+                        break;
+                    }
+                }
             }
 
-            if (_combatStyle != null && _combatStyle.WeaponTypeRequirement == (int)eObjectType.Shield)
+            if (_combatStyle != null && _combatStyle.WeaponTypeRequirement == (int) eObjectType.Shield)
                 _weapon = _leftWeapon;
 
             int mainHandAttackSpeed = _attackComponent.AttackSpeed(_weapon);
 
-            if (GameLoop.GameLoopTime > _styleComponent.NextCombatStyleTime + mainHandAttackSpeed)
+            if (clearOldStyles || _styleComponent.NextCombatStyleTime + mainHandAttackSpeed < GameLoop.GameLoopTime)
             {
                 // Cancel the styles if they were registered too long ago.
                 // Nature's Shield stays active forever and falls back to a non-backup style.
@@ -167,12 +181,18 @@ namespace DOL.GS
                 _styleComponent.NextCombatBackupStyle = null;
             }
 
-            // Damage is doubled on sitting players, but only with melee weapons; arrows and magic does normal damage.
+            // Styles must be checked before the target.
+            if (_target == null)
+            {
+                _interval = TICK_INTERVAL_FOR_NON_ATTACK;
+                return false;
+            }
+
+            // Damage is doubled on sitting players, but only with melee weapons; arrows and magic do normal damage.
             if (_target is GamePlayer playerTarget && playerTarget.IsSitting)
                 _effectiveness *= 2;
 
             _interruptDuration = mainHandAttackSpeed;
-
             return true;
         }
 
@@ -199,11 +219,8 @@ namespace DOL.GS
             byte flightDuration = (byte)(_ticksToTarget > 350 ? 1 + (_ticksToTarget - 350) / 75 : 1);
             bool cancelPrepareAnimation = _owner.ActiveWeapon.Object_Type == (int)eObjectType.Thrown;
 
-            Parallel.ForEach(_owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
+            foreach (GamePlayer player in _owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
             {
-                if (player == null)
-                    return;
-
                 // Special case for thrown weapons (bows and crossbows don't need this).
                 // For some obscure reason, their 'BowShoot' animation doesn't cancel their 'BowPrepare', and 'BowPrepare' resumes after 'BowShoot'.
                 if (cancelPrepareAnimation)
@@ -214,7 +231,7 @@ namespace DOL.GS
                 // 1 means roughly 350ms (the lowest time possible), then each increment adds about 75ms (needs testing).
                 // Using ticksToTarget, we can make the arrow take more time to reach its target the farther it is.
                 player.Out.SendCombatAnimation(_owner, _target, (ushort)model, 0x00, player.Out.BowShoot, flightDuration, 0x00, ((GameLiving)_target).HealthPercent);
-            });
+            }
 
             switch (_owner.rangeAttackComponent.RangedAttackType)
             {
@@ -359,14 +376,9 @@ namespace DOL.GS
                     _owner.rangeAttackComponent.RangedAttackType = eRangedAttackType.Long;
             }
 
-            Parallel.ForEach(_owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-            {
-                if (player == null)
-                    return;
-
-                // The 'stance' parameter appears to be used to tell whether or not the animation should be held, and doesn't seem to be related to the weapon speed.
+            // The 'stance' parameter appears to be used to tell whether or not the animation should be held, and doesn't seem to be related to the weapon speed.
+            foreach (GamePlayer player in _owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
                 player.Out.SendCombatAnimation(_owner, null, (ushort)(_weapon != null ? _weapon.Model : 0), 0x00, player.Out.BowPrepare, 0x1A, 0x00, 0x00);
-            });
 
             return true;
         }

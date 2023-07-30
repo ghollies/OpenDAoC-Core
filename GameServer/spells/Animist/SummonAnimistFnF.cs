@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using System.Linq;
 using DOL.AI.Brain;
@@ -64,7 +65,7 @@ namespace DOL.GS.Spells
 				}
 			}
 
-			foreach (GameNPC npc in Caster.CurrentRegion.GetNPCsInRadius(Caster.GroundTarget.X, Caster.GroundTarget.Y, Caster.GroundTarget.Z, (ushort)Properties.TURRET_AREA_CAP_RADIUS, true))
+			foreach (GameNPC npc in Caster.CurrentRegion.GetNPCsInRadius(Caster.GroundTarget, (ushort) Properties.TURRET_AREA_CAP_RADIUS, true))
 			{
 				if (npc.Brain is TurretFNFBrain)
 					nCount++;
@@ -104,8 +105,7 @@ namespace DOL.GS.Spells
 
 			(m_pet.Brain as TurretBrain).IsMainPet = false;
 			(m_pet.Brain as TurretBrain).Think();
-
-			Caster.PetCount++;
+			Caster.UpdatePetCount(true);
 		}
 
 		protected override void SetBrainToOwner(IControlledBrain brain)
@@ -150,8 +150,7 @@ namespace DOL.GS.Spells
 		/// <returns>immunity duration in milliseconds</returns>
 		public override int OnEffectExpires(GameSpellEffect effect, bool noMessages)
 		{
-			Caster.PetCount--;
-
+			Caster.UpdatePetCount(false);
 			return base.OnEffectExpires(effect, noMessages);
 		}
 

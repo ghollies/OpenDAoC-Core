@@ -4,16 +4,16 @@ namespace DOL.GS
 {
     public class CraftComponent : IManagedEntity
     {
+        public GamePlayer Owner { get; private set; }
         public CraftAction CraftAction { get; set; }
         public bool CraftState { get; set; }
-        public EntityManagerId EntityManagerId { get; set; } = new();
+        public EntityManagerId EntityManagerId { get; set; } = new(EntityManager.EntityType.CraftComponent, false);
         public List<Recipe> Recipes { get; private set; } = new();
-        private GamePlayer _owner;
         private object _recipesLock = new();
 
         public CraftComponent(GamePlayer owner)
         {
-            _owner = owner;
+            Owner = owner;
         }
 
         public void AddRecipe(Recipe recipe)
@@ -44,15 +44,15 @@ namespace DOL.GS
             CraftAction?.Tick(time);
 
             if (CraftAction == null)
-                EntityManager.Remove(EntityManager.EntityType.CraftComponent, this);
+                EntityManager.Remove(this);
         }
 
         public void StartCraft(Recipe recipe, AbstractCraftingSkill skill, int craftingTime)
         {
             if (CraftAction == null)
             {
-                CraftAction = new CraftAction(_owner, craftingTime, recipe, skill);
-                EntityManager.Add(EntityManager.EntityType.CraftComponent, this);
+                CraftAction = new CraftAction(Owner, craftingTime, recipe, skill);
+                EntityManager.Add(this);
             }
         }
 

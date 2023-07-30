@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 namespace DOL.GS.PacketHandler.Client.v168
 {
 	[PacketHandlerAttribute(PacketHandlerType.TCP, eClientPackets.ObjectInteractRequest, "Handles Client Interact Request", eClientStatus.PlayerInGame)]
@@ -29,14 +30,14 @@ namespace DOL.GS.PacketHandler.Client.v168
 			int sessionId = packet.ReadShort();
 			ushort targetOid = packet.ReadShort();
 
-            //TODO: utilize these client-sent coordinates to possibly check for exploits which are spoofing position packets but not spoofing them everywhere
+			//TODO: utilize these client-sent coordinates to possibly check for exploits which are spoofing position packets but not spoofing them everywhere
 			new InteractActionHandler(client.Player, targetOid).Start(1);
 		}
 
 		/// <summary>
 		/// Handles player interact actions
 		/// </summary>
-		protected class InteractActionHandler : AuxRegionECSAction
+		protected class InteractActionHandler : AuxECSGameTimerWrapperBase
 		{
 			/// <summary>
 			/// The interact target OID
@@ -58,12 +59,14 @@ namespace DOL.GS.PacketHandler.Client.v168
 			/// </summary>
 			protected override int OnTick(AuxECSGameTimer timer)
 			{
-				var player = (GamePlayer) m_actionSource;
+				GamePlayer player = (GamePlayer) timer.Owner;
 				Region region = player.CurrentRegion;
+
 				if (region == null)
 					return 0;
 
 				GameObject obj = region.GetObject(m_targetOid);
+
 				if (obj == null || !player.IsWithinRadius(obj, WorldMgr.OBJ_UPDATE_DISTANCE))
 					player.Out.SendObjectDelete(m_targetOid);
 				else

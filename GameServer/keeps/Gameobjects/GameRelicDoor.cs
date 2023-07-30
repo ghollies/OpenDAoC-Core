@@ -17,11 +17,10 @@
  *
  */
 
-using System;
 using System.Collections;
-using System.Threading.Tasks;
 using DOL.Database;
 using DOL.GS.PacketHandler;
+using static DOL.GS.GameSiegeWeapon;
 
 namespace DOL.GS.Keeps
 {
@@ -65,13 +64,15 @@ namespace DOL.GS.Keeps
 		/// </summary>
 		public override eDoorState State
 		{
-			get { return m_state; }
+			get => m_state;
 			set
 			{
 				if (m_state != value)
 				{
 					m_state = value;
-					BroadcastDoorStatus();
+
+					foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
+						player.Out.SendDoorState(CurrentRegion, this);
 				}
 			}
 		}
@@ -283,24 +284,11 @@ namespace DOL.GS.Keeps
 		/// </summary>
 		public virtual void BroadcastDoorStatus()
 		{
-
-			
-			Parallel.ForEach(this.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
+			foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 			{
-				try
-				{
-					player.SendDoorUpdate(this);
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine($"Critical error encountered in Relic Door health broadcast: {e}");
-				}
-			});
-
-			// foreach (GameClient client in WorldMgr.GetClientsOfRegion(CurrentRegionID))
-			// {
-			// 	client.Player.SendDoorUpdate(this);
-			// }
+				PlayerService.UpdateObjectForPlayer(player, this);
+				player.Out.SendDoorState(CurrentRegion, this);
+			}
 		}
 
 		/*
@@ -337,7 +325,6 @@ namespace DOL.GS.Keeps
 			return true;
 		}
 
-		public override void NPCManipulateDoorRequest(GameNPC npc, bool open)
-		{ }
+		public override void NPCManipulateDoorRequest(GameNPC npc, bool open) { }
 	}
 }

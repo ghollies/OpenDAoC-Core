@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 namespace DOL.GS.PacketHandler.Client.v168
 {
 	[PacketHandlerAttribute(PacketHandlerType.TCP, eClientPackets.InviteToGroup, "Handle Invite to Group Request.", eClientStatus.PlayerInGame)]
@@ -29,22 +30,20 @@ namespace DOL.GS.PacketHandler.Client.v168
 		/// <summary>
 		/// Handles group invlite actions
 		/// </summary>
-		protected class HandleGroupInviteAction : RegionECSAction
+		protected class HandleGroupInviteAction : ECSGameTimerWrapperBase
 		{
 			/// <summary>
 			/// constructs a new HandleGroupInviteAction
 			/// </summary>
 			/// <param name="actionSource">The action source</param>
-			public HandleGroupInviteAction(GamePlayer actionSource) : base(actionSource)
-			{
-			}
+			public HandleGroupInviteAction(GamePlayer actionSource) : base(actionSource) { }
 
 			/// <summary>
 			/// Called on every timer tick
 			/// </summary>
 			protected override int OnTick(ECSGameTimer timer)
 			{
-				var player = (GamePlayer) m_actionSource;
+				GamePlayer player = (GamePlayer) timer.Owner;
 
 				if (player.TargetObject == null || player.TargetObject == player)
 				{
@@ -65,8 +64,8 @@ namespace DOL.GS.PacketHandler.Client.v168
 					ChatUtil.SendSystemMessage(player, "You are not the leader of your group.");
 					return 0;
 				}
-                
-                if (player.Group != null && player.Group.MemberCount >= ServerProperties.Properties.GROUP_MAX_MEMBER)
+
+				if (player.Group != null && player.Group.MemberCount >= ServerProperties.Properties.GROUP_MAX_MEMBER)
 				{
 					ChatUtil.SendSystemMessage(player, "The group is full.");
 					return 0;

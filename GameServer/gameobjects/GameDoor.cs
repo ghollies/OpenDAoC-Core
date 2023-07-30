@@ -52,7 +52,7 @@ namespace DOL.GS
                         _state = value;
 
                         foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
-                            player.SendDoorUpdate(this);
+                            player.Out.SendDoorState(CurrentRegion, this);
                     }
                 }
             }
@@ -88,7 +88,7 @@ namespace DOL.GS
             m_model = 0xFFFF;
             DoorID = dbDoor.InternalID;
             m_guildName = dbDoor.Guild;
-            _realm = (eRealm) dbDoor.Realm;
+            Realm = (eRealm) dbDoor.Realm;
             m_level = dbDoor.Level;
             m_health = dbDoor.Health;
             Locked = dbDoor.Locked;
@@ -270,13 +270,13 @@ namespace DOL.GS
             }
         }
 
-        private class CloseDoorAction : AuxRegionECSAction
+        private class CloseDoorAction : AuxECSGameTimerWrapperBase
         {
             public CloseDoorAction(GameDoor door) : base(door) { }
 
             protected override int OnTick(AuxECSGameTimer timer)
             {
-                GameDoor door = (GameDoor) m_actionSource;
+                GameDoor door = (GameDoor) timer.Owner;
                 door.Close();
                 return 0;
             }

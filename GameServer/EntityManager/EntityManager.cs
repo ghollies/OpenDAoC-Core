@@ -35,10 +35,10 @@ namespace DOL.GS
             { EntityType.CraftComponent, new EntityArray<CraftComponent>(100) },
             { EntityType.ObjectChangingSubZone, new EntityArray<ObjectChangingSubZone>(ServerProperties.Properties.MAX_ENTITIES) },
             { EntityType.Timer, new EntityArray<ECSGameTimer>(500) },
-            { EntityType.AuxTimer, new EntityArray<AuxECSGameTimer>(250) }
+            { EntityType.AuxTimer, new EntityArray<AuxECSGameTimer>(500) }
         };
 
-        public static bool Add<T>(EntityType type, T entity) where T : IManagedEntity
+        public static bool Add<T>(T entity) where T : IManagedEntity
         {
             EntityManagerId id = entity.EntityManagerId;
 
@@ -46,11 +46,16 @@ namespace DOL.GS
             if (id.IsSet && !id.IsPendingRemoval)
                 return false;
 
-            _entityArrays[type].Add(entity);
+            _entityArrays[entity.EntityManagerId.Type].Add(entity);
             return true;
         }
 
-        public static bool Remove<T>(EntityType type, T entity) where T : IManagedEntity
+        public static bool TryReuse<T>(EntityType type, out T entity) where T : IManagedEntity
+        {
+            return _entityArrays[type].TryReuse(out entity);
+        }
+
+        public static bool Remove<T>(T entity) where T : IManagedEntity
         {
             EntityManagerId id = entity.EntityManagerId;
 
@@ -58,29 +63,28 @@ namespace DOL.GS
             if (!id.IsSet && !id.IsPendingAddition)
                 return false;
 
-            _entityArrays[type].Remove(entity);
+            _entityArrays[entity.EntityManagerId.Type].Remove(entity);
             return true;
         }
 
-        // Applies pending additions and removals then returns the list alongside the last non-null index.
+        // Applies pending additions and removals then returns the list alongside the last valid index.
         // Thread unsafe. The returned list should not be modified.
-        public static List<T> UpdateAndGetAll<T>(EntityType type, out int lastNonNullIndex) where T : IManagedEntity
+        public static List<T> UpdateAndGetAll<T>(EntityType type, out int lastValidIndex) where T : IManagedEntity
         {
             dynamic array = _entityArrays[type];
-            lastNonNullIndex = array.Update();
+            lastValidIndex = array.Update();
             return array.Entities;
         }
 
         private class EntityArray<T> where T : class, IManagedEntity
         {
-            private static Comparer<int> _descendingOrder = Comparer<int>.Create((x, y) => x < y ? 1 : x > y ? -1 : 0);
-
-            private SortedSet<int> _deletedIndexes = new(_descendingOrder);
+            private SortedSet<int> _invalidIndexes = new();
             private Stack<T> _entitiesToAdd  = new();
             private Stack<T> _entitiesToRemove = new();
+            private object _invalidIndexesLock = new();
             private object _entitiesToAddLock = new();
             private object _entitiesToRemoveLock = new();
-            private int _lastNonNullIndex = -1;
+            private int _lastValidIndex = -1;
 
             public List<T> Entities { get; private set; }
 
@@ -91,110 +95,129 @@ namespace DOL.GS
 
             public void Add(T entity)
             {
+                entity.EntityManagerId.OnPreAdd();
+
                 lock (_entitiesToAddLock)
                 {
                     _entitiesToAdd.Push(entity);
-                    entity.EntityManagerId.OnPreAdd();
                 }
+            }
+
+            public bool TryReuse(out T entity)
+            {
+                int index;
+                entity = null;
+
+                lock (_invalidIndexesLock)
+                {
+                    if (_invalidIndexes.Count == 0)
+                        return false;
+
+                    index = _invalidIndexes.Min;
+                    _invalidIndexes.Remove(index);
+                    entity = Entities[index];
+                    entity.EntityManagerId.Value = index;
+
+                    if (_lastValidIndex < index)
+                        _lastValidIndex = index;
+                }
+
+                return true;
             }
 
             public void Remove(T entity)
             {
+                entity.EntityManagerId.OnPreRemove();
+
                 lock (_entitiesToRemoveLock)
                 {
                     _entitiesToRemove.Push(entity);
-                    entity.EntityManagerId.OnPreRemove();
                 }
             }
 
             public int Update()
             {
-                lock (_entitiesToRemoveLock)
+                lock (_invalidIndexesLock)
                 {
-                    while (_entitiesToRemove.Count > 0)
+                    lock (_entitiesToRemoveLock)
                     {
-                        T entity = _entitiesToRemove.Pop();
-                        EntityManagerId id = entity.EntityManagerId;
-
-                        if (id.IsPendingRemoval)
+                        while (_entitiesToRemove.Count > 0)
                         {
-                            if (id.IsSet)
-                                RemoveInternal(id.Value);
+                            T entity = _entitiesToRemove.Pop();
+                            EntityManagerId id = entity.EntityManagerId;
 
-                            id.Unset();
+                            if (id.IsPendingRemoval && id.IsSet)
+                                RemoveInternal(id.Value);
+                        }
+                    }
+
+                    while (_lastValidIndex > -1)
+                    {
+                        if (Entities[_lastValidIndex]?.EntityManagerId.IsSet == true)
+                            break;
+
+                        _lastValidIndex--;
+                    }
+
+                    lock (_entitiesToAddLock)
+                    {
+                        while (_entitiesToAdd.Count > 0)
+                        {
+                            T entity = _entitiesToAdd.Pop();
+                            EntityManagerId id = entity.EntityManagerId;
+
+                            if (id.IsPendingAddition && !id.IsSet)
+                                id.Value = AddInternal(entity);
                         }
                     }
                 }
 
-                lock (_entitiesToAddLock)
-                {
-                    while (_entitiesToAdd.Count > 0)
-                    {
-                        T entity = _entitiesToAdd.Pop();
-                        EntityManagerId id = entity.EntityManagerId;
-
-                        if (id.IsPendingAddition && !id.IsSet)
-                            id.Value = AddInternal(entity);
-                    }
-                }
-
-                return _lastNonNullIndex;
+                return _lastValidIndex;
             }
 
             private int AddInternal(T entity)
             {
-                if (_deletedIndexes.Any())
+                if (_invalidIndexes.Count > 0)
                 {
-                    int index = _deletedIndexes.Max;
-                    _deletedIndexes.Remove(index);
+                    int index = _invalidIndexes.Min;
+                    _invalidIndexes.Remove(index);
                     Entities[index] = entity;
 
-                    if (index > _lastNonNullIndex)
-                        _lastNonNullIndex = index;
+                    if (index > _lastValidIndex)
+                        _lastValidIndex = index;
 
                     return index;
                 }
-                else
-                {
-                    // Increase the capacity of the list in the event that it's too small. This is a costly operation.
-                    // 'Add' already does it, but we want to know when it happens and control by how much it grows (instead of doubling it).
-                    if (++_lastNonNullIndex >= Entities.Capacity)
-                    {
-                        int newCapacity = Entities.Capacity + 100;
-                        log.Warn($"{typeof(T)} {nameof(Entities)} is too short. Resizing it to {newCapacity}.");
-                        ListExtras.Resize(Entities, newCapacity);
-                    }
 
-                    Entities.Add(entity);
-                    return _lastNonNullIndex;
+                // Increase the capacity of the list in the event that it's too small. This is a costly operation.
+                // 'Add' already does it, but we nay want to know when it happens and control by how much it grows ('Add' would double it).
+                if (++_lastValidIndex >= Entities.Capacity)
+                {
+                    int newCapacity = (int) (Entities.Capacity * 1.2);
+
+                    if (log.IsWarnEnabled)
+                        log.Warn($"{typeof(T)} {nameof(Entities)} is too short. Resizing it to {newCapacity}.");
+
+                    ListExtras.Resize(Entities, newCapacity);
                 }
+
+                Entities.Add(entity);
+                return _lastValidIndex;
             }
 
             private void RemoveInternal(int id)
             {
-                Entities[id] = null;
-                _deletedIndexes.Add(id);
+                T entity = Entities[id];
 
-                if (id == _lastNonNullIndex)
-                {
-                    if (_deletedIndexes.Any())
-                    {
-                        int lastIndex = _deletedIndexes.Min;
+                if (id == Entities.Count)
+                    _lastValidIndex--;
 
-                        // Find the first non-contiguous number. For example if the collection contains 7 6 3 1, we should return 5.
-                        foreach (int index in _deletedIndexes)
-                        {
-                            if (lastIndex - index > 0)
-                                break;
+                EntityManagerId entityManagerId = entity.EntityManagerId;
+                entityManagerId.Unset();
+                _invalidIndexes.Add(id);
 
-                            lastIndex--;
-                        }
-
-                        _lastNonNullIndex = lastIndex;
-                    }
-                    else
-                        _lastNonNullIndex--;
-                }
+                if (!entityManagerId.AllowReuseByEntityManager)
+                    Entities[id] = null;
             }
         }
     }
@@ -214,9 +237,17 @@ namespace DOL.GS
                 _pendingState = PendingState.NONE;
             }
         }
+        public EntityManager.EntityType Type { get; private set; }
+        public bool AllowReuseByEntityManager { get; private set; }
         public bool IsSet => _value > UNSET_ID;
         public bool IsPendingAddition => _pendingState == PendingState.ADDITION;
         public bool IsPendingRemoval => _pendingState == PendingState.REMOVAL;
+
+        public EntityManagerId(EntityManager.EntityType type, bool allowReuseByEntityManager)
+        {
+            Type = type;
+            AllowReuseByEntityManager = allowReuseByEntityManager;
+        }
 
         public void OnPreAdd()
         {

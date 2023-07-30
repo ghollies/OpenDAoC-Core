@@ -11,7 +11,7 @@ namespace DOL.GS
     public class TimerService
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string SERVICE_NAME = "TimerService";
+        private const string SERVICE_NAME = nameof(TimerService);
 
         private static int _nonNullTimerCount;
         private static int _nullTimerCount;
@@ -30,13 +30,13 @@ namespace DOL.GS
                 _nullTimerCount = 0;
             }
 
-            List<ECSGameTimer> list = EntityManager.UpdateAndGetAll<ECSGameTimer>(EntityManager.EntityType.Timer, out int lastNonNullIndex);
+            List<ECSGameTimer> list = EntityManager.UpdateAndGetAll<ECSGameTimer>(EntityManager.EntityType.Timer, out int lastValidIndex);
 
-            Parallel.For(0, lastNonNullIndex + 1, i =>
+            Parallel.For(0, lastValidIndex + 1, i =>
             {
                 ECSGameTimer timer = list[i];
 
-                if (timer == null)
+                if (timer?.EntityManagerId.IsSet != true)
                 {
                     if (Debug)
                         Interlocked.Increment(ref _nullTimerCount);
@@ -55,13 +55,13 @@ namespace DOL.GS
                         timer.Tick();
                         long stopTick = GameLoop.GetCurrentTime();
 
-                        if ((stopTick - startTick) > 25)
-                            log.Warn($"Long TimerService.Tick for Timer Callback: {timer.Callback?.Method?.DeclaringType}:{timer.Callback?.Method?.Name}  Owner: {timer.TimerOwner?.Name} Time: {stopTick - startTick}ms");
+                        if (stopTick - startTick > 25)
+                            log.Warn($"Long {SERVICE_NAME}.{nameof(Tick)} for Timer Callback: {timer.Callback?.Method?.DeclaringType}:{timer.Callback?.Method?.Name}  Owner: {timer.Owner?.Name} Time: {stopTick - startTick}ms");
                     }
                 }
                 catch (Exception e)
                 {
-                    log.Error($"Critical error encountered in TimerService: {e}");
+                    ServiceUtils.HandleServiceException(e, SERVICE_NAME, timer, timer.Owner);
                 }
             });
 
@@ -80,30 +80,30 @@ namespace DOL.GS
     {
         public delegate int ECSTimerCallback(ECSGameTimer timer);
 
-        public GameObject TimerOwner { get; set; }
+        public GameObject Owner { get; set; }
         public ECSTimerCallback Callback { get; set; }
         public int Interval { get; set; }
         public long StartTick { get; set; }
         public long NextTick => StartTick + Interval;
         public bool IsAlive { get; set; }
         public int TimeUntilElapsed => (int) (StartTick + Interval - GameLoop.GameLoopTime);
-        public EntityManagerId EntityManagerId { get; set; } = new();
+        public EntityManagerId EntityManagerId { get; set; } = new(EntityManager.EntityType.Timer, false);
         private PropertyCollection _properties;
 
-        public ECSGameTimer(GameObject target)
+        public ECSGameTimer(GameObject timerOwner)
         {
-            TimerOwner = target;
+            Owner = timerOwner;
         }
 
-        public ECSGameTimer(GameObject target, ECSTimerCallback callback)
+        public ECSGameTimer(GameObject timerOwner, ECSTimerCallback callback)
         {
-            TimerOwner = target;
+            Owner = timerOwner;
             Callback = callback;
         }
 
-        public ECSGameTimer(GameObject target, ECSTimerCallback callback, int interval)
+        public ECSGameTimer(GameObject timerOwner, ECSTimerCallback callback, int interval)
         {
-            TimerOwner = target;
+            Owner = timerOwner;
             Callback = callback;
             Interval = interval;
             Start();
@@ -121,13 +121,13 @@ namespace DOL.GS
             Interval = interval;
             IsAlive = true;
 
-            if (EntityManager.Add(EntityManager.EntityType.Timer, this))
+            if (EntityManager.Add(this))
                 IsAlive = true;
         }
 
         public void Stop()
         {
-            if (EntityManager.Remove(EntityManager.EntityType.Timer, this))
+            if (EntityManager.Remove(this))
                IsAlive = false;
         }
 
@@ -162,5 +162,16 @@ namespace DOL.GS
                 return _properties;
             }
         }
+    }
+
+    public abstract class ECSGameTimerWrapperBase : ECSGameTimer
+    {
+        public ECSGameTimerWrapperBase(GameObject owner) : base(owner)
+        {
+            Owner = owner;
+            Callback = new ECSTimerCallback(OnTick);
+        }
+
+        protected abstract int OnTick(ECSGameTimer timer);
     }
 }

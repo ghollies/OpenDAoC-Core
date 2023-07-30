@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using DOL.AI.Brain;
 using DOL.Database;
 using DOL.GS;
@@ -53,14 +52,9 @@ namespace DOL.GS
         {
             get { return 100000; }
         }
-        public override void ReturnToSpawnPoint()
+        public override void ReturnToSpawnPoint(short speed)
         {
-            if (CurrentRegionID == 160) //if region is tuscaran glacier
-            {
-                if (IsAlive)
-                    return;
-            }
-            base.ReturnToSpawnPoint();
+            return;
         }
         #region Stats
         public override short Charisma { get => base.Charisma; set => base.Charisma = 200; }
@@ -437,14 +431,9 @@ namespace DOL.GS
             }
         }
 
-        public override void ReturnToSpawnPoint()
+        public override void ReturnToSpawnPoint(short speed)
         {
-            if (CurrentRegionID == 160) //if region is tuscaran glacier
-            {
-                if (IsAlive)
-                    return;
-            }
-            base.ReturnToSpawnPoint();
+            return;
         }
 
         public override double AttackDamage(InventoryItem weapon)
@@ -783,28 +772,27 @@ namespace DOL.GS
             }
             return success;
         }
-        #region Effect
+
         protected int Show_Effect(ECSGameTimer timer)
         {
             if (IsAlive)
             {
-                Parallel.ForEach(GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-                {
+                foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
                     player?.Out.SendSpellEffectAnimation(this, this, 4168, 0, false, 0x01);
-                });
 
                 return 1600;
             }
+
             return 0;
         }
-      
-        #endregion
+
         public override void Die(GameObject killer)
         {
             base.Die(killer);
         }
     }
 }
+
 namespace DOL.AI.Brain
 {
     public class TorstEddiesBrain : StandardMobBrain

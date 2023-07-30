@@ -1,20 +1,9 @@
-﻿/*
- * author: Kelt
- * Name: Uaimh Lairmaster
- * Server: Atlas Freeshard
- */
-
-using System;
-using System.Collections;
+﻿using System;
 using DOL.AI.Brain;
-using DOL.Events;
 using DOL.Database;
-using DOL.GS;
-using DOL.GS.Behaviour.Actions;
+using DOL.Events;
 using DOL.GS.PacketHandler;
 using DOL.GS.Scripts.DOL.AI.Brain;
-using DOL.GS.Styles;
-using FiniteStateMachine;
 
 namespace DOL.GS.Scripts
 {
@@ -138,19 +127,18 @@ namespace DOL.GS.Scripts
         /// Return to spawn point, Uaimh Lairmaster can't be attacked while it's
         /// on it's way.
         /// </summary>
-        public override void ReturnToSpawnPoint()
+        public override void ReturnToSpawnPoint(short speed)
         {
             UaimhLairmasterBrain brain = new UaimhLairmasterBrain();
             StopAttack();
             StopFollowing();
             brain.AggroTable.Clear();
-            EvadeChance = 100;
-            ReturnToSpawnPoint(MaxSpeed);
+            base.ReturnToSpawnPoint(MaxSpeed);
         }
 
         public override void OnAttackedByEnemy(AttackData ad)
         {
-            if (EvadeChance == 100)
+            if (IsReturningToSpawnPoint)
                 return;
 
             base.OnAttackedByEnemy(ad);
@@ -178,11 +166,9 @@ namespace DOL.GS.Scripts
 
             if (e == GameObjectEvent.TakeDamage)
             {
-                if (CheckHealth()) return;
+                if (CheckHealth())
+                    return;
             }
-
-            if (e == GameNPCEvent.ArriveAtTarget)
-                EvadeChance = 0;
         }
 
         #endregion
@@ -197,8 +183,8 @@ namespace DOL.GS.Scripts
         {
             if (HealthPercent <= 60 && IsFleeing)
             {
-                BroadcastMessage(String.Format(m_FleeingAnnounce, Name));
-                ReturnToSpawnPoint();
+                BroadcastMessage(string.Format(m_FleeingAnnounce, Name));
+                ReturnToSpawnPoint(NpcMovementComponent.DEFAULT_WALK_SPEED);
                 IsFleeing = false;
                 return true;
             }

@@ -10,34 +10,34 @@ namespace DOL.GS
     public static class CastingService
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string SERVICE_NAME = "CastingService";
+        private const string SERVICE_NAME = nameof(CastingService);
 
         public static void Tick(long tick)
         {
             GameLoop.CurrentServiceTick = SERVICE_NAME;
             Diagnostics.StartPerfCounter(SERVICE_NAME);
 
-            List<CastingComponent> list = EntityManager.UpdateAndGetAll<CastingComponent>(EntityManager.EntityType.CastingComponent, out int lastNonNullIndex);
+            List<CastingComponent> list = EntityManager.UpdateAndGetAll<CastingComponent>(EntityManager.EntityType.CastingComponent, out int lastValidIndex);
 
-            Parallel.For(0, lastNonNullIndex + 1, i =>
+            Parallel.For(0, lastValidIndex + 1, i =>
             {
+                CastingComponent castingComponent = list[i];
+
                 try
                 {
-                    CastingComponent c = list[i];
-
-                    if (c == null)
+                    if (castingComponent?.EntityManagerId.IsSet != true)
                         return;
 
                     long startTick = GameLoop.GetCurrentTime();
-                    c.Tick(tick);
+                    castingComponent.Tick(tick);
                     long stopTick = GameLoop.GetCurrentTime();
 
-                    if ((stopTick - startTick) > 25)
-                        log.Warn($"Long CastingComponent.Tick for: {c.Owner.Name}({c.Owner.ObjectID}) Spell: {c.SpellHandler?.Spell?.Name} Time: {stopTick - startTick}ms");
+                    if (stopTick - startTick > 25)
+                        log.Warn($"Long {SERVICE_NAME}.{nameof(Tick)} for: {castingComponent.Owner.Name}({castingComponent.Owner.ObjectID}) Spell: {castingComponent.SpellHandler?.Spell?.Name} Time: {stopTick - startTick}ms");
                 }
                 catch (Exception e)
                 {
-                    log.Error($"Critical error encountered in CastingService: {e}");
+                    ServiceUtils.HandleServiceException(e, SERVICE_NAME, castingComponent, castingComponent.Owner);
                 }
             });
 

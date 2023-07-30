@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections;
-using System.Threading.Tasks;
 using DOL.Database;
 using DOL.GS.PacketHandler;
 using DOL.GS.ServerProperties;
 using log4net;
+using static DOL.GS.GameSiegeWeapon;
 
 namespace DOL.GS.Keeps
 {
@@ -119,13 +119,15 @@ namespace DOL.GS.Keeps
 		/// </summary>
 		public override eDoorState State
 		{
-			get { return m_state; }
+			get => m_state;
 			set
 			{
 				if (m_state != value)
 				{
 					m_state = value;
-					BroadcastDoorStatus();
+
+					foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
+						player.Out.SendDoorState(CurrentRegion, this);
 				}
 			}
 		}
@@ -135,7 +137,7 @@ namespace DOL.GS.Keeps
 		/// </summary>
 		public override byte Level
 		{
-			get 
+			get
 			{
 				if (Component == null || Component.Keep == null)
 				{
@@ -296,10 +298,9 @@ namespace DOL.GS.Keeps
 				if (m_oldHealthPercent != HealthPercent)
 				{
 					m_oldHealthPercent = HealthPercent;
-					Parallel.ForEach(GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-					{
-						player?.Client.Out.SendObjectUpdate(this);
-					});
+
+					foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
+						PlayerService.UpdateObjectForPlayer(player, this);
 				}
 			}
 
@@ -336,12 +337,14 @@ namespace DOL.GS.Keeps
 		private void BroadcastRelicGateDamage()
 		{
 			var message = $"{Component.Keep.Name} is under attack!";
-			Parallel.ForEach(WorldMgr.GetClientsOfRealm(Realm), cl =>
+
+			foreach (GameClient cl in WorldMgr.GetClientsOfRealm(Realm))
 			{
-				if (cl.Player.ObjectState != eObjectState.Active) return;
+				if (cl.Player.ObjectState != eObjectState.Active)
+					return;
 				cl.Out.SendMessage(message, eChatType.CT_ScreenCenterSmaller, eChatLoc.CL_SystemWindow);
 				cl.Out.SendMessage(message, eChatType.CT_Important, eChatLoc.CL_SystemWindow);
-			});
+			}
 			
 			/*
 			foreach (var cl in WorldMgr.GetClientsOfRealm(Realm))
@@ -561,14 +564,9 @@ namespace DOL.GS.Keeps
 				// if you target a door it will re-broadcast it's state
 
 				if (Health <= 0 && State != eDoorState.Open)
-				{
 					State = eDoorState.Open;
-					BroadcastDoorStatus();
-				}
-				else if (State == eDoorState.Open)
-				{
-					player.SendDoorUpdate(this, true);
-				}
+
+				PlayerService.UpdateObjectForPlayer(player, this);
 			}
 
 			return list;
@@ -677,7 +675,7 @@ namespace DOL.GS.Keeps
 			if (curZone == null)
 				return;
 			
-			_currentRegion = curZone.ZoneRegion;
+			CurrentRegion = curZone.ZoneRegion;
 			m_name = dbDoor.Name;
 			m_health = dbDoor.Health;
 			_heading = (ushort)dbDoor.Heading;
@@ -829,10 +827,11 @@ namespace DOL.GS.Keeps
 		/// </summary>
 		public virtual void BroadcastDoorStatus()
 		{
-			Parallel.ForEach(GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
+			foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 			{
-				player.SendDoorUpdate(this);
-			});
+				PlayerService.UpdateObjectForPlayer(player, this);
+				player.Out.SendDoorState(CurrentRegion, this);
+			}
 		}
 
 		protected AuxECSGameTimer m_repairTimer;

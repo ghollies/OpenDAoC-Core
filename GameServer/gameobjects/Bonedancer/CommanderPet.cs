@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using System.Collections.Generic;
 using DOL.AI.Brain;
@@ -172,10 +173,10 @@ namespace DOL.GS
 		/// <returns>True, if string needs further processing.</returns>
 		public override bool WhisperReceive(GameLiving source, string str)
 		{
-			return false;
 			// Everything below this comment is added in 1.83, and should not exist in a strict 1.65 level. Feel free to add it back in if desired.
+			return false;
 
-			if (!(source is GamePlayer player) || player != Owner)
+			if (source is not GamePlayer player || player != Owner)
 				return false;
 
 			string[] strargs = str.ToUpper().Split(new char[] { ' ', '-' });
@@ -870,7 +871,7 @@ namespace DOL.GS
 			if (i >= m_controlledBrain.Length)
 				return false;
 			m_controlledBrain[i] = controlledNpc;
-			PetCount++;
+			UpdatePetCount(true);
 			return base.AddControlledNpc(controlledNpc);
 		}
 
@@ -906,7 +907,7 @@ namespace DOL.GS
 						controlledNpcBrain.StripCastedBuffs();
 
 					m_controlledBrain[i] = null;
-					PetCount--;
+					UpdatePetCount(false);
 
 					return base.RemoveControlledNpc(controlledNpc);
 				}

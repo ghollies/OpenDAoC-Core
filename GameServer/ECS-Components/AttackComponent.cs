@@ -24,7 +24,7 @@ namespace DOL.GS
         public GameLiving owner;
         public WeaponAction weaponAction;
         public AttackAction attackAction;
-        public EntityManagerId EntityManagerId { get; set; } = new();
+        public EntityManagerId EntityManagerId { get; set; } = new(EntityManager.EntityType.AttackComponent, false);
 
         /// <summary>
         /// The objects currently attacking this living
@@ -108,7 +108,7 @@ namespace DOL.GS
                 weaponAction = null;
 
             if (weaponAction is null && attackAction is null && !owner.InCombat)
-                EntityManager.Remove(EntityManager.EntityType.AttackComponent, this);
+                EntityManager.Remove(this);
         }
 
         /// <summary>
@@ -576,7 +576,7 @@ namespace DOL.GS
             {
                 m_startAttackTarget = attackTarget;
                 StartAttackRequested = true;
-                EntityManager.Add(EntityManager.EntityType.AttackComponent, this);
+                EntityManager.Add(this);
             }
         }
 
@@ -853,10 +853,12 @@ namespace DOL.GS
                 return false;
 
             // NPCs aren't allowed to prepare their ranged attack while moving or out of range.
-            if (owner is not GamePlayer && owner.ActiveWeaponSlot == eActiveWeaponSlot.Distance)
+            if (owner is GameNPC npcOwner && owner.ActiveWeaponSlot == eActiveWeaponSlot.Distance)
             {
-                if (owner.IsMoving || !owner.IsWithinRadius(owner.TargetObject, owner.attackComponent.AttackRange))
+                if (!npcOwner.IsWithinRadius(npcOwner.TargetObject, npcOwner.attackComponent.AttackRange))
                     return false;
+                else if (npcOwner.IsMoving)
+                    npcOwner.StopMoving();
             }
 
             attackAction = owner.CreateAttackAction();
@@ -2898,19 +2900,11 @@ namespace DOL.GS
         /// <param name="weapon">attack weapon</param>
         public double UnstyledDamageCap(InventoryItem weapon)
         {
-            if (owner is GameEpicBoss) //damage cap for epic encounters if they use melee weapons,if errors appear remove from here
+            if (owner is GameEpicBoss) // Damage cap for epic encounters if they use melee weapons.
             {
                 var p = owner as GameEpicBoss;
-                return AttackDamage(weapon) * ((double) p.Empathy / 100) *
-                       ServerProperties.Properties.SET_EPIC_ENCOUNTER_WEAPON_DAMAGE_CAP;
-            } ///////////////////////////remove until here if errors appear
-              
-            if (owner is GameDragon) //damage cap for dragon encounter
-            {
-                var p = owner as GameDragon;
-                return AttackDamage(weapon) * ((double) p.Empathy / 100) *
-                       ServerProperties.Properties.SET_EPIC_ENCOUNTER_WEAPON_DAMAGE_CAP;
-            } 
+                return AttackDamage(weapon) * ((double) p.Empathy / 100) * Properties.SET_EPIC_ENCOUNTER_WEAPON_DAMAGE_CAP;
+            }
 
             if (owner is GamePlayer)
             {

@@ -13,7 +13,7 @@ namespace DOL.GS
     public static class NpcService
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string SERVICE_NAME = "NpcService";
+        private const string SERVICE_NAME = nameof(NpcService);
 
         private static int _nonNullBrainCount;
         private static int _nullBrainCount;
@@ -32,13 +32,13 @@ namespace DOL.GS
                 _nullBrainCount = 0;
             }
 
-            List<ABrain> list = EntityManager.UpdateAndGetAll<ABrain>(EntityManager.EntityType.Brain, out int lastNonNullIndex);
+            List<ABrain> list = EntityManager.UpdateAndGetAll<ABrain>(EntityManager.EntityType.Brain, out int lastValidIndex);
 
-            Parallel.For(0, lastNonNullIndex + 1, i =>
+            Parallel.For(0, lastValidIndex + 1, i =>
             {
                 ABrain brain = list[i];
 
-                if (brain == null)
+                if (brain?.EntityManagerId.IsSet != true)
                 {
                     if (Debug)
                         Interlocked.Increment(ref _nullBrainCount);
@@ -65,8 +65,8 @@ namespace DOL.GS
                         brain.Think();
                         long stopTick = GameLoop.GetCurrentTime();
 
-                        if ((stopTick - startTick) > 25)
-                            log.Warn($"Long Think for {npc.Name}({npc.ObjectID}) Interval: {brain.ThinkInterval} BrainType: {brain.GetType()} Time: {stopTick - startTick}ms");
+                        if (stopTick - startTick > 25)
+                            log.Warn($"Long {SERVICE_NAME}.{nameof(Tick)} for {npc.Name}({npc.ObjectID}) Interval: {brain.ThinkInterval} BrainType: {brain.GetType()} Time: {stopTick - startTick}ms");
 
                         brain.LastThinkTick = tick;
 
@@ -79,13 +79,13 @@ namespace DOL.GS
 
                     if (npc.NeedsBroadcastUpdate)
                     {
-                        npc.BroadcastUpdate();
+                        PlayerService.UpdateObjectForPlayers(npc);
                         npc.NeedsBroadcastUpdate = false;
                     }
                 }
                 catch (Exception e)
                 {
-                    log.Error($"Critical error encountered: {e}");
+                    ServiceUtils.HandleServiceException(e, SERVICE_NAME, brain, brain.Body);
                 }
             });
 

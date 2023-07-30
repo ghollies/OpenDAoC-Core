@@ -17,7 +17,6 @@
  *
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -449,9 +448,6 @@ namespace DOL.GS.PacketHandler
 
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray[new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber)] = GameLoop.GetCurrentTime();
 		}
 
 		public override void SendGarden(House house)
@@ -474,9 +470,6 @@ namespace DOL.GS.PacketHandler
 
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray.UpdateIfExists(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), GameLoop.GetCurrentTime());
 		}
 
 		public override void SendGarden(House house, int i)
@@ -494,9 +487,6 @@ namespace DOL.GS.PacketHandler
 				pak.WriteByte((byte)item.Rotation);
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray.UpdateIfExists(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), GameLoop.GetCurrentTime());
 		}
 
 		public override void SendHouseOccupied(House house, bool flagHouseOccuped)
@@ -510,9 +500,6 @@ namespace DOL.GS.PacketHandler
 
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray.UpdateIfExists(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), GameLoop.GetCurrentTime());
 		}
 
 		public override void SendEnterHouse(House house)

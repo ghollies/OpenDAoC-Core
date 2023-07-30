@@ -323,55 +323,52 @@ namespace DOL.GS
             return subZoneIndex < _subZones.Length && subZoneIndex > -1 ? _subZones[subZoneIndex] : null;
         }
 
-        public void AddObjectToZone(GameObject gameObject)
+        public bool AddObject(GameObject gameObject)
         {
             if (!_initialized)
                 InitializeZone();
 
-            eGameObjectType objectType;
-
-            // Only GamePlayer, GameNPC, GameStaticItem, and GameDoorBase objects are handled.
-            if (gameObject is GamePlayer)
-                objectType = eGameObjectType.PLAYER;
-            else if (gameObject is GameNPC)
-                objectType = eGameObjectType.NPC;
-            else if (gameObject is GameStaticItem)
-                objectType = eGameObjectType.ITEM;
-            else if (gameObject is GameDoorBase)
-                objectType = eGameObjectType.DOOR;
-            else
-                return;
-
-            SubZoneObject subZoneObject = new(gameObject, null);
             SubZone subZone = GetSubZone(GetSubZoneIndex(gameObject.X, gameObject.Y));
 
             if (subZone == null)
             {
-                log.Error($"Couldn't add an object to a zone (Object: {gameObject}) (Zone: {this})");
-                return;
+                if (log.IsErrorEnabled)
+                    log.Error($"Couldn't find a valid subzone for an object (Object: {gameObject})");
+
+                return false;
             }
 
-            LightConcurrentLinkedList<SubZoneObject>.Node node = new(subZoneObject);
-            ObjectChangingSubZone objectChangingSubZone = new(node, objectType, this, subZone);
-            EntityManager.Add(EntityManager.EntityType.ObjectChangingSubZone, objectChangingSubZone);
+            LightConcurrentLinkedList<GameObject>.Node node = new(gameObject);
+            SubZoneObject subZoneObject= new(node, null);
+            gameObject.SubZoneObject = subZoneObject;
+
+            if (subZoneObject.StartSubZoneChange)
+                ObjectChangingSubZone.Create(node, subZoneObject, this, subZone);
+
+            return true;
         }
 
         /// <summary>
-        /// Gets the lists of objects, located in the current Zone and of the given type, that are at most at a 'radius' distance from (x,y,z).
+        /// Gets the lists of objects, located in the current Zone and of the given type, that are at most at a 'radius' distance from an observer.
         /// The found objects are appended to the given 'partialList'.
         /// </summary>
-        /// <param name="objectType">the type of objects to look for</param>
-        /// <param name="x">the x coordinate of the observation position</param>
-        /// <param name="y">the y coordinate of the observation position</param>
-        /// <param name="z">the z coordinate of the observation position</param>
-        /// <param name="radius">the radius to check against</param>
         /// <param name="partialList">a non-null list</param>
-        public void GetObjectsInRadius<T>(eGameObjectType objectType, int x, int y, int z, ushort radius, HashSet<T> partialList, bool ignoreZ) where T : GameObject
+        public void GetObjectsInRadius<T>(Point3D point, eGameObjectType objectType, ushort radius, HashSet<T> partialList, bool ignoreZ) where T : GameObject
+        {
+            GetObjectsInRadius(point.X, point.Y, point.Z, objectType, radius, partialList, ignoreZ);
+        }
+
+        /// <summary>
+        /// Gets the lists of objects, located in the current Zone and of the given type, that are at most at a 'radius' distance from an observer.
+        /// The found objects are appended to the given 'partialList'.
+        /// </summary>
+        /// <param name="partialList">a non-null list</param>
+        public void GetObjectsInRadius<T>(int x, int y, int z, eGameObjectType objectType, ushort radius, HashSet<T> partialList, bool ignoreZ) where T : GameObject
         {
             if (!_initialized)
                 InitializeZone();
 
-            uint sqRadius = (uint)radius * radius;
+            uint sqRadius = (uint) radius * radius;
             int referenceSubZoneIndex = GetSubZoneIndex(x, y);
 
             int xInZone = x - XOffset; // x in zone coordinates.
@@ -398,7 +395,7 @@ namespace DOL.GS
                 maxLine = SUBZONE_NBR_ON_ZONE_SIDE - 1;
 
             int subZoneIndex;
-            LightConcurrentLinkedList<SubZoneObject> objects;
+            LightConcurrentLinkedList<GameObject> objects;
             bool ignoreDistance;
 
             for (int line = minLine; line <= maxLine; ++line)
@@ -428,26 +425,25 @@ namespace DOL.GS
                     else
                         ignoreDistance = false;
 
-                    using LightConcurrentLinkedList<SubZoneObject>.Reader reader = objects.GetReader();
+                    using LightConcurrentLinkedList<GameObject>.Reader reader = objects.GetReader();
 
-                    for (LightConcurrentLinkedList<SubZoneObject>.Node node = reader.Current(); node != null; node = reader.Next())
+                    for (LightConcurrentLinkedList<GameObject>.Node node = reader.Current(); node != null; node = reader.Next())
                     {
-                        // If the object needs to be relocated, force a distance check. Relocation will be performed by the zone service.
-                        switch (Relocate(node, objectType, subZoneIndex))
+                        GameObject gameObject = node.Item;
+
+                        // Inactive or deleted objects can't remove themselves.
+                        if (gameObject.ObjectState != GameObject.eObjectState.Active || gameObject.CurrentRegion != ZoneRegion)
                         {
-                            case SubZoneRelocationReason.DIFFERENT_ZONE:
-                            case SubZoneRelocationReason.DIFFERENT_SUBZONE_IN_ZONE:
-                                ignoreDistance = false;
-                                break;
-                            case SubZoneRelocationReason.INVALID_OBJECT_OR_DIFFERENT_REGION:
-                                continue;
+                            SubZoneObject subZoneObject = gameObject.SubZoneObject;
+
+                            if (subZoneObject.StartSubZoneChange)
+                                ObjectChangingSubZone.Create(node, subZoneObject, null, null);
+
+                            continue;
                         }
 
-                        GameObject gameObject = node.Item.Object;
-                        bool added = false;
-  
                         if (ignoreDistance || IsWithinSquaredRadius(x, y, z, gameObject.X, gameObject.Y, gameObject.Z, sqRadius, ignoreZ))
-                            added = partialList.Add((T) gameObject);
+                            partialList.Add((T) gameObject);
                     }
                 }
             }
@@ -455,13 +451,34 @@ namespace DOL.GS
 
         #region Relocation
 
-        private SubZoneRelocationReason Relocate(LightConcurrentLinkedList<SubZoneObject>.Node node, eGameObjectType objectType, int subZoneIndex)
+        public void CheckForRelocation(LightConcurrentLinkedList<GameObject>.Node node)
         {
-            SubZoneObject subZoneObject = node.Item;
-            GameObject gameObject = subZoneObject.Object;
+            GameObject gameObject = node.Item;
+            SubZoneObject subZoneObject = gameObject.SubZoneObject;
+            SubZone subZone = subZoneObject.CurrentSubZone;
+
+            if (subZone == null)
+                return;
+
+            short subZoneIndex = GetSubZoneIndex(gameObject.X, gameObject.Y);
+
+            // Are we still in the correct subzone?
+            if (subZoneIndex != -1 && _subZones[subZoneIndex] == subZone)
+                return;
+
+            using LightConcurrentLinkedList<GameObject>.Reader reader = subZone.GetObjects(gameObject.GameObjectType).GetReader();
+            reader.MoveTo(node);
+            Relocate(node, -1);
+            return;
+        }
+
+        private void Relocate(LightConcurrentLinkedList<GameObject>.Node node, int newSubZoneIndex)
+        {
+            GameObject gameObject = node.Item;
+            SubZoneObject subZoneObject = gameObject.SubZoneObject;
 
             // Does the current object exists, is active and still in the region where this zone is located?
-            if (gameObject != null && gameObject.ObjectState == GameObject.eObjectState.Active && gameObject.CurrentRegion == ZoneRegion)
+            if (gameObject.ObjectState == GameObject.eObjectState.Active && gameObject.CurrentRegion == ZoneRegion)
             {
                 int objectSubZoneIndex = GetSubZoneIndex(gameObject.X, gameObject.Y);
 
@@ -471,26 +488,17 @@ namespace DOL.GS
                     Zone newZone = ZoneRegion.GetZone(gameObject.X, gameObject.Y);
                     SubZone newSubZone = newZone.GetSubZone(newZone.GetSubZoneIndex(gameObject.X, gameObject.Y));
 
-                    if (!subZoneObject.IsChangingSubZone)
-                        EntityManager.Add(EntityManager.EntityType.ObjectChangingSubZone, new ObjectChangingSubZone(node, objectType, newZone, newSubZone));
-
-                    return SubZoneRelocationReason.DIFFERENT_ZONE;
+                    if (subZoneObject.StartSubZoneChange)
+                        ObjectChangingSubZone.Create(node, subZoneObject, newZone, newSubZone);
                 }
-                else if (objectSubZoneIndex != subZoneIndex)
+                else if (objectSubZoneIndex != newSubZoneIndex)
                 {
-                    if (!subZoneObject.IsChangingSubZone)
-                        EntityManager.Add(EntityManager.EntityType.ObjectChangingSubZone, new ObjectChangingSubZone(node, objectType, this, _subZones[objectSubZoneIndex]));
-
-                    return SubZoneRelocationReason.DIFFERENT_SUBZONE_IN_ZONE;
+                    if (subZoneObject.StartSubZoneChange)
+                        ObjectChangingSubZone.Create(node, subZoneObject, this, _subZones[objectSubZoneIndex]);
                 }
             }
-            else if (!subZoneObject.IsChangingSubZone)
-            {
-                EntityManager.Add(EntityManager.EntityType.ObjectChangingSubZone, new ObjectChangingSubZone(node, objectType, null, null));
-                return SubZoneRelocationReason.INVALID_OBJECT_OR_DIFFERENT_REGION;
-            }
-
-            return SubZoneRelocationReason.NONE;
+            else if (subZoneObject.StartSubZoneChange)
+                ObjectChangingSubZone.Create(node, subZoneObject, null, null);
         }
 
         public void OnObjectAddedToZone()
@@ -501,14 +509,6 @@ namespace DOL.GS
         public void OnObjectRemovedFromZone()
         {
             Interlocked.Decrement(ref _objectCount);
-        }
-
-        private enum SubZoneRelocationReason
-        {
-            NONE,
-            DIFFERENT_ZONE,
-            DIFFERENT_SUBZONE_IN_ZONE,
-            INVALID_OBJECT_OR_DIFFERENT_REGION
         }
 
         #endregion
@@ -689,11 +689,11 @@ namespace DOL.GS
             {
                 foreach (SubZone subZone in _subZones)
                 {
-                    using LightConcurrentLinkedList<SubZoneObject>.Reader reader = subZone.GetObjects(eGameObjectType.NPC).GetReader();
+                    using LightConcurrentLinkedList<GameObject>.Reader reader = subZone.GetObjects(eGameObjectType.NPC).GetReader();
 
-                    for (LightConcurrentLinkedList<SubZoneObject>.Node node = reader.Current(); node != null; node = reader.Next())
+                    for (LightConcurrentLinkedList<GameObject>.Node node = reader.Current(); node != null; node = reader.Next())
                     {
-                        currentNPC = (GameNPC)node.Item.Object;
+                        currentNPC = (GameNPC) node.Item;
 
                         for (int i = 0; i < realms.Length; i++)
                         {
@@ -732,13 +732,5 @@ namespace DOL.GS
         }
 
         #endregion
-
-        public enum eGameObjectType : byte
-        {
-            ITEM = 0,
-            NPC = 1,
-            PLAYER = 2,
-            DOOR = 3,
-        }
     }
 }

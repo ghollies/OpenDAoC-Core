@@ -3,20 +3,21 @@ using System.Numerics;
 using DOL.AI.Brain;
 using DOL.Database;
 using DOL.GS.Movement;
-using static DOL.GS.GameNPC;
 using static DOL.GS.GameObject;
 
 namespace DOL.GS
 {
     public class NpcMovementComponent : MovementComponent
     {
-        private const int MIN_ALLOWED_FOLLOW_DISTANCE = 100;
-        private const int MIN_ALLOWED_PET_FOLLOW_DISTANCE = 90;
-        private const short DEFAULT_WALK_SPEED = 50;
+        public static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        public const short DEFAULT_WALK_SPEED = 50;
+        public const int MIN_ALLOWED_FOLLOW_DISTANCE = 100;
+        public const int MIN_ALLOWED_PET_FOLLOW_DISTANCE = 90;
         private const double FOLLOW_SPEED_SCALAR = 2.5;
 
         private MovementType _movementType;
-        private long _followLastTick;
+        private long _lastFollowTick;
         private int _followTickInterval;
         private long _walkingToEstimatedArrivalTime;
         private short _moveOnPathSpeed;
@@ -30,8 +31,8 @@ namespace DOL.GS
         // This however means 'TargetPosition' might be slightly outdated.
         public IPoint3D TargetPosition { get; private set; }
         public GameObject FollowTarget { get; private set; }
-        public int FollowMaxDist { get; private set; } = 3000;
-        public int FollowMinDist { get; private set; } = 100;
+        public int FollowMinDistance { get; private set; } = 100;
+        public int FollowMaxDistance { get; private set; } = 3000;
         public string PathID { get; set; }
         public PathPoint CurrentWaypoint { get; set; }
         public bool IsReturningToSpawnPoint { get; private set; }
@@ -52,10 +53,10 @@ namespace DOL.GS
         {
             if (IsSet(MovementType.FOLLOW))
             {
-                if (_followLastTick + _followTickInterval < tick)
+                if (_lastFollowTick + _followTickInterval < tick)
                 {
                     _followTickInterval = FollowTick();
-                    _followLastTick = tick;
+                    _lastFollowTick = tick;
 
                     if (_followTickInterval == 0)
                         _movementType &= ~MovementType.FOLLOW;
@@ -79,6 +80,8 @@ namespace DOL.GS
                     MoveToNextWaypoint();
                 }
             }
+
+            base.Tick(tick);
         }
 
         public void WalkTo(IPoint3D targetPosition, short speed)
@@ -108,13 +111,6 @@ namespace DOL.GS
                 if (distanceToTarget > 25)
                     TurnTo(targetPosition.X, targetPosition.Y);
 
-                // Cancel the ranged attack if the NPC is moving.
-                if (Owner.ActiveWeaponSlot == eActiveWeaponSlot.Distance)
-                {
-                    Owner.StopAttack();
-                    Owner.attackComponent.attackAction?.CleanUp();
-                }
-
                 _movementType |= MovementType.WALK_TO;
                 _walkingToEstimatedArrivalTime = GameLoop.GameLoopTime + ticksToArrive;
             }
@@ -139,19 +135,14 @@ namespace DOL.GS
             UpdateMovement(null, 0);
         }
 
-        public void Follow(GameObject target)
-        {
-            Follow(target, FollowMinDist, FollowMaxDist);
-        }
-
         public void Follow(GameObject target, int minDistance, int maxDistance)
         {
             if (target == null || target.ObjectState != eObjectState.Active)
                 return;
 
             FollowTarget = target;
-            FollowMaxDist = maxDistance;
-            FollowMinDist = minDistance;
+            FollowMinDistance = minDistance;
+            FollowMaxDistance = maxDistance;
             _movementType |= MovementType.FOLLOW;
         }
 
@@ -159,11 +150,6 @@ namespace DOL.GS
         {
             FollowTarget = null;
             _movementType &= ~MovementType.FOLLOW;
-        }
-
-        public void MoveOnPath()
-        {
-            MoveOnPath(DEFAULT_WALK_SPEED);
         }
 
         public void MoveOnPath(short speed)
@@ -247,11 +233,6 @@ namespace DOL.GS
         public void CancelReturnToSpawnPoint()
         {
             IsReturningToSpawnPoint = false;
-        }
-
-        public void Roam()
-        {
-            Roam(DEFAULT_WALK_SPEED);
         }
 
         public void Roam(short speed)
@@ -339,8 +320,16 @@ namespace DOL.GS
 
         private int FollowTick()
         {
-            if (Owner.IsCasting)
+            // Stop moving if the NPC is casting or attacking with a ranged weapon.
+            if (Owner.IsCasting || (Owner.attackComponent.IsAttacking && Owner.ActiveWeaponSlot == eActiveWeaponSlot.Distance))
+            {
+                TurnTo(FollowTarget);
+
+                if (IsMoving)
+                    StopMoving();
+
                 return ServerProperties.Properties.GAMENPC_FOLLOWCHECK_TIME;
+            }
 
             GameLiving followLiving = FollowTarget as GameLiving;
 
@@ -356,7 +345,7 @@ namespace DOL.GS
             double distance = Math.Sqrt(diffX * diffX + diffY * diffY + diffZ * diffZ);
 
             // If distance is greater then the max follow distance, stop following and return home.
-            if (distance > FollowMaxDist)
+            if (distance > FollowMaxDistance)
             {
                 ReturnToSpawnPoint();
                 return 0;
@@ -408,8 +397,8 @@ namespace DOL.GS
             // Pets can follow closer. Need to implement /fdistance command to make this adjustable.
             int minAllowedFollowDistance = Owner.Brain is IControlledBrain ? MIN_ALLOWED_PET_FOLLOW_DISTANCE : MIN_ALLOWED_FOLLOW_DISTANCE;
 
-            if (FollowMinDist > minAllowedFollowDistance)
-                minAllowedFollowDistance = FollowMinDist;
+            if (FollowMinDistance > minAllowedFollowDistance)
+                minAllowedFollowDistance = FollowMinDistance;
 
             if (distance <= minAllowedFollowDistance)
             {
@@ -427,7 +416,7 @@ namespace DOL.GS
             targetPosition = new((int) (FollowTarget.X - diffX), (int) (FollowTarget.Y - diffY), (int) (FollowTarget.Z - diffZ));
 
             // Slow down out of combat pets when they're close.
-            if (!Owner.InCombat && Owner.Brain is ControlledNpcBrain controledBrain && controledBrain.Owner == Owner.FollowTarget)
+            if (!Owner.InCombat && Owner.Brain is ControlledNpcBrain controlledBrain && controlledBrain.Owner == Owner.FollowTarget)
                 PathTo(targetPosition, (short) Math.Max(Math.Min(MaxSpeed, Owner.GetDistance(targetPosition) * FOLLOW_SPEED_SCALAR), 50));
             else
                 PathTo(targetPosition, MaxSpeed);

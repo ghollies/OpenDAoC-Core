@@ -707,9 +707,6 @@ namespace DOL.GS.PacketHandler
 				 */
 			}
 
-			// Update Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(playerToCreate.CurrentRegionID, (ushort)playerToCreate.ObjectID)] = GameLoop.GetCurrentTime();
-
 			//if (GameServer.ServerRules.GetColorHandling(m_gameClient) == 1) // PvP
 			SendObjectGuildID(playerToCreate, playerToCreate.Guild);
 			//used for nearest friendly/enemy object buttons and name colors on PvP server
@@ -843,26 +840,13 @@ namespace DOL.GS.PacketHandler
 				{
 					pak.WriteByte(0);
 				}
-
-				// Following code is temporarily disabled since it is the cause for janky NPC movement.
-				// It makes them pause at waypoints and teleport instead of walk when their destination is very close.
-				// Need to figure out how it's actually supposed to work.
-				// Possibly broken anyway since those values don't seem to match what the official server sends.
-
 				//Dinberg:Instances - zoneskinID for positioning of objects clientside.
-				//flags |= (byte) (((z.ZoneSkinID & 0x100) >> 6) | ((targetZone & 0x100) >> 5));
+				flags |= (byte) (((z.ZoneSkinID & 0x100) >> 6) | ((targetZone & 0x100) >> 5));
 				pak.WriteByte(flags);
 				pak.WriteByte((byte) z.ZoneSkinID);
 				//Dinberg:Instances - targetZone already accomodates for this feat.
-				pak.WriteByte(0/*(byte) targetZone*/);
+				pak.WriteByte((byte) targetZone);
 				SendUDP(pak);
-			}
-			// Update Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID)] = GameLoop.GetCurrentTime();
-
-			if (obj is GameNPC)
-			{
-				(obj as GameNPC).NPCUpdatedCallback();
 			}
 		}
 
@@ -881,13 +865,6 @@ namespace DOL.GS.PacketHandler
 
 		public virtual void SendObjectRemove(GameObject obj)
 		{
-			// Remove from cache
-			if (m_gameClient.GameObjectUpdateArray.ContainsKey(new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID)))
-			{
-				long dummy;
-				m_gameClient.GameObjectUpdateArray.TryRemove(new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID), out dummy);
-			}
-
 			int oType = 0;
 			if (obj is GamePlayer)
 				oType = 2;
@@ -966,9 +943,6 @@ namespace DOL.GS.PacketHandler
 				else pak.WriteByte(0x00);
 				SendTCP(pak);
 			}
-
-			// Update Object Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID)] = GameLoop.GetCurrentTime();
 		}
 
 		public virtual void SendDebugMode(bool on)
@@ -1101,10 +1075,6 @@ namespace DOL.GS.PacketHandler
 				pak.WriteByte(0x00);
 				SendTCP(pak);
 			}
-
-			// Update Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(npc.CurrentRegionID, (ushort)npc.ObjectID)] = 0;
-
 		}
 
 		public virtual void SendLivingEquipmentUpdate(GameLiving living)
@@ -2160,9 +2130,6 @@ namespace DOL.GS.PacketHandler
 
 				SendUDP(pak);
 			}
-
-			// Update Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(player.CurrentRegionID, (ushort)player.ObjectID)] = GameLoop.GetCurrentTime();
 		}
 
 		public virtual void SendUpdatePlayer()
@@ -3014,10 +2981,6 @@ namespace DOL.GS.PacketHandler
 
 		public virtual void SendObjectDelete(GameObject obj)
 		{
-			// Remove from Cache
-			if (m_gameClient.GameObjectUpdateArray.ContainsKey(new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID)))
-				m_gameClient.GameObjectUpdateArray.TryRemove(new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID), out _);
-
 			SendObjectDelete((ushort)obj.ObjectID);
 		}
 
@@ -3224,17 +3187,10 @@ namespace DOL.GS.PacketHandler
 
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray[new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber)] = GameLoop.GetCurrentTime();
 		}
 
 		public virtual void SendRemoveHouse(House house)
 		{
-			// Remove from cache
-			if (m_gameClient.HouseUpdateArray.ContainsKey(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber)))
-				m_gameClient.HouseUpdateArray.TryRemove(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), out _);
-
 			using (var pak = new GSTCPPacketOut(GetPacketCode(eServerPackets.HouseCreate)))
 			{
 				pak.WriteShort((ushort) house.HouseNumber);
@@ -3284,9 +3240,6 @@ namespace DOL.GS.PacketHandler
 
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray.UpdateIfExists(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), GameLoop.GetCurrentTime());
 		}
 
 		public virtual void SendGarden(House house, int i)
@@ -3303,9 +3256,6 @@ namespace DOL.GS.PacketHandler
 				pak.WriteByte((byte) item.Rotation);
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray.UpdateIfExists(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), GameLoop.GetCurrentTime());
 		}
 
 		public virtual void SendHouseOccupied(House house, bool flagHouseOccuped)
@@ -3318,9 +3268,6 @@ namespace DOL.GS.PacketHandler
 
 				SendTCP(pak);
 			}
-
-			// Update cache
-			m_gameClient.HouseUpdateArray.UpdateIfExists(new Tuple<ushort, ushort>(house.RegionID, (ushort)house.HouseNumber), GameLoop.GetCurrentTime());
 		}
 
 		public virtual void SendEnterHouse(House house)
@@ -3523,9 +3470,6 @@ namespace DOL.GS.PacketHandler
 				pak.WriteByte(0); // trailing ?
 				SendTCP(pak);
 			}
-
-			// Update Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(obj.CurrentRegionID, (ushort)obj.ObjectID)] = GameLoop.GetCurrentTime();
 		}
 
 		public virtual void SendSiegeWeaponInterface(GameSiegeWeapon siegeWeapon, int time)

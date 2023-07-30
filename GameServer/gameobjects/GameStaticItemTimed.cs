@@ -96,22 +96,20 @@ namespace DOL.GS
 		/// <summary>
 		/// The callback function that will remove this bag after some time
 		/// </summary>
-		protected class RemoveItemAction : AuxRegionECSAction
+		protected class RemoveItemAction : AuxECSGameTimerWrapperBase
 		{
 			/// <summary>
 			/// Constructs a new remove action
 			/// </summary>
 			/// <param name="item"></param>
-			public RemoveItemAction(GameStaticItemTimed item) : base(item)
-			{
-			}
+			public RemoveItemAction(GameStaticItemTimed item) : base(item) { }
 
 			/// <summary>
 			/// The callback function that will remove this bag after some time
 			/// </summary>
 			protected override int OnTick(AuxECSGameTimer timer)
 			{
-				GameStaticItem item = (GameStaticItem)m_actionSource;
+				GameStaticItem item = (GameStaticItem) timer.Owner;
 				//remove this object from the world after some time
 				item.Delete();
 				return 0;

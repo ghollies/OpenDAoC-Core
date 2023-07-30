@@ -43,24 +43,19 @@ namespace DOL.AI.Brain
         // Used for AmbientBehaviour "Seeing" - maintains a list of GamePlayer in range
         public List<GamePlayer> PlayersSeen = new List<GamePlayer>();
 
-        public new StandardMobFSM FSM { get; private set; }
-
         /// <summary>
         /// Constructs a new StandardMobBrain
         /// </summary>
         public StandardMobBrain() : base()
         {
-            AggroLevel = 0;
-            AggroRange = 0;
-
-            FSM = new StandardMobFSM();
-            FSM.Add(new StandardMobState_IDLE(FSM, this));
-            FSM.Add(new StandardMobState_WAKING_UP(FSM, this));
-            FSM.Add(new StandardMobState_AGGRO(FSM, this));
-            FSM.Add(new StandardMobState_RETURN_TO_SPAWN(FSM, this));
-            FSM.Add(new StandardMobState_PATROLLING(FSM, this));
-            FSM.Add(new StandardMobState_ROAMING(FSM, this));
-            FSM.Add(new StandardMobState_DEAD(FSM, this));
+            FSM = new FSM();
+            FSM.Add(new StandardMobState_IDLE(this));
+            FSM.Add(new StandardMobState_WAKING_UP(this));
+            FSM.Add(new StandardMobState_AGGRO(this));
+            FSM.Add(new StandardMobState_RETURN_TO_SPAWN(this));
+            FSM.Add(new StandardMobState_PATROLLING(this));
+            FSM.Add(new StandardMobState_ROAMING(this));
+            FSM.Add(new StandardMobState_DEAD(this));
 
             FSM.SetCurrentState(eFSMStateType.WAKING_UP);
         }
@@ -102,20 +97,14 @@ namespace DOL.AI.Brain
             FireAmbientSentence();
 
             // Check aggro only if our aggro list is empty and we're not in combat.
-            if (AggroRange > 0 && !HasAggro && !Body.AttackState && Body.CurrentSpellHandler == null)
+            if (AggroLevel > 0 && AggroRange > 0 && !HasAggro && !Body.AttackState && Body.CurrentSpellHandler == null)
             {
-                // Don't check aggro if we spawned less than X seconds ago. This is to prevent clients from sending positive LoS check
-                // when they shouldn't, which can happen right after 'SendNPCCreate' and makes mobs aggro through walls.
-                // TODO: Find a way to delay the first tick of 'Think()' instead.
-                if (GameLoop.GameLoopTime - Body.SpawnTick < 1250)
-                    return false;
-
                 CheckPlayerAggro();
                 CheckNPCAggro();
             }
 
-            // Some calls rely on this method to return if there's something in the aggro list, not necesarilly to perform a proximity aggro check.
-            // But this doesn't necessarily return wheter or not the check was positive, only the current state (LoS checks take time).
+            // Some calls rely on this method to return if there's something in the aggro list, not necessarily to perform a proximity aggro check.
+            // But this doesn't necessarily return whether or not the check was positive, only the current state (LoS checks take time).
             return HasAggro;
         }
 
@@ -484,7 +473,9 @@ namespace DOL.AI.Brain
 
             if (Body.TargetObject != null)
             {
-                if (!CheckSpells(eCheckSpellType.Offensive))
+                if (CheckSpells(eCheckSpellType.Offensive))
+                    Body.StopAttack();
+                else
                     Body.StartAttack(Body.TargetObject);
             }
         }
@@ -626,8 +617,9 @@ namespace DOL.AI.Brain
         protected virtual void OnFollowLostTarget(GameObject target)
         {
             AttackMostWanted();
+
             if (!Body.attackComponent.AttackState)
-                Body.ReturnToSpawnPoint();
+                Body.ReturnToSpawnPoint(NpcMovementComponent.DEFAULT_WALK_SPEED);
         }
 
 		public virtual void OnAttackedByEnemy(AttackData ad)
@@ -646,7 +638,7 @@ namespace DOL.AI.Brain
 				// Ensure that non damaging hits still result in the mob reacting.
 				ConvertDamageToAggroAmount(ad.Attacker, Math.Max(1, damage));
 				FSM.SetCurrentState(eFSMStateType.AGGRO);
-				FSM.Think();
+				Think();
 			}
 			else if (damage > 0)
 				ConvertDamageToAggroAmount(ad.Attacker, damage);
@@ -987,8 +979,8 @@ namespace DOL.AI.Brain
 
             // clear current target, set target based on spell type, cast spell, return target to original target
             GameObject lastTarget = Body.TargetObject;
-
             Body.TargetObject = null;
+
             switch (spell.SpellType)
             {
                 #region Buffs
@@ -1174,7 +1166,6 @@ namespace DOL.AI.Brain
                 casted = Body.CastSpell(spell, m_mobSpellLine);
 
             Body.TargetObject = lastTarget;
-
             return casted;
         }
 
@@ -1188,24 +1179,22 @@ namespace DOL.AI.Brain
 
             bool casted = false;
 
-            if (Body.TargetObject is GameLiving living && (spell.Duration == 0 || (!LivingHasEffect(living,spell) || spell.SpellType == eSpellType.DirectDamageWithDebuff || spell.SpellType == eSpellType.DamageSpeedDecrease)))
+            if (Body.TargetObject is GameLiving living && (spell.Duration == 0 || !LivingHasEffect(living,spell) || spell.SpellType == eSpellType.DirectDamageWithDebuff || spell.SpellType == eSpellType.DamageSpeedDecrease))
             {
-                // Offensive spells require the caster to be facing the target
                 if (Body.TargetObject != Body)
                     Body.TurnTo(Body.TargetObject);
 
                 casted = Body.CastSpell(spell, m_mobSpellLine);
 
-                // if (casted && spell.CastTime > 0 && Body.IsMoving)
-                //Stopfollowing if spell casted and the cast time > 0 (non-instant spells)
-                if (casted && spell.CastTime > 0)
-                    Body.StopFollowing();
-                //If instant cast and spell casted, and current follow target is not the target object, then switch follow target to current TargetObject
-                else if(casted && (spell.CastTime == 0 && Body.FollowTarget != Body.TargetObject))
+                if (casted)
                 {
-                    Body.Follow(Body.TargetObject, GameNPC.STICK_MINIMUM_RANGE, GameNPC.STICK_MAXIMUM_RANGE);
+                    if (spell.CastTime > 0)
+                        Body.StopFollowing();
+                    else if (Body.FollowTarget != Body.TargetObject)
+                        Body.Follow(Body.TargetObject, GameNPC.STICK_MINIMUM_RANGE, GameNPC.STICK_MAXIMUM_RANGE);
                 }
             }
+
             return casted;
         }
 
@@ -1343,9 +1332,9 @@ namespace DOL.AI.Brain
 
         public virtual void DetectDoor()
         {
-            ushort range = (ushort)((ThinkInterval / 800) * Body.CurrentWaypoint.MaxSpeed);
+            ushort range = (ushort) (ThinkInterval / 800 * Body.CurrentWaypoint.MaxSpeed);
 
-            foreach (GameDoorBase door in Body.CurrentRegion.GetDoorsInRadius(Body.X, Body.Y, Body.Z, range, false))
+            foreach (GameDoorBase door in Body.CurrentRegion.GetDoorsInRadius(Body, range, false))
             {
                 if (door is GameKeepDoor)
                 {

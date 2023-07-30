@@ -38,11 +38,11 @@ namespace DOL.AI.Brain
         {
             FSM.ClearStates();
 
-            FSM.Add(new NecromancerPetState_WAKING_UP(FSM, this));
-            FSM.Add(new NecromancerPetState_DEFENSIVE(FSM, this));
-            FSM.Add(new NecromancerPetState_AGGRO(FSM, this));
-            FSM.Add(new NecromancerPetState_PASSIVE(FSM, this));
-            FSM.Add(new StandardMobState_DEAD(FSM, this));
+            FSM.Add(new NecromancerPetState_WAKING_UP(this));
+            FSM.Add(new NecromancerPetState_DEFENSIVE(this));
+            FSM.Add(new NecromancerPetState_AGGRO(this));
+            FSM.Add(new NecromancerPetState_PASSIVE(this));
+            FSM.Add(new StandardMobState_DEAD(this));
 
             FSM.SetCurrentState(eFSMStateType.WAKING_UP);
         }
@@ -60,6 +60,50 @@ namespace DOL.AI.Brain
 
         #region Events
 
+        public void OnOwnerFinishPetSpellCast(Spell spell, SpellLine spellLine, GameLiving target)
+        {
+            bool hadQueuedSpells = false;
+
+            if (!m_spellQueue.IsEmpty)
+            {
+                MessageToOwner(LanguageMgr.GetTranslation((Owner as GamePlayer).Client.Account.Language, "AI.Brain.Necromancer.CastSpellAfterAction", Body.Name), eChatType.CT_System, Owner as GamePlayer);
+                hadQueuedSpells = true;
+            }
+
+            if (Body.attackComponent.AttackState || Body.IsCasting)
+            {
+                if (spell.IsInstantCast && !spell.IsHarmful)
+                    CastSpell(spell, spellLine, target, true);
+                else if (!spell.IsInstantCast)
+                    AddToSpellQueue(spell, spellLine, target);
+                else
+                    AddToAttackSpellQueue(spell, spellLine, target);
+            }
+            else
+            {
+                if (spell.IsInstantCast)
+                    CastSpell(spell, spellLine, target, true);
+                else
+                    AddToSpellQueue(spell, spellLine, target);
+            }
+
+            // Immediately cast if this was the first spell added.
+            if (hadQueuedSpells == false && !Body.IsCasting)
+                CheckSpellQueue();
+        }
+
+        public void OnPetBeginCast(Spell spell, SpellLine spellLine)
+        {
+            DebugMessageToOwner($"Now casting '{spell}'");
+
+            // This message is for spells from the spell queue only, so suppress it for insta cast buffs coming from the pet itself.
+            if (spellLine.Name != NecromancerPet.PetInstaSpellLine)
+            {
+                Owner.Notify(GameLivingEvent.CastStarting, Body, new CastingEventArgs(Body.CurrentSpellHandler));
+                MessageToOwner(LanguageMgr.GetTranslation((Owner as GamePlayer).Client.Account.Language, "AI.Brain.Necromancer.PetCastingSpell", Body.Name), eChatType.CT_System, Owner as GamePlayer);
+            }
+        }
+
         /// <summary>
         /// Process events.
         /// </summary>
@@ -67,39 +111,7 @@ namespace DOL.AI.Brain
         {
             base.Notify(e, sender, args);
 
-            if (e == GameNPCEvent.PetSpell)
-            {
-                PetSpellEventArgs petSpell = (PetSpellEventArgs)args;
-                bool hadQueuedSpells = false;
-
-                if (!m_spellQueue.IsEmpty)
-                {
-                    MessageToOwner(LanguageMgr.GetTranslation((Owner as GamePlayer).Client.Account.Language, "AI.Brain.Necromancer.CastSpellAfterAction", Body.Name), eChatType.CT_System, Owner as GamePlayer);
-                    hadQueuedSpells = true;
-                }
-
-                if (Body.attackComponent.AttackState || Body.IsCasting)
-                {
-                    if (petSpell.Spell.IsInstantCast && !petSpell.Spell.IsHarmful)
-                        CastSpell(petSpell.Spell, petSpell.SpellLine, petSpell.Target, true);
-                    else if (!petSpell.Spell.IsInstantCast)
-                        AddToSpellQueue(petSpell.Spell, petSpell.SpellLine, petSpell.Target);
-                    else
-                        AddToAttackSpellQueue(petSpell.Spell, petSpell.SpellLine, petSpell.Target);
-                }
-                else
-                {
-                    if (petSpell.Spell.IsInstantCast)
-                        CastSpell(petSpell.Spell, petSpell.SpellLine, petSpell.Target, true);
-                    else
-                        AddToSpellQueue(petSpell.Spell, petSpell.SpellLine, petSpell.Target);
-                }
-
-                // Immediately cast if this was the first spell added.
-                if (hadQueuedSpells == false && !Body.IsCasting)
-                    CheckSpellQueue();
-            }
-            else if (e == GameLivingEvent.Dying)
+            if (e == GameLivingEvent.Dying)
             {
                 // At necropet Die, we check DamageRvRMemory for transfer it to owner if necessary.
                 GamePlayer playerowner = GetPlayerOwner();
@@ -156,29 +168,6 @@ namespace DOL.AI.Brain
                         break;
                 }
             }
-            else if (e == GameLivingEvent.CastSucceeded)
-            {
-                // The spell will cast.
-                PetSpellEventArgs spellArgs = args as PetSpellEventArgs;
-                SpellLine spellLine = spellArgs.SpellLine;
-
-                if (spellArgs != null && spellArgs.Spell != null)
-                    DebugMessageToOwner(string.Format("Now casting '{0}'", spellArgs.Spell.Name));
-
-                // This message is for spells from the spell queue only, so suppress
-                // it for insta cast buffs coming from the pet itself.
-                if (spellLine.Name != NecromancerPet.PetInstaSpellLine)
-                {
-                    Owner.Notify(GameLivingEvent.CastStarting, Body, new CastingEventArgs(Body.CurrentSpellHandler));
-                    MessageToOwner(LanguageMgr.GetTranslation((Owner as GamePlayer).Client.Account.Language, "AI.Brain.Necromancer.PetCastingSpell", Body.Name), eChatType.CT_System, Owner as GamePlayer);
-                }
-            }
-            else if (e == GameNPCEvent.SwitchedTarget && sender == Body.TargetObject && sender is GameNPC && !(sender as GameNPC).IsCrowdControlled)
-            {
-                // Target has started attacking someone else.
-                if (Body.EffectList.GetOfType<TauntEffect>() != null)
-                    (Body as NecromancerPet).Taunt();
-            }
             else if (e == GameLivingEvent.AttackFinished)
                 Owner.Notify(GameLivingEvent.AttackFinished, Owner, args);
         }
@@ -198,8 +187,10 @@ namespace DOL.AI.Brain
                     shadeEffect.SetTetherTimer(seconds);
                 }
 
-                ArrayList effectList = new(1);
-                effectList.Add(shadeEffect);
+                ArrayList effectList = new(1)
+                {
+                    shadeEffect
+                };
 
                 int effectsCount = 1;
 
@@ -484,11 +475,7 @@ namespace DOL.AI.Brain
                 Interval = 1000;
 
                 if (m_seconds > 0)
-                {
-                    m_pet.Brain.Notify(GameNPCEvent.OutOfTetherRange, this, 
-                        new TetherEventArgs(m_seconds));
                     m_seconds -= 1;
-                }
                 else
                 {
                     Stop();

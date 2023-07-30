@@ -5,6 +5,10 @@ namespace DOL.GS
 {
     public class MovementComponent
     {
+        private const int SUBZONE_RELOCATION_CHECK_INTERVAL = 500;
+
+        private long _lastSubZoneRelocationCheckTick;
+        private Point3D _positionDuringLastSubZoneRelocationCheck = new();
         private int _turningDisabledCount;
         private AuxECSGameTimer _resetHeadingAction;
 
@@ -34,7 +38,16 @@ namespace DOL.GS
                 return new MovementComponent(gameLiving);
         }
 
-        public virtual void Tick(long tick) { }
+        public virtual void Tick(long tick)
+        {
+            // Check for subzone relocation only if we're moving.
+            if (!Owner.IsWithinRadius(_positionDuringLastSubZoneRelocationCheck, 0) && _lastSubZoneRelocationCheckTick + SUBZONE_RELOCATION_CHECK_INTERVAL < tick)
+            {
+                _lastSubZoneRelocationCheckTick = tick;
+                _positionDuringLastSubZoneRelocationCheck = new Point3D(Owner.X, Owner.Y, Owner.Z);
+                Owner.SubZoneObject.CheckForRelocation();
+            }
+        }
 
         public virtual void DisableTurning(bool add)
         {
@@ -97,7 +110,7 @@ namespace DOL.GS
             TickSpeedZ = z;
         }
 
-        private class ResetHeadingAction : AuxRegionECSAction
+        private class ResetHeadingAction : AuxECSGameTimerWrapperBase
         {
             private MovementComponent _movementComponent;
             private ushort _oldHeading;

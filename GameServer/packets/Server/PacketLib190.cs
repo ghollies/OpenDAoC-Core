@@ -352,9 +352,6 @@ namespace DOL.GS.PacketHandler
 
 				SendUDP(pak);
 			}
-
-			// Update Cache
-			m_gameClient.GameObjectUpdateArray[new Tuple<ushort, ushort>(player.CurrentRegionID, (ushort)player.ObjectID)] = GameLoop.GetCurrentTime();
 		}
 	}
 }

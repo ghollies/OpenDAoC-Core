@@ -16,10 +16,9 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using System.Collections;
-using System.Linq;
-using System.Threading.Tasks;
 using DOL.Database;
 using DOL.Events;
 using DOL.Language;
@@ -46,6 +45,8 @@ namespace DOL.GS
 			get { return m_respawnInterval; }
 			set	{ m_respawnInterval = value; }
 		}
+
+		public override eGameObjectType GameObjectType => eGameObjectType.ITEM;
 
 		/// <summary>
 		/// Constructs a new GameStaticItem
@@ -330,13 +331,12 @@ namespace DOL.GS
 		/// <returns>true when created</returns>
 		public override bool AddToWorld()
 		{
-			if(!base.AddToWorld()) return false;
-			// foreach(GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
+			if (!base.AddToWorld())
+				return false;
 			
-			Parallel.ForEach(GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-			{
+			foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 				player.Out.SendObjectCreate(this);
-			});
+
 			return true;
 		}
 

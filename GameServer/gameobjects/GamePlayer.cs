@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -58,6 +59,7 @@ namespace DOL.GS
 
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        public override eGameObjectType GameObjectType => eGameObjectType.PLAYER;
         private readonly object m_LockObject = new object();
         public int Regen { get; set; }
         public int Endchant { get; set; }
@@ -69,7 +71,7 @@ namespace DOL.GS
         public double NonCombatNonSprintRegen { get; set; }
         public double CombatRegen { get; set; }
         public double SpecLock { get; set; }
-        public EntityManagerId EntityManagerId { get; set; } = new();
+        public EntityManagerId EntityManagerId { get; set; } = new(EntityManager.EntityType.Player, false);
         public long LastWorldUpdate { get; set; }
 
         public ECSGameTimer EnduRegenTimer { get { return m_enduRegenerationTimer; } }
@@ -376,35 +378,9 @@ namespace DOL.GS
             set { m_wasmovedbycorpsesummoner = value; }
         }
 
-        #region DoorCache
-        protected Dictionary<int, eDoorState> m_doorUpdateList = null;
-
-        protected ushort m_doorUpdateRegionID;
-
-        /// <summary>
-        /// Send a door state to this client
-        /// </summary>
-        /// <param name="door">the door</param>
-        /// <param name="forceUpdate">force a send of the door state regardless of status</param>
-        public void SendDoorUpdate(GameDoorBase door, bool forceUpdate = false)
-        {
-            Out.SendObjectCreate(door);
-
-            if (m_doorUpdateList == null || m_doorUpdateRegionID != CurrentRegionID)
-            {
-                m_doorUpdateList = new Dictionary<int,eDoorState>();
-                m_doorUpdateRegionID = CurrentRegionID;
-                m_doorUpdateList.Add(door.ObjectID, door.State);
-                Out.SendDoorState(CurrentRegion, door);
-            }
-            else if (forceUpdate || m_doorUpdateList.ContainsKey(door.ObjectID) == false || m_doorUpdateList[door.ObjectID] != door.State)
-            {
-                Out.SendDoorState(CurrentRegion, door);
-                m_doorUpdateList[door.ObjectID] = door.State;
-            }
-
-            Out.SendObjectUpdate(door);
-        }
+        #region Object Caches
+        public ConcurrentDictionary<GameObject, long>[] ObjectUpdateCaches { get; private set; } = new ConcurrentDictionary<GameObject, long>[Enum.GetValues(typeof(eGameObjectType)).Length];
+        public ConcurrentDictionary<House, long> HouseUpdateCache { get; private set; } = new();
         #endregion
 
         #region Database Accessor
@@ -1046,7 +1022,7 @@ namespace DOL.GS
                 IsOnHorse = false;
 
             GameEventMgr.RemoveAllHandlersForObject(m_inventory);
-            EntityManager.Remove(EntityManager.EntityType.Player, this);
+            EntityManager.Remove(this);
 
             if (CraftTimer != null)
             {
@@ -1093,7 +1069,7 @@ namespace DOL.GS
 
             // Dinberg: this will eventually need to be changed so that it moves them to the location they TP'ed in.
             // DamienOphyr: Overwrite current position with Bind position in database, MoveTo() is inoperant
-            if (CurrentRegion.IsInstance)
+            if (CurrentRegion?.IsInstance == true)
             {
                 DBCharacter.Region = BindRegion;
                 DBCharacter.Xpos = BindXpos;
@@ -5195,7 +5171,7 @@ namespace DOL.GS
 
             int numCurrentLoyalDays = this.TempProperties.getProperty<int>(CURRENT_LOYALTY_KEY);
             //check for cached loyalty days, and grab value if needed
-            if (numCurrentLoyalDays == null || numCurrentLoyalDays == 0)
+            if (numCurrentLoyalDays == 0)
             {
                 AccountXRealmLoyalty realmLoyalty = DOLDB<AccountXRealmLoyalty>.SelectObject(DB.Column("AccountID").IsEqualTo(this.Client.Account.ObjectId).And(DB.Column("Realm").IsEqualTo(this.Realm)));
                 if (realmLoyalty == null)
@@ -12477,23 +12453,20 @@ namespace DOL.GS
         /// <summary>
         /// Uncovers the player if a mob is too close
         /// </summary>
-        protected class UncoverStealthAction : RegionECSAction
+        protected class UncoverStealthAction : ECSGameTimerWrapperBase
         {
             /// <summary>
             /// Constructs a new uncover stealth action
             /// </summary>
             /// <param name="actionSource">The action source</param>
-            public UncoverStealthAction(GamePlayer actionSource)
-                : base(actionSource)
-            {
-            }
+            public UncoverStealthAction(GamePlayer actionSource) : base(actionSource) { }
 
             /// <summary>
             /// Called on every timer tick
             /// </summary>
             protected override int OnTick(ECSGameTimer timer)
             {
-                GamePlayer player = (GamePlayer)m_actionSource;
+                GamePlayer player = (GamePlayer) timer.Owner;
 
                 if (player.Client.Account.PrivLevel > 1)
                     return 0;
@@ -13972,7 +13945,7 @@ namespace DOL.GS
         /// <summary>
         /// The timer to call invulnerability expired callbacks
         /// </summary>
-        protected class InvulnerabilityTimer : RegionECSAction
+        protected class InvulnerabilityTimer : ECSGameTimerWrapperBase
         {
             /// <summary>
             /// Defines a logger for this class.
@@ -13989,8 +13962,7 @@ namespace DOL.GS
             /// </summary>
             /// <param name="actionSource"></param>
             /// <param name="callback"></param>
-            public InvulnerabilityTimer(GamePlayer actionSource, InvulnerabilityExpiredCallback callback)
-                : base(actionSource)
+            public InvulnerabilityTimer(GamePlayer actionSource, InvulnerabilityExpiredCallback callback) : base(actionSource)
             {
                 if (callback == null)
                     throw new ArgumentNullException("callback");
@@ -14004,7 +13976,7 @@ namespace DOL.GS
             {
                 try
                 {
-                    m_callback((GamePlayer)m_actionSource);
+                    m_callback((GamePlayer) timer.Owner);
                 }
                 catch (Exception e)
                 {
@@ -15215,11 +15187,6 @@ namespace DOL.GS
             m_client = client;
             m_dbCharacter = dbChar;
             m_controlledHorse = new ControlledHorse(this);
-            m_buff1Bonus = new PropertyIndexer((int)eProperty.MaxProperty); // set up a fixed indexer for players
-            m_buff2Bonus = new PropertyIndexer((int)eProperty.MaxProperty);
-            m_debuffBonus = new PropertyIndexer((int)eProperty.MaxProperty);
-            m_buff4Bonus = new PropertyIndexer((int)eProperty.MaxProperty);
-            m_itemBonus = new PropertyIndexer((int)eProperty.MaxProperty);
             m_lastUniqueLocations = new GameLocation[4];
             m_canFly = false;
 
@@ -15238,7 +15205,11 @@ namespace DOL.GS
 
             LoadFromDatabase(dbChar);
             CreateStatistics();
-            EntityManager.Add(EntityManager.EntityType.Player, this);
+
+            for (int i = 0; i < ObjectUpdateCaches.Length; i++)
+                ObjectUpdateCaches[i] = new();
+
+            EntityManager.Add(this);
 
             m_combatTimer = new ECSGameTimer(this, new ECSGameTimer.ECSTimerCallback(_ =>
             {

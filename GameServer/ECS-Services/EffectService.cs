@@ -17,35 +17,42 @@ namespace DOL.GS
     public static class EffectService
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string SERVICE_NAME = "EffectService";
+        private const string SERVICE_NAME = nameof(EffectService);
 
         public static void Tick()
         {
             GameLoop.CurrentServiceTick = SERVICE_NAME;
             Diagnostics.StartPerfCounter(SERVICE_NAME);
 
-            List<ECSGameEffect> list = EntityManager.UpdateAndGetAll<ECSGameEffect>(EntityManager.EntityType.Effect, out int lastNonNullIndex);
+            List<ECSGameEffect> list = EntityManager.UpdateAndGetAll<ECSGameEffect>(EntityManager.EntityType.Effect, out int lastValidIndex);
 
-            Parallel.For(0, lastNonNullIndex + 1, i =>
+            Parallel.For(0, lastValidIndex + 1, i =>
             {
                 ECSGameEffect effect = list[i];
 
-                if (effect == null)
-                    return;
+                try
+                {
+                    if (effect?.EntityManagerId.IsSet != true)
+                        return;
 
-                long startTick = GameLoop.GetCurrentTime();
+                    long startTick = GameLoop.GetCurrentTime();
 
-                if (effect.CancelEffect || effect.IsDisabled)
-                    HandleCancelEffect(effect);
-                else
-                    HandlePropertyModification(effect);
+                    if (effect.CancelEffect || effect.IsDisabled)
+                        HandleCancelEffect(effect);
+                    else
+                        HandlePropertyModification(effect);
 
-                EntityManager.Remove(EntityManager.EntityType.Effect, effect);
+                    EntityManager.Remove(effect);
 
-                long stopTick = GameLoop.GetCurrentTime();
+                    long stopTick = GameLoop.GetCurrentTime();
 
-                if ((stopTick - startTick) > 25 )
-                    log.Warn($"Long EffectService.Tick for Effect: {effect}  Owner: {effect.OwnerName} Time: {stopTick - startTick}ms");
+                    if (stopTick - startTick > 25)
+                        log.Warn($"Long {SERVICE_NAME}.{nameof(Tick)} for Effect: {effect}  Owner: {effect.OwnerName} Time: {stopTick - startTick}ms");
+                }
+                catch (Exception e)
+                {
+                    ServiceUtils.HandleServiceException(e, SERVICE_NAME, effect, effect.Owner);
+                }
             });
 
             Diagnostics.StopPerfCounter(SERVICE_NAME);
@@ -279,7 +286,7 @@ namespace DOL.GS
 
             effect.CancelEffect = true;
             effect.ExpireTick = GameLoop.GameLoopTime - 1;
-            EntityManager.Add(EntityManager.EntityType.Effect, effect);
+            EntityManager.Add(effect);
         }
 
         /// <summary>
@@ -378,10 +385,8 @@ namespace DOL.GS
                 else
                     target = e.Owner;
 
-                Parallel.ForEach(e.Owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-                {
+                foreach (GamePlayer player in e.Owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
                     player.Out.SendSpellEffectAnimation(spellHandler.Caster, target, spell.ClientEffect, 0, false, 1);
-                });
             }
         }
 
@@ -616,10 +621,8 @@ namespace DOL.GS
             if (e is null)
                 return;
 
-            Parallel.ForEach(e.Owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-            {
+            foreach (GamePlayer player in e.Owner.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
                 player.Out.SendSpellEffectAnimation(e.SpellHandler.Caster, e.Owner, e.SpellHandler.Spell.ClientEffect, 0, false, 0);
-            });
         }
 
         private static void SendPlayerUpdates(GamePlayer player)

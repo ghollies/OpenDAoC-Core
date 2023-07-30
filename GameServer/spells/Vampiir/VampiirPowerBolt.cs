@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using DOL.GS.PacketHandler;
 
@@ -65,13 +66,12 @@ namespace DOL.GS.Spells
 			base.FinishSpellCast(target);
 		}
 
-		protected class BoltOnTargetAction : RegionECSAction
+		protected class BoltOnTargetAction : ECSGameTimerWrapperBase
 		{
 			protected readonly GameLiving m_boltTarget;
 			protected readonly VampiirBoltSpellHandler m_handler;
 
-			public BoltOnTargetAction(GameLiving actionSource, GameLiving boltTarget, VampiirBoltSpellHandler spellHandler)
-				: base(actionSource)
+			public BoltOnTargetAction(GameLiving actionSource, GameLiving boltTarget, VampiirBoltSpellHandler spellHandler) : base(actionSource)
 			{
 				if (boltTarget == null)
 					throw new ArgumentNullException("boltTarget");
@@ -84,18 +84,19 @@ namespace DOL.GS.Spells
 			protected override int OnTick(ECSGameTimer timer)
 			{
 				GameLiving target = m_boltTarget;
-				GameLiving caster = (GameLiving)m_actionSource;
+				GameLiving caster = (GameLiving) timer.Owner;
+
 				if (target == null || target.CurrentRegionID != caster.CurrentRegionID || target.ObjectState != GameObject.eObjectState.Active || !target.IsAlive)
 					return 0;
 
-				int power = 0;
+				int power ;
 
 				if (target is GameNPC || target.Mana > 0)
 				{
 					if (target is GameNPC)
-						power = (int)Math.Round(((double)(target.Level) * (double)(m_handler.Spell.Value) * 2) / 100);
+						power = (int) Math.Round(target.Level * (double) m_handler.Spell.Value * 2 / 100);
 					else 
-						power = (int)Math.Round((double)(target.MaxMana) * (((double)m_handler.Spell.Value) / 250));
+						power = (int) Math.Round(target.MaxMana * ((double) m_handler.Spell.Value / 250));
 
 					if (target.Mana < power)
 						power = target.Mana;

@@ -16,12 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using DOL.Database;
 using DOL.Events;
 using DOL.GS.Housing;
@@ -89,52 +89,25 @@ namespace DOL.GS
 			}
 		}
 
+		public abstract eGameObjectType GameObjectType { get; }
+
 		#endregion
 
 		#region Position
 
-		protected Region _currentRegion;
-		protected Zone _currentZone;
-		protected string _ownerID;
 		protected ushort _heading;
-		protected eRealm _realm;
 
-		public virtual eRealm Realm
-		{
-			get => _realm;
-			set => _realm = value;
-		}
-
-		public virtual Region CurrentRegion
-		{
-			get => _currentRegion;
-			set => _currentRegion = value;
-		}
-
-		public virtual string OwnerID
-		{
-			get => _ownerID;
-			set => _ownerID = value;
-		}
-
+		public virtual string OwnerID { get; set; }
+		public virtual eRealm Realm { get; set; }
+		public virtual Region CurrentRegion { get; set; }
 		public virtual ushort CurrentRegionID
 		{
-			get => _currentRegion == null ? (ushort) 0 : _currentRegion.ID;
+			get => CurrentRegion == null ? (ushort) 0 : CurrentRegion.ID;
 			set => CurrentRegion = WorldMgr.GetRegion(value);
 		}
-
-		public Zone CurrentZone
-		{
-			get
-			{
-				if (_currentZone == null && _currentRegion != null)
-					_currentZone = _currentRegion.GetZone(X, Y);
-
-				return _currentZone;
-			}
-			set => _currentZone = value;
-		}
-
+		// This is silly and needs to be changed. Some objects access 'CurrentZone' before they're added to the world.
+		public Zone CurrentZone => SubZoneObject?.CurrentSubZone?.ParentZone ?? CurrentRegion?.GetZone(X, Y);
+		public SubZoneObject SubZoneObject { get; set; }
 		public virtual ushort Heading
 		{
 			get => _heading;
@@ -287,24 +260,9 @@ namespace DOL.GS
 		/// </summary>
 		public virtual IList<IArea> CurrentAreas
 		{
-			get
-			{
-				List<IArea> areas = new List<IArea>();
-				try
-				{
-					if(CurrentZone != null) areas = CurrentZone.GetAreasOfSpot(this) as List<IArea>;
-				}
-				catch (Exception e)
-				{
-					log.Error($"Error encountered when querying current zone of {this.Name}: {e}");
-				}
-
-				return areas;
-			}
-			
+			get => CurrentZone.GetAreasOfSpot(this);
 			set { }
 		}
-
 
 		protected House m_currentHouse;
 		/// <summary>
@@ -741,14 +699,20 @@ namespace DOL.GS
 		/// <returns>true if object was created</returns>
 		public virtual bool AddToWorld()
 		{
-			Zone currentZone = CurrentZone;
-			if (currentZone == null || m_ObjectState == eObjectState.Active)
+			if (m_ObjectState == eObjectState.Active)
 				return false;
 
-			if (!_currentRegion.AddObject(this))
+			Zone zone = CurrentRegion.GetZone(X, Y);
+
+			if (zone == null)
+			{
+				log.Warn($"Couldn't find a zone for (Name: {Name}) (ID: {InternalID})");
+				return false;
+			}
+
+			if (!CurrentRegion.AddObject(this) || !zone.AddObject(this))
 				return false;
 
-			CurrentZone?.AddObjectToZone(this);
 			Notify(GameObjectEvent.AddToWorld, this);
 			ObjectState = eObjectState.Active;
 			m_spawnTick = GameLoop.GameLoopTime;
@@ -767,18 +731,16 @@ namespace DOL.GS
 		/// </summary>
 		public virtual bool RemoveFromWorld()
 		{
-			if (_currentRegion == null || ObjectState != eObjectState.Active)
+			if (CurrentRegion == null || ObjectState != eObjectState.Active)
 				return false;
 
 			Notify(GameObjectEvent.RemoveFromWorld, this);
 			ObjectState = eObjectState.Inactive;
 
-			Parallel.ForEach(GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE), player =>
-			{
+			foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 				player.Out.SendObjectRemove(this);
-			});
 
-			_currentRegion.RemoveObject(this);
+			CurrentRegion.RemoveObject(this);
 			return true;
 		}
 
@@ -825,7 +787,6 @@ namespace DOL.GS
 			m_z = z;
 			_heading = heading;
 			CurrentRegionID = regionID;
-			CurrentZone = newZone;
 			return AddToWorld();
 		}
 
@@ -1128,7 +1089,7 @@ namespace DOL.GS
 					}
 				}
 				else
-					return CurrentRegion.GetPlayersInRadius(X, Y, Z, radiusToCheck, ignoreZ);
+					return CurrentRegion.GetPlayersInRadius(this, radiusToCheck, ignoreZ);
 			}
 
 			return new();
@@ -1148,7 +1109,7 @@ namespace DOL.GS
 					}
 				}
 				else
-					return CurrentRegion.GetNPCsInRadius(X, Y, Z, radiusToCheck, ignoreZ);
+					return CurrentRegion.GetNPCsInRadius(this, radiusToCheck, ignoreZ);
 			}
 
 			return new();
@@ -1168,7 +1129,7 @@ namespace DOL.GS
 					}
 				}
 				else
-					return CurrentRegion.GetItemsInRadius(X, Y, Z, radiusToCheck);
+					return CurrentRegion.GetItemsInRadius(this, radiusToCheck);
 			}
 
 			return new();
@@ -1188,7 +1149,7 @@ namespace DOL.GS
 					}
 				}
 				else
-					return CurrentRegion.GetDoorsInRadius(X, Y, Z, radiusToCheck);
+					return CurrentRegion.GetDoorsInRadius(this, radiusToCheck);
 			}
 
 			return new();
@@ -1316,27 +1277,6 @@ namespace DOL.GS
             set { }
         }
 
-		#region Broadcast Utils
-
-		/// <summary>
-		/// Broadcasts the Object Update to all players around
-		/// </summary>
-		public virtual void BroadcastUpdate()
-		{
-			if (ObjectState != eObjectState.Active)
-				return;
-
-			foreach (GamePlayer player in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
-			{
-				if (player == null)
-					continue;
-				
-				player.Out.SendObjectUpdate(this);
-			}
-		}
-
-		#endregion
-
 		/// <summary>
 		/// Constructs a new empty GameObject
 		/// </summary>
@@ -1365,5 +1305,7 @@ namespace DOL.GS
 			else
 				return m_boat_ownerid;
 		}
+
+		public virtual void OnUpdateByPlayerService() { }
 	}
 }

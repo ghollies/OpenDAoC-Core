@@ -90,11 +90,11 @@ namespace DOL.AI.Brain
 
 			FSM.ClearStates();
 
-			FSM.Add(new ControlledNPCState_WAKING_UP(FSM, this));
-			FSM.Add(new ControlledNPCState_PASSIVE(FSM, this));
-			FSM.Add(new ControlledNPCState_DEFENSIVE(FSM, this));
-			FSM.Add(new ControlledNPCState_AGGRO(FSM, this));
-			FSM.Add(new StandardMobState_DEAD(FSM, this));
+			FSM.Add(new ControlledNPCState_WAKING_UP(this));
+			FSM.Add(new ControlledNPCState_PASSIVE(this));
+			FSM.Add(new ControlledNPCState_DEFENSIVE(this));
+			FSM.Add(new ControlledNPCState_AGGRO(this));
+			FSM.Add(new StandardMobState_DEAD(this));
 
 			FSM.SetCurrentState(eFSMStateType.WAKING_UP);
 		}
@@ -237,7 +237,7 @@ namespace DOL.AI.Brain
                     else if (m_tempX > 0 && m_tempY > 0 && m_tempZ > 0)
                     {
                         Body.StopFollowing();
-                        Body.WalkTo(m_tempX, m_tempY, m_tempZ, Body.MaxSpeed);
+                        Body.WalkTo(new Point3D(m_tempX, m_tempY, m_tempZ), Body.MaxSpeed);
                     }
                 }
             }
@@ -254,6 +254,9 @@ namespace DOL.AI.Brain
 				AggressionState = eAggressionState.Defensive;
 				UpdatePetWindow();
 			}
+
+			if (m_orderAttackTarget == target)
+				return;
 
 			m_orderAttackTarget = target as GameLiving;
 			FSM.SetCurrentState(eFSMStateType.AGGRO);
@@ -386,8 +389,6 @@ namespace DOL.AI.Brain
 
 			if (WalkState == eWalkState.Follow)
 				FollowOwner();
-
-			Body.TargetObject = null;
 
 			return true;
 		}
@@ -1054,7 +1055,7 @@ namespace DOL.AI.Brain
 				else if (m_tempX > 0 && m_tempY > 0 && m_tempZ > 0)
 				{
 					Body.StopFollowing();
-					Body.WalkTo(m_tempX, m_tempY, m_tempZ, Body.MaxSpeed);
+					Body.WalkTo(new Point3D(m_tempX, m_tempY, m_tempZ), Body.MaxSpeed);
 					// TODO: Should the cached position be cleared?
 				}
 			}

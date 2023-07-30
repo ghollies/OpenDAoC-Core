@@ -63,15 +63,25 @@ namespace DOL.GS.PacketHandler.Client.v168
 
 				// The rider and their steed are never at the exact same position (made worse by a high latency).
 				// So the radius is arbitrary and must not be too low to avoid spamming packets.
-				if (!rider.IsWithinRadius(steed, 500))
+				if (!rider.IsWithinRadius(steed, 1000))
 				{
 					rider.X = steed.X;
 					rider.Y = steed.Y;
 					rider.Z = steed.Z;
 					rider.Heading = steed.Heading;
 					rider.MovementStartTick = GameLoop.GameLoopTime;
-					rider.Out.SendPlayerJump(false);
-					rider.Out.SendObjectUpdate(steed);
+
+					// The client appears to get confused and teleports the player to the opposite edge of the current zone if we teleport it to a different one while it thinks it's still mounted.
+					// For this reason, we force it to dismount first.
+					if (rider.CurrentZone != steed.CurrentZone)
+					{
+						rider.Out.SendRiding(rider, steed, true);
+						rider.Out.SendPlayerJump(false);
+						rider.Out.SendRiding(rider, steed, false);
+					}
+					else
+						rider.Out.SendPlayerJump(false);
+
 					return;
 				}
 			}
@@ -761,16 +771,9 @@ namespace DOL.GS.PacketHandler.Client.v168
 
 			foreach (GamePlayer player in client.Player.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 			{
-				if (player == null)
+				if (player == null || player == client.Player)
 					continue;
-				//No position updates for ourselves
-				if (player == client.Player)
-				{
-					// Update Player Cache (Client sending Packet is admitting he's already having it)
-					player.Client.GameObjectUpdateArray[new Tuple<ushort, ushort>(client.Player.CurrentRegionID, (ushort)client.Player.ObjectID)] = GameLoop.GetCurrentTime();
-					continue;
-				}
-				//no position updates in different houses
+
 				if ((client.Player.InHouse || player.InHouse) && player.CurrentHouse != client.Player.CurrentHouse)
 					continue;
 
@@ -786,9 +789,6 @@ namespace DOL.GS.PacketHandler.Client.v168
 
 				if (!client.Player.IsStealthed || player.CanDetect(client.Player))
 				{
-					// Update Player Cache
-					player.Client.GameObjectUpdateArray[new Tuple<ushort, ushort>(client.Player.CurrentRegionID, (ushort)client.Player.ObjectID)] = GameLoop.GetCurrentTime();
-
 					//forward the position packet like normal!
 					if (player.Client.Version >= GameClient.eClientVersion.Version1124)
 						player.Out.SendUDP(outpak1124);
@@ -1330,24 +1330,14 @@ namespace DOL.GS.PacketHandler.Client.v168
 
 			foreach (GamePlayer player in client.Player.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 			{
-				if (player == null)
+				if (player == null || player == client.Player)
 					continue;
-				//No position updates for ourselves
-				if (player == client.Player)
-				{
-					// Update Player Cache (Client sending Packet is admitting he's already having it)
-					player.Client.GameObjectUpdateArray[new Tuple<ushort, ushort>(client.Player.CurrentRegionID, (ushort)client.Player.ObjectID)] = GameLoop.GetCurrentTime();
-					continue;
-				}
-				//no position updates in different houses
+
 				if ((client.Player.InHouse || player.InHouse) && player.CurrentHouse != client.Player.CurrentHouse)
 					continue;
 
 				if (!client.Player.IsStealthed || player.CanDetect(client.Player))
 				{
-					// Update Player Cache
-					player.Client.GameObjectUpdateArray[new Tuple<ushort, ushort>(client.Player.CurrentRegionID, (ushort)client.Player.ObjectID)] = GameLoop.GetCurrentTime();
-
 					if (player.Client.Version >= GameClient.eClientVersion.Version1127)
 						player.Out.SendUDP(outpak1127);
 					else if (player.Client.Version >= GameClient.eClientVersion.Version1124)

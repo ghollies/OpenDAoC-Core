@@ -16,13 +16,12 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
-using System;
+
 using System.Collections;
 using System.Collections.Specialized;
 using DOL.GS.Effects;
-using DOL.GS.PropertyCalc;
-using System.Reflection;
 using DOL.GS.PacketHandler;
+using DOL.GS.PropertyCalc;
 
 namespace DOL.GS.Spells
 {
@@ -157,7 +156,7 @@ namespace DOL.GS.Spells
 		/// <summary>
 		/// Checks effect owner distance and cancels the effect if too far
 		/// </summary>
-		private sealed class RangeCheckAction : RegionECSAction
+		private sealed class RangeCheckAction : ECSGameTimerWrapperBase
 		{
 			/// <summary>
 			/// The list of effects
@@ -180,7 +179,8 @@ namespace DOL.GS.Spells
 			protected override int OnTick(ECSGameTimer timer)
 			{
 				IDictionary effects = m_handler.m_concEffects;
-				GameLiving caster = (GameLiving)m_actionSource;
+				GameLiving caster = (GameLiving) timer.Owner;
+
 				lock (effects)
 				{
 					if (effects.Count <= 0)

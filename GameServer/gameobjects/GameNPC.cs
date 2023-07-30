@@ -53,6 +53,7 @@ namespace DOL.GS
 
 		private int m_databaseLevel;
 
+		public override eGameObjectType GameObjectType => eGameObjectType.NPC;
 		public bool NeedsBroadcastUpdate { get; set; }
 
 		#region Formations/Spacing
@@ -862,7 +863,7 @@ namespace DOL.GS
 		/// The Mob's max distance from its spawn before return automatically
 		/// if MaxDistance > 0 ... the amount is the normal value
 		/// if MaxDistance = 0 ... no maxdistance check
-		/// if MaxDistance less than 0 ... the amount is calculated in procent of the value and the aggrorange (in StandardMobBrain)
+		/// if MaxDistance less than 0 ... the amount is calculated in percent of the value and the aggrorange (in StandardMobBrain)
 		/// </summary>
 		public int MaxDistance
 		{
@@ -939,11 +940,6 @@ namespace DOL.GS
 		public bool IsAtTargetPosition => movementComponent.IsAtTargetPosition;
 		public bool CanRoam => movementComponent.CanRoam;
 
-		public virtual void WalkTo(int x, int y, int z, short speed)
-		{
-			movementComponent.WalkTo(new Point3D(x, y, z), speed);
-		}
-
 		public virtual void WalkTo(IPoint3D target, short speed)
 		{
 			movementComponent.WalkTo(target, speed);
@@ -959,11 +955,6 @@ namespace DOL.GS
 			movementComponent.StopMoving();
 		}
 
-		public virtual void Follow(GameObject target)
-		{
-			movementComponent.Follow(target);
-		}
-
 		public virtual void Follow(GameObject target, int minDistance, int maxDistance)
 		{
 			movementComponent.Follow(target, minDistance, maxDistance);
@@ -972,11 +963,6 @@ namespace DOL.GS
 		public virtual void StopFollowing()
 		{
 			movementComponent.StopFollowing();
-		}
-
-		public virtual void MoveOnPath()
-		{
-			movementComponent.MoveOnPath();
 		}
 
 		public virtual void MoveOnPath(short speed)
@@ -989,11 +975,6 @@ namespace DOL.GS
 			movementComponent.StopMovingOnPath();
 		}
 
-		public virtual void ReturnToSpawnPoint()
-		{
-			movementComponent.ReturnToSpawnPoint();
-		}
-
 		public virtual void ReturnToSpawnPoint(short speed)
 		{
 			movementComponent.ReturnToSpawnPoint(speed);
@@ -1002,11 +983,6 @@ namespace DOL.GS
 		public virtual void CancelReturnToSpawnPoint()
 		{
 			movementComponent.CancelReturnToSpawnPoint();
-		}
-
-		public virtual void Roam()
-		{
-			movementComponent.Roam();
 		}
 
 		public virtual void Roam(short speed)
@@ -1853,10 +1829,11 @@ namespace DOL.GS
 				return false;
 
 			rider.MoveTo(CurrentRegionID, X, Y, Z, Heading);
-
-			Notify(GameNPCEvent.RiderMount, this, new RiderMountEventArgs(rider, this));
 			int slot = GetFreeArrayLocation();
-			if(slot == -1) return false; //full
+
+			if (slot == -1)
+				return false; //full
+
 			Riders[slot] = rider;
 			rider.Steed = this;
 			return true;
@@ -1881,9 +1858,6 @@ namespace DOL.GS
 			if (Riders[slot] != null)
 				return false;
 
-			//rider.MoveTo(CurrentRegionID, X, Y, Z, Heading);
-
-			Notify(GameNPCEvent.RiderMount, this, new RiderMountEventArgs(rider, this));
 			Riders[slot] = rider;
 			rider.Steed = this;
 			return true;
@@ -1904,15 +1878,12 @@ namespace DOL.GS
 				return false;
 
 			int slot = RiderArrayLocation(player);
+
 			if (slot < 0)
-			{
 				return false;
-			}
+
 			Riders[slot] = null;
-
-			Notify(GameNPCEvent.RiderDismount, this, new RiderDismountEventArgs(player, this));
 			player.Steed = null;
-
 			return true;
 		}
 
@@ -2006,18 +1977,12 @@ namespace DOL.GS
 
 		#region Add/Remove/Create/Remove/Update
 
-		/// <summary>
-		/// callback that npc was updated to the world
-		/// so it must be visible to at least one player
-		/// </summary>
-		public void NPCUpdatedCallback()
+		public override void OnUpdateByPlayerService()
 		{
 			m_lastVisibleToPlayerTick = GameLoop.GameLoopTime;
 
-			lock (BrainSync)
-			{
-				Brain?.Start();
-			}
+			if (Brain != null && !Brain.EntityManagerId.IsSet)
+				Brain.Start();
 		}
 
 		/// <summary>
@@ -2055,10 +2020,7 @@ namespace DOL.GS
 			m_spawnPoint.Z = Z;
 			m_spawnHeading = Heading;
 
-			lock (BrainSync)
-			{
-				Brain?.Start();
-			}
+			Brain?.Start();
 
 			if (Mana <= 0 && MaxMana > 0)
 				Mana = MaxMana;
@@ -2134,11 +2096,7 @@ namespace DOL.GS
 			if (!base.RemoveFromWorld())
 				return false;
 
-			lock (BrainSync)
-			{
-				Brain.Stop();
-			}
-
+			Brain.Stop();
 			EffectList.CancelAll();
 
 			if (ShowTeleporterIndicator && m_teleporterIndicator != null)
@@ -2239,11 +2197,7 @@ namespace DOL.GS
 				}
 			}
 
-			lock (BrainSync)
-			{
-				Brain.Stop();
-			}
-
+			Brain.Stop();
 			StopFollowing();
 			TempProperties.removeProperty(CHARMED_TICK_PROP);
 			base.Delete();
@@ -2262,19 +2216,6 @@ namespace DOL.GS
 		/// Holds the all added to this npc brains
 		/// </summary>
 		private ArrayList m_brains = new ArrayList(1);
-
-		/// <summary>
-		/// The sync object for brain changes
-		/// </summary>
-		private readonly object m_brainSync = new object();
-
-		/// <summary>
-		/// Gets the brain sync object
-		/// </summary>
-		public object BrainSync
-		{
-			get { return m_brainSync; }
-		}
 
 		/// <summary>
 		/// Gets the current brain of this NPC
@@ -2302,19 +2243,16 @@ namespace DOL.GS
 			if (brain.IsActive)
 				throw new ArgumentException("The new brain is already active.", "brain");
 
-			lock (BrainSync)
-			{
-				ABrain oldBrain = m_ownBrain;
-				bool activate = oldBrain.IsActive;
-				if (activate)
-					oldBrain.Stop();
-				m_ownBrain = brain;
-				m_ownBrain.Body = this;
-				if (activate)
-					m_ownBrain.Start();
+			ABrain oldBrain = m_ownBrain;
+			bool activate = oldBrain.IsActive;
+			if (activate)
+				oldBrain.Stop();
+			m_ownBrain = brain;
+			m_ownBrain.Body = this;
+			if (activate)
+				m_ownBrain.Start();
 
-				return oldBrain;
-			}
+			return oldBrain;
 		}
 
 		/// <summary>
@@ -2328,15 +2266,12 @@ namespace DOL.GS
 			if (newBrain.IsActive)
 				throw new ArgumentException("The new brain is already active.", "newBrain");
 
-			lock (BrainSync)
-			{
-				Brain.Stop();
-				ArrayList brains = new ArrayList(m_brains);
-				brains.Add(newBrain);
-				m_brains = brains; // make new array list to avoid locks in the Brain property
-				newBrain.Body = this;
-				newBrain.Start();
-			}
+			Brain.Stop();
+			ArrayList brains = new ArrayList(m_brains);
+			brains.Add(newBrain);
+			m_brains = brains; // make new array list to avoid locks in the Brain property
+			newBrain.Body = this;
+			newBrain.Start();
 		}
 
 		/// <summary>
@@ -2352,25 +2287,22 @@ namespace DOL.GS
 				return false;
 			}
 
-			lock (BrainSync)
+			ArrayList brains = new ArrayList(m_brains);
+			int index = brains.IndexOf(removeBrain);
+			if (index < 0)
 			{
-				ArrayList brains = new ArrayList(m_brains);
-				int index = brains.IndexOf(removeBrain);
-				if (index < 0)
-				{
-					//Console.WriteLine("Brain index < 0");
-					return false;
-				}
-				bool active = brains[index] == Brain;
-				if (active)
-					removeBrain.Stop();
-				brains.RemoveAt(index);
-				m_brains = brains;
-				if (active)
-					Brain.Start();
-
-				return true;
+				//Console.WriteLine("Brain index < 0");
+				return false;
 			}
+			bool active = brains[index] == Brain;
+			if (active)
+				removeBrain.Stop();
+			brains.RemoveAt(index);
+			m_brains = brains;
+			if (active)
+				Brain.Start();
+
+			return true;
 		}
 		#endregion
 
@@ -2809,7 +2741,7 @@ namespace DOL.GS
 			if (FollowTarget != target)
 			{
 				StopFollowing();
-				Follow(target);
+				Follow(target, movementComponent.FollowMinDistance, movementComponent.FollowMaxDistance);
 			}
 
 			FireAmbientSentence(eAmbientTrigger.fighting, target);
@@ -2985,7 +2917,7 @@ namespace DOL.GS
 					Diagnostics.StopPerfCounter($"ReaperService-NPC-ProcessDeath-AreaMessages-NPC({hashCode})");
 				}
 
-				StopFollowing();
+				StopMoving();
 
 				if (Group != null)
 					Group.RemoveMember(this);
@@ -3327,9 +3259,7 @@ namespace DOL.GS
 		/// <returns>the new interval</returns>
 		protected virtual int RespawnTimerCallback(AuxECSGameTimer respawnTimer)
 		{
-			int dummy;
-			// remove Mob from "respawning"
-			CurrentRegion.MobsRespawning.TryRemove(this, out dummy);
+			CurrentRegion.MobsRespawning.TryRemove(this, out _);
 
 			lock (m_respawnTimerLock)
 			{
@@ -3340,11 +3270,9 @@ namespace DOL.GS
 				}
 			}
 
-			//DOLConsole.WriteLine("respawn");
-			//TODO some real respawn handling
-			if (IsAlive) return 0;
-			if (ObjectState == eObjectState.Active) return 0;
-			
+			if (IsAlive || ObjectState == eObjectState.Active)
+				return 0;
+
 			/*
 			if (m_level >= 5 && m_databaseLevel < 60)
 			{
@@ -3353,22 +3281,26 @@ namespace DOL.GS
 				this.Level = (byte)  Util.Random(minBound, maxBound);
 			}*/
 
-			//Heal this mob, move it to the spawnlocation
+			SpawnTick = GameLoop.GameLoopTime;
+
+			// Heal this NPC and move it to the spawn location.
 			Health = MaxHealth;
 			Mana = MaxMana;
 			Endurance = MaxEndurance;
+
 			int origSpawnX = m_spawnPoint.X;
 			int origSpawnY = m_spawnPoint.Y;
-			//X=(m_spawnX+Random(750)-350); //new SpawnX = oldSpawn +- 350 coords
-			//Y=(m_spawnY+Random(750)-350);	//new SpawnX = oldSpawn +- 350 coords
 			X = m_spawnPoint.X;
 			Y = m_spawnPoint.Y;
 			Z = m_spawnPoint.Z;
 			Heading = m_spawnHeading;
-			SpawnTick = GameLoop.GameLoopTime;
 			AddToWorld();
 			m_spawnPoint.X = origSpawnX;
 			m_spawnPoint.Y = origSpawnY;
+
+			// Delay the first think tick a bit to prevent clients from sending positive LoS check
+			// when they shouldn't, which can happen right after 'SendNPCCreate' and makes mobs aggro through walls.
+			Brain.LastThinkTick = GameLoop.GameLoopTime + 1250;
 			return 0;
 		}
 
@@ -3716,8 +3648,9 @@ namespace DOL.GS
 
 		#region Spell
 
-		private List<Spell> m_spells = new List<Spell>(0);
-		private ConcurrentDictionary<GameObject, Tuple<Spell, SpellLine, long>> m_spellTargetLosChecks = new();
+		private List<Spell> m_spells = new(0);
+		private ConcurrentDictionary<GameObject, (Spell, SpellLine, long)> m_castSpellLosChecks = new();
+		private bool m_spellCastedFromLosCheck;
 
 		/// <summary>
 		/// property of spell array of NPC
@@ -3944,12 +3877,12 @@ namespace DOL.GS
 		{
 			// Good opportunity to clean up our 'm_spellTargetLosChecks'.
 			// Entries older than 3 seconds are removed, so that another check can be performed in case the previous one never was.
-			for (int i = m_spellTargetLosChecks.Count - 1 ; i >= 0 ; i--)
+			for (int i = m_castSpellLosChecks.Count - 1; i >= 0; i--)
 			{
-				var element = m_spellTargetLosChecks.ElementAt(i);
+				var element = m_castSpellLosChecks.ElementAt(i);
 
 				if (GameLoop.GameLoopTime - element.Value.Item3 >= 3000)
-					m_spellTargetLosChecks.TryRemove(element.Key, out _);
+					m_castSpellLosChecks.TryRemove(element.Key, out _);
 			}
 
 			if (IsIncapacitated)
@@ -3960,7 +3893,7 @@ namespace DOL.GS
 			if (line.KeyName == GlobalSpellsLines.Mob_Spells)
 			{
 				// NPC spells will get the level equal to their caster
-				spellToCast = (Spell)spell.Clone();
+				spellToCast = (Spell) spell.Clone();
 				spellToCast.Level = Level;
 			}
 			else
@@ -3992,13 +3925,18 @@ namespace DOL.GS
 			if (LosChecker == null)
 				return base.CastSpell(spellToCast, line);
 
-			if (m_spellTargetLosChecks.TryAdd(TargetObject, new Tuple<Spell, SpellLine, long>(spellToCast, line, GameLoop.GameLoopTime)))
-				LosChecker.Out.SendCheckLOS(this, TargetObject, new CheckLOSResponse(StartSpellAttackCheckLos));
+			bool spellCastedFromLosCheck = m_spellCastedFromLosCheck;
 
-			return false;
+			if (spellCastedFromLosCheck)
+				m_spellCastedFromLosCheck = false;
+
+			if (m_castSpellLosChecks.TryAdd(TargetObject, new(spellToCast, line, GameLoop.GameLoopTime)))
+				LosChecker.Out.SendCheckLOS(this, TargetObject, new CheckLOSResponse(CastSpellLosCheckReply));
+
+			return spellCastedFromLosCheck;
 		}
 
-		public void StartSpellAttackCheckLos(GamePlayer player, ushort response, ushort targetOID)
+		public void CastSpellLosCheckReply(GamePlayer player, ushort response, ushort targetOID)
 		{
 			if (targetOID == 0)
 				return;
@@ -4008,7 +3946,7 @@ namespace DOL.GS
 			if (target == null)
 				return;
 
-			if (m_spellTargetLosChecks.TryRemove(target, out Tuple<Spell, SpellLine, long> value))
+			if (m_castSpellLosChecks.TryRemove(target, out (Spell, SpellLine, long) value))
 			{
 				Spell spell = value.Item1;
 				SpellLine line = value.Item2;
@@ -4018,10 +3956,13 @@ namespace DOL.GS
 					if (target is GameLiving livingTarget && livingTarget.EffectList.GetOfType<NecromancerShadeEffect>() != null)
 						target = livingTarget.ControlledBrain?.Body;
 
-					CastSpell(spell, line, target as GameLiving);
+					m_spellCastedFromLosCheck = CastSpell(spell, line, target as GameLiving);
 				}
 				else
+				{
+					m_spellCastedFromLosCheck = false;
 					Notify(GameLivingEvent.CastFailed, this, new CastFailedEventArgs(null, CastFailedEventArgs.Reasons.TargetNotInView));
+				}
 			}
 		}
 
@@ -4361,7 +4302,7 @@ namespace DOL.GS
 			{
 				case "b": // Broadcast message without "[Broadcast] {0}:" string start
 				{
-					foreach (GamePlayer player in CurrentRegion.GetPlayersInRadius(X, Y, Z, 25000, false))
+					foreach (GamePlayer player in CurrentRegion.GetPlayersInRadius(this, 25000, false))
 					{
 					  player.Out.SendMessage(text, eChatType.CT_Broadcast, eChatLoc.CL_ChatWindow);
 					}
@@ -4636,17 +4577,16 @@ namespace DOL.GS
 
 			Level = 1;
 			m_health = MaxHealth;
-			_realm = 0;
+			Realm = 0;
 			m_name = "new mob";
 			m_model = 408;
 			MaxSpeedBase = 200;
 			GuildName = "";
-			m_brainSync = m_brains.SyncRoot;
 			m_size = 50;
 			m_flags = 0;
 			m_maxdistance = 0;
 			RoamingRange = 0;
-			_ownerID = "";
+			OwnerID = "";
 			m_spawnPoint = new Point3D();
 			LinkedFactions = new ArrayList(1);
 

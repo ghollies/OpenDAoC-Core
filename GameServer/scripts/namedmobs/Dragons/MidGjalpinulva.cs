@@ -195,11 +195,10 @@ namespace DOL.GS
 		}
         public override void ReturnToSpawnPoint(short speed)
         {
-			speed = 400;
 			if (MidGjalpinulvaBrain.IsRestless)
 				return;
-			else
-				base.ReturnToSpawnPoint(speed);
+
+			base.ReturnToSpawnPoint(speed);
         }
         public override void StartAttack(GameObject target)
         {
@@ -442,7 +441,7 @@ namespace DOL.AI.Brain
 			if (!ResetChecks && _lastRoamIndex >= _roamingPathPoints.Count)
 			{
 				IsRestless = false;//can roam again
-				Body.ReturnToSpawnPoint();//move dragon to spawn so he can attack again
+				Body.ReturnToSpawnPoint(400);//move dragon to spawn so he can attack again
 				Body.Flags = 0; //remove all flags
 				_lastRoamIndex = 0;
 				ResetChecks = true;//do it only once
@@ -502,12 +501,12 @@ namespace DOL.AI.Brain
 				short speed = 350;
 				
 				if (Body.IsWithinRadius(_roamingPathPoints[_lastRoamIndex], 100))
-				{
 					_lastRoamIndex++;
-				}
 
-				if(_lastRoamIndex >= _roamingPathPoints.Count) Body.ReturnToSpawnPoint();
-				else if(!Body.IsMoving) Body.WalkTo(_roamingPathPoints[_lastRoamIndex], speed);
+				if(_lastRoamIndex >= _roamingPathPoints.Count)
+					Body.ReturnToSpawnPoint(400);
+				else if(!Body.IsMoving)
+					Body.WalkTo(_roamingPathPoints[_lastRoamIndex], speed);
             }
         }
 
@@ -1012,15 +1011,15 @@ namespace DOL.GS
 {
 	public class GjalpinulvaMessenger : GameNPC
 	{
+		public override bool IsVisibleToPlayers => true;
+
 		public override int MaxHealth
 		{
 			get { return 1500; }
 		}
-		public override void ReturnToSpawnPoint()
+		public override void ReturnToSpawnPoint(short speed)
 		{
-			if (IsAlive)
-				return;
-			base.ReturnToSpawnPoint();
+			return;
 		}
 		public override int GetResist(eDamageType damageType)
 		{
@@ -1082,6 +1081,7 @@ namespace DOL.AI.Brain
 			AggroLevel = 100;
 			AggroRange = 500;
 		}
+
 		private protected bool ChoosePath = false;
 		private protected bool ChoosePath1 = false;
 		private protected bool ChoosePath2 = false;
@@ -1326,6 +1326,8 @@ namespace DOL.GS
 {
 	public class GjalpinulvaSpawnedAdd : GameNPC
 	{
+		public override bool IsVisibleToPlayers => true;
+
 		public GjalpinulvaSpawnedAdd() : base() { }
 
 		public override int GetResist(eDamageType damageType)
@@ -1354,11 +1356,9 @@ namespace DOL.GS
 		public override void DropLoot(GameObject killer) //no loot
 		{
 		}
-		public override void ReturnToSpawnPoint()
+		public override void ReturnToSpawnPoint(short speed)
 		{
-			if (IsAlive)
-				return;
-			base.ReturnToSpawnPoint();
+			return;
 		}
 		public override long ExperienceValue => 0;
 		public override int MaxHealth
@@ -1397,7 +1397,6 @@ namespace DOL.GS
 			base.AddToWorld();
 			return true;
 		}
-        public override bool IsVisibleToPlayers => true;
     }
 }
 namespace DOL.AI.Brain
@@ -1405,20 +1404,14 @@ namespace DOL.AI.Brain
 	public class GjalpinulvaSpawnedAdBrain : StandardMobBrain
 	{
 		private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-		public GjalpinulvaSpawnedAdBrain()
-			: base()
+
+		public GjalpinulvaSpawnedAdBrain() : base()
 		{
 			AggroLevel = 100;
 			AggroRange = 1000;
 			ThinkInterval = 1500;
 		}
-        public override bool Start()
-        {
-			if (Body.IsAlive)
-				return true;
 
-            return base.Start();
-        }
         public override void Think()
 		{
 			if (Body.PackageID == "ChoosePath1" && !Body.InCombat && !HasAggro)

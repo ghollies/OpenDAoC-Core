@@ -10,36 +10,36 @@ namespace DOL.GS
     public class AuxTimerService
     {
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private const string SERVICE_NAME = "AuxTimerService";
+        private const string SERVICE_NAME = nameof(AuxTimerService);
 
         public static void Tick(long tick)
         {
             // Diagnostics.StartPerfCounter(SERVICE_NAME);
 
-            List<AuxECSGameTimer> list = EntityManager.UpdateAndGetAll<AuxECSGameTimer>(EntityManager.EntityType.AuxTimer, out int lastNonNullIndex);
+            List<AuxECSGameTimer> list = EntityManager.UpdateAndGetAll<AuxECSGameTimer>(EntityManager.EntityType.AuxTimer, out int lastValidIndex);
 
-            Parallel.For(0, lastNonNullIndex + 1, i =>
+            Parallel.For(0, lastValidIndex + 1, i =>
             {
                 AuxECSGameTimer timer = list[i];
 
-                if (timer == null)
-                    return;
-
                 try
                 {
+                    if (timer?.EntityManagerId.IsSet != true)
+                        return;
+
                     if (timer.NextTick < tick)
                     {
                         long startTick = GameLoop.GetCurrentTime();
                         timer.Tick();
                         long stopTick = GameLoop.GetCurrentTime();
 
-                        if ((stopTick - startTick) > 25)
-                            log.Warn($"Long AuxTimerService.Tick for Timer Callback: {timer.Callback?.Method?.DeclaringType}:{timer.Callback?.Method?.Name}  Owner: {timer.TimerOwner?.Name} Time: {stopTick - startTick}ms");
+                        if (stopTick - startTick > 25)
+                            log.Warn($"Long {SERVICE_NAME}.{nameof(Tick)} for Timer Callback: {timer.Callback?.Method?.DeclaringType}:{timer.Callback?.Method?.Name}  Owner: {timer.Owner?.Name} Time: {stopTick - startTick}ms");
                     }
                 }
                 catch (Exception e)
                 {
-                    log.Error($"Critical error encountered in AuxTimerService: {e}");
+                    ServiceUtils.HandleServiceException(e, SERVICE_NAME, timer, timer.Owner);
                 }
             });
 
@@ -54,30 +54,30 @@ namespace DOL.GS
         /// </summary>
         public delegate int AuxECSTimerCallback(AuxECSGameTimer timer);
 
-        public GameObject TimerOwner { get; set; }
+        public GameObject Owner { get; set; }
         public AuxECSTimerCallback Callback { get; set; }
         public int Interval { get; set; }
         public long StartTick { get; set; }
         public long NextTick => StartTick + Interval;
         public bool IsAlive { get; set; }
         public int TimeUntilElapsed => (int) (StartTick + Interval - GameLoop.GameLoopTime);
-        public EntityManagerId EntityManagerId { get; set; } = new();
+        public EntityManagerId EntityManagerId { get; set; } = new(EntityManager.EntityType.AuxTimer, false);
         private PropertyCollection _properties;
 
-        public AuxECSGameTimer(GameObject target)
+        public AuxECSGameTimer(GameObject owner)
         {
-            TimerOwner = target;
+            Owner = owner;
         }
 
-        public AuxECSGameTimer(GameObject target, AuxECSTimerCallback callback)
+        public AuxECSGameTimer(GameObject owner, AuxECSTimerCallback callback)
         {
-            TimerOwner = target;
+            Owner = owner;
             Callback = callback;
         }
 
-        public AuxECSGameTimer(GameObject target, AuxECSTimerCallback callback, int interval)
+        public AuxECSGameTimer(GameObject owner, AuxECSTimerCallback callback, int interval)
         {
-            TimerOwner = target;
+            Owner = owner;
             Callback = callback;
             Interval = interval;
             Start();
@@ -94,13 +94,13 @@ namespace DOL.GS
             StartTick = AuxGameLoop.GameLoopTime;
             Interval = interval;
 
-            if (EntityManager.Add(EntityManager.EntityType.AuxTimer, this))
+            if (EntityManager.Add(this))
                 IsAlive = true;
         }
 
         public void Stop()
         {
-            if (EntityManager.Remove(EntityManager.EntityType.AuxTimer, this))
+            if (EntityManager.Remove(this))
                IsAlive = false;
         }
 
@@ -135,5 +135,16 @@ namespace DOL.GS
                 return _properties;
             }
         }
+    }
+
+    public abstract class AuxECSGameTimerWrapperBase : AuxECSGameTimer
+    {
+        public AuxECSGameTimerWrapperBase(GameObject owner) : base(owner)
+        {
+            Owner = owner;
+            Callback = new AuxECSTimerCallback(OnTick);
+        }
+
+        protected abstract int OnTick(AuxECSGameTimer timer);
     }
 }

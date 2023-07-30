@@ -1,13 +1,7 @@
-/*
-Hamar
-<author>Kelt</author>
- */
 using System;
-using System.Collections.Generic;
-using System.Text;
+using DOL.AI.Brain;
 using DOL.Database;
 using DOL.Events;
-using DOL.AI.Brain;
 using DOL.GS.PacketHandler;
 using DOL.GS.Scripts.DOL.AI.Brain;
 
@@ -105,32 +99,17 @@ namespace DOL.GS.Scripts
 		/// Return to spawn point, Hamar can't be attacked while it's
 		/// on it's way.
 		/// </summary>
-		public override void ReturnToSpawnPoint()
+		public override void ReturnToSpawnPoint(short speed)
 		{
-			EvadeChance = 100;
-			ReturnToSpawnPoint(MaxSpeed);
+			base.ReturnToSpawnPoint(MaxSpeed);
 		}
 
 		public override void OnAttackedByEnemy(AttackData ad)
 		{
-			if (EvadeChance == 100)
+			if (IsReturningToSpawnPoint)
 				return;
 
 			base.OnAttackedByEnemy(ad);
-		}
-		
-		/// <summary>
-		/// Handle event notifications.
-		/// </summary>
-		/// <param name="e">The event that occured.</param>
-		/// <param name="sender">The sender of the event.</param>
-		public override void Notify(DOLEvent e, object sender)
-		{
-			base.Notify(e, sender);
-			
-			// When Hamar arrives at its spawn point, make it vulnerable again.
-			if (e == GameNPCEvent.ArriveAtTarget)
-				EvadeChance = 0;
 		}
 
 		[ScriptLoadedEvent]
@@ -142,8 +121,8 @@ namespace DOL.GS.Scripts
 	}
 
 	namespace DOL.AI.Brain
-	{
-		public class HamarBrain : StandardMobBrain
+    {
+        public class HamarBrain : StandardMobBrain
 		{
 			private bool _startAttack = true;
 			public HamarBrain() : base()
