@@ -34,7 +34,7 @@ namespace DOL.GS.RealmAbilities
             m_dbspell.PulsePower = 0;
             m_dbspell.Power = 0;
             m_dbspell.CastTime = 0;
-			m_dbspell.EffectGroup = 99999; // stacks with other damage adds
+			m_dbspell.EffectGroup = 0; // stacks with other damage adds
             m_dbspell.Range = 1000;
             m_spell = new Spell(m_dbspell, 0); // make spell level 0 so it bypasses the spec level adjustment code
             m_spellline = new SpellLine("RAs", "RealmAbilities", "RealmAbilities", true);

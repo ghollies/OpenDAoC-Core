@@ -55,7 +55,7 @@ namespace DOL.GS
 
                         // RAs use spells with an ID of 0. Differentiating them is tricky and requires some rewriting.
                         // So for now let's prevent overwriting / coexistence altogether.
-                        if (newSpell.ID == 0)
+                        if (newSpell.ID == 0 && newSpell.SpellType != eSpellType.DamageAdd)
                             return false;
 
                         List<ECSGameSpellEffect> existingEffects = existingGameEffects.Cast<ECSGameSpellEffect>().ToList();
