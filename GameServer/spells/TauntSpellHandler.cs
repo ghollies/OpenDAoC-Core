@@ -86,17 +86,20 @@ namespace DOL.GS.Spells
 		public override void DamageTarget(AttackData ad, bool showEffectAnimation, int attackResult)
 		{
 			base.DamageTarget(ad, showEffectAnimation, attackResult);
-
-			if (ad.Target is GameNPC && Spell.Value > 0)
+			bool success = false;
+			if (ad.Target is GameNPC npc && Spell.Value > 0)
 			{
 				IOldAggressiveBrain aggroBrain = ((GameNPC)ad.Target).Brain as IOldAggressiveBrain;
 				if (aggroBrain != null)
 				{
-					// this amount is a wild guess - Tolakram
-					aggroBrain.AddToAggroList(Caster, Math.Max(1, (int)(Spell.Value * Caster.Level * 0.1)));
+					success = true;
+					aggroBrain.AddToAggroList(Caster, Math.Max(1, (int)(Spell.Value)));
 					//log.DebugFormat("Damage: {0}, Taunt Value: {1}, Taunt Amount {2}", ad.Damage, Spell.Value, Math.Max(1, (int)(Spell.Value * Caster.Level * 0.1)));
+					if(Caster is GamePlayer p) p.Out.SendMessage($"{npc.Name} becomes enraged at you!", eChatType.CT_Spell, eChatLoc.CL_SystemWindow);
 				}
 			}
+			
+			if(!success && Caster is GamePlayer pl) pl.Out.SendMessage($"Your shout has no effect on {ad.Target.Name}!", eChatType.CT_Spell, eChatLoc.CL_SystemWindow);
 
 			m_lastAttackData = ad;
 		}
