@@ -2284,23 +2284,43 @@ namespace DOL.GS
 					EffectService.RequestImmediateCancelEffect(effects[i]);
 				}
             }
+            ECSGameEffect sosEffect = EffectListService.GetEffectOnTarget(this, eEffect.SpeedOfSound);
+			if(sosEffect != null)
+			{
+				EffectListService.TryCancelFirstEffectOfTypeOnTarget(this, eEffect.SpeedOfSound);
+            }
 
-			if (this is GameNPC npc && npc.Brain is ControlledNpcBrain || this is GameSummonedPet)
+            if (this is GameNPC npc && npc.Brain is ControlledNpcBrain || this is GameSummonedPet)
             {
 				List<ECSGameSpellEffect> ownerEffects;
-				ControlledNpcBrain pBrain = (this as GameNPC).Brain as ControlledNpcBrain;
+				ECSGameEffect ownerSosEffect;
+                GameLiving owner;
+
+
+                ControlledNpcBrain pBrain = (this as GameNPC).Brain as ControlledNpcBrain;
 				GameSummonedPet pet = this as GameSummonedPet;
-
 				if (pBrain != null)
+				{
 					ownerEffects = pBrain.Owner.effectListComponent.GetSpellEffects(eEffect.MovementSpeedBuff);
+					ownerSosEffect = EffectListService.GetEffectOnTarget(pBrain.Owner, eEffect.SpeedOfSound);
+					owner = pBrain.Owner;
+				}
 				else
+				{
 					ownerEffects = pet.Owner.effectListComponent.GetSpellEffects(eEffect.MovementSpeedBuff);
+					ownerSosEffect = EffectListService.GetEffectOnTarget(pet.Owner, eEffect.SpeedOfSound);
+                    owner = pet.Owner;
+                }
 
-				for (int i = 0; i < ownerEffects.Count; i++)
+                for (int i = 0; i < ownerEffects.Count; i++)
 				{
 					if (isAttacker || ownerEffects[i] is not ECSGameSpellEffect spellEffect || spellEffect.SpellHandler.Spell.Target != "Self")
 						EffectService.RequestImmediateCancelEffect(ownerEffects[i]);
-				}				
+				}
+                if (ownerSosEffect != null)
+                {
+                    EffectListService.TryCancelFirstEffectOfTypeOnTarget(owner, eEffect.SpeedOfSound);
+                }
             }
         }
 
