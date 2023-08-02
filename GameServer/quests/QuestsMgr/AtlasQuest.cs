@@ -1,6 +1,6 @@
 using DOL.Database;
 
-namespace DOL.GS.Quests
+namespace DOL.GS.Quests;
 
 /*
 {
