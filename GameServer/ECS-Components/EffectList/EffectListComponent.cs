@@ -191,11 +191,13 @@ namespace DOL.GS
                                         // New Effect is better than the current enabled effect so disable the current Effect and add the new effect.
                                         if (newSpell.Value > existingSpell.Value || newSpell.Damage > existingSpell.Damage)
                                         {
+                                            /*
                                             if (newSpell.IsHelpful&& (newSpellHandler.Caster != existingSpellHandler.Caster
                                                 || newSpellHandler.SpellLine.KeyName == GlobalSpellsLines.Potions_Effects
                                                 || existingSpellHandler.SpellLine.KeyName == GlobalSpellsLines.Potions_Effects))
                                                 EffectService.RequestDisableEffect(existingEffect);
                                             else
+                                            */
                                                 EffectService.RequestCancelEffect(existingEffect);
 
                                             addEffect = true;
@@ -204,6 +206,7 @@ namespace DOL.GS
                                         // New Effect is not as good as current effect, but it can be added in a disabled state.
                                         else
                                         {
+                                            /*
                                             if (newSpell.IsHelpful && (newSpellHandler.Caster != existingSpellHandler.Caster
                                                 || newSpellHandler.SpellLine.KeyName == GlobalSpellsLines.Potions_Effects
                                                 || existingSpellHandler.SpellLine.KeyName == GlobalSpellsLines.Potions_Effects))
@@ -211,7 +214,8 @@ namespace DOL.GS
                                                 addEffect = true;
                                                 newSpellEffect.IsDisabled = true;
                                                 break;
-                                            }
+                                            }*/
+                                            //we dont want to do this on a server with shears
                                         }
                                     }
                                 }
