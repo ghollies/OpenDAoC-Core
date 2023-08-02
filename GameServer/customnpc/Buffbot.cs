@@ -287,8 +287,8 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "StrengthBuff";
 					spell.PackageID = "BuffBotSpells";
-                    GameServer.Database.AddObject(spell);
                     spell.EffectGroup = 4;
+                    GameServer.Database.AddObject(spell);
                     m_basestr = new Spell(spell, 50);
                 }
                 return m_basestr;
@@ -319,6 +319,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "ConstitutionBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 201;
                     GameServer.Database.AddObject(spell);
                     m_basecon = new Spell(spell, 50);
                 }
@@ -350,6 +351,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "DexterityBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 202;
                     GameServer.Database.AddObject(spell);
                     m_basedex = new Spell(spell, 50);
                 }
@@ -381,6 +383,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "StrengthConstitutionBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 204;
                     GameServer.Database.AddObject(spell);
                     m_strcon = new Spell(spell, 50);
                 }
@@ -412,6 +415,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "DexterityQuicknessBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 203;
                     GameServer.Database.AddObject(spell);
                     m_dexqui = new Spell(spell, 50);
                 }
@@ -443,6 +447,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "AcuityBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 200;
                     GameServer.Database.AddObject(spell);
                     m_acuity = new Spell(spell, 50);
                 }
@@ -563,6 +568,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "CombatSpeedBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 100;
                     GameServer.Database.AddObject(spell);
                     m_haste = new Spell(spell, 50);
                 }
@@ -594,6 +600,7 @@ namespace DOL.GS.Scripts
                     spell.Target = "Realm";
                     spell.Type = "HealthRegenBuff";
 					spell.PackageID = "BuffBotSpells";
+                    spell.EffectGroup = 70;
                     GameServer.Database.AddObject(spell);
                     m_hpRegen = new Spell(spell, 50);
                 }
