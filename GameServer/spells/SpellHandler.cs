@@ -1854,21 +1854,7 @@ namespace DOL.GS.Spells
 						{
 							if (GameServer.ServerRules.IsAllowedToAttack(Caster, player, true))
 							{
-								SelectiveBlindnessEffect SelectiveBlindness = Caster.EffectList.GetOfType<SelectiveBlindnessEffect>();
-
-								if (SelectiveBlindness != null)
-								{
-									GameLiving EffectOwner = SelectiveBlindness.EffectSource;
-									if (EffectOwner == player)
-									{
-										if (Caster is GamePlayer player1)
-											player1.Out.SendMessage(string.Format("{0} is invisible to you!", player.GetName(0, true)), eChatType.CT_Missed, eChatLoc.CL_SystemWindow);
-									}
-									else
-										aoePlayers.Add(player);
-								}
-								else
-									aoePlayers.Add(player);
+								aoePlayers.Add(player);
 							}
 						}
 
