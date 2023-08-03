@@ -268,7 +268,8 @@ public class Blacksmith : GameNPC
 
         var tax = NeededMoney * REPAIR_ALL_TAX;
 
-        return NeededMoney + (long) tax;
+        return 0;
+        //return NeededMoney + (long) tax;
     }
 
     private void RepairAll(GamePlayer player, byte response)
