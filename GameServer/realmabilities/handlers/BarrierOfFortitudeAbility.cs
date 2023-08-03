@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DOL.Database;
 using DOL.GS.Effects;
+using DOL.GS.PacketHandler;
 using DOL.GS.Spells;
 
 namespace DOL.GS.RealmAbilities
@@ -38,12 +40,8 @@ namespace DOL.GS.RealmAbilities
 
 				success = !playerInGroup.TempProperties.getProperty(BofBaSb, false);
 
-				SendCasterSpellEffect(playerInGroup, 7009, success);
-				SendCasterSpellEffect(playerInGroup, 1486, success);
-				SendCasterSpellEffect(playerInGroup, 10535, success);
-				
 				if (success)
-					new BunkerOfFaithECSEffect(new ECSGameEffectInitParams(playerInGroup, m_duration, GetAbsorbAmount(), CreateSpell(player)));
+					new BunkerOfFaithECSEffect(new ECSGameEffectInitParams(playerInGroup, m_duration, 1, CreateSpell(player)));
 			}
 
 			DisableSkill(player);
@@ -52,15 +50,15 @@ namespace DOL.GS.RealmAbilities
 		public virtual SpellHandler CreateSpell(GameLiving caster)
 		{
 			m_dbspell = new DBSpell();
-			m_dbspell.Name = "Bunker Of Faith";
-			m_dbspell.Icon = 7132;
-			m_dbspell.ClientEffect = 4242;
+			m_dbspell.Name = "Barrier of Fortitude";
+			m_dbspell.Icon = 7016;
+			m_dbspell.ClientEffect = 7016;
 			m_dbspell.Damage = 0;
 			m_dbspell.DamageType = 0;
 			m_dbspell.Target = "Group";
 			m_dbspell.Radius = 0;
 			m_dbspell.Type = eSpellType.ArmorAbsorptionBuff.ToString();
-			m_dbspell.Value = 50;
+			m_dbspell.Value = GetAbsorbAmount(Level);
 			m_dbspell.Duration = 30;
 			m_dbspell.Pulse = 0;
 			m_dbspell.PulsePower = 0;
@@ -77,25 +75,17 @@ namespace DOL.GS.RealmAbilities
 		private DBSpell m_dbspell;
 		private Spell m_spell = null;
 		private SpellLine m_spellline;
-		
-		private byte CastSuccess(bool success)
-		{
-			if (success)
-				return 1;
-			else
-				return 0;
-		}
 
 		public override int GetReUseDelay(int level)
 		{
 			return 600;
 		}
 
-        protected virtual int GetAbsorbAmount()
+        protected virtual int GetAbsorbAmount(int level)
         {
 			if (ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
             {
-                switch (Level)
+                switch (level)
                 {
                     case 1: return 10;
                     case 2: return 15;
@@ -106,7 +96,7 @@ namespace DOL.GS.RealmAbilities
             }
             else
             {
-                switch (Level)
+                switch (level)
                 {
                     case 1: return 10;
                     case 2: return 20;
@@ -114,6 +104,16 @@ namespace DOL.GS.RealmAbilities
                 }
             }
 			return 0;
+        }
+        
+        public override void AddDelve(ref MiniDelveWriter w, GamePlayer player)
+        {
+	        base.AddDelve(ref w, player);
+
+	        for (int i = 1; i <= MaxLevel; i++)
+	        {
+		        w.AddKeyValuePair(string.Format("Absorb Amount: {0}", i), GetAbsorbAmount(i));
+	        }
         }
     }
 }
