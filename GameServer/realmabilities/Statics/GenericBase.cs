@@ -45,8 +45,9 @@ namespace DOL.GS.RealmAbilities.Statics
 		}
 		protected virtual int PulseTimer(ECSGameTimer timer)
         {
-			if (currentTick >= m_lifeTime || m_caster == null) 
-            {
+			if (currentTick >= m_lifeTime || m_caster == null)
+			{
+				this.Model = 0;
 				this.RemoveFromWorld();
 				timer.Stop();
 				timer=null;
