@@ -78,8 +78,8 @@ namespace DOL.GS.RealmAbilities
         {
 	        DBSpell dbspell = new DBSpell();
 	        dbspell.Name = "The Empty Mind";
-	        dbspell.Icon = 7122;
-	        dbspell.ClientEffect = 7122;
+	        dbspell.Icon = 7008;
+	        dbspell.ClientEffect = 7008;
 	        dbspell.Damage = 0;
 	        dbspell.DamageType = 0;
 	        dbspell.Target = "Self";
