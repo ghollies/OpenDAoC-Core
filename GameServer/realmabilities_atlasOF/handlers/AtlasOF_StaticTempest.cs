@@ -8,8 +8,9 @@ namespace DOL.GS.RealmAbilities
     {
         public AtlasOF_StaticTempest(DBAbility dba, int level) : base(dba, level) { }
 
-        public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
-        public override int GetReUseDelay(int level) { return 1800; } // 30 mins
+        public override int MaxLevel { get { return 5; } }
+
+        public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetNewFrontier5LevelRACost(level); }
+        public override int GetReUseDelay(int level) { return 600; } // 10 mins
     }
 }

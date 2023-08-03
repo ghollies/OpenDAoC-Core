@@ -43,7 +43,6 @@ namespace DOL.GS.RealmAbilities
             }
             this.m_player = caster;
             
-            /*
             if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
             {
 	            switch (Level)
@@ -66,9 +65,7 @@ namespace DOL.GS.RealmAbilities
 	                default: return;
 	            }
             }
-            */
             
-            m_duration = 30;
             m_stunDuration = 3;
             foreach (GamePlayer i_player in caster.GetPlayersInRadius(WorldMgr.INFO_DISTANCE))
             {
