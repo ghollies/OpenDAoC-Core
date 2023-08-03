@@ -133,8 +133,8 @@ namespace DOL.GS
             int restorePoints = (int)Math.Min(player.TotalConstitutionLostAtDeath, player.GetCurrentMoney() / cost);
             if (restorePoints < 1)
                 restorePoints = 1; // Constitution reduced by 1 at minimum
-            long totalCost = restorePoints * cost; // Total cost to restore full Con lost
-            
+            //long totalCost = restorePoints * cost; // Total cost to restore full Con lost
+            long totalCost = 0;
             // Trigger if player has sufficient money to "donate"
             if (player.RemoveMoney(totalCost))
             {
