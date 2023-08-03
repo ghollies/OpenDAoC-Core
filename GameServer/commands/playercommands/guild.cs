@@ -141,7 +141,7 @@ namespace DOL.GS.Commands
 							ply.TempProperties.removeProperty("Guild_Consider");
 						}
 						player.Group.Leader.TempProperties.removeProperty("Guild_Name");
-						player.Group.Leader.RemoveMoney(GuildFormCost);
+						//player.Group.Leader.RemoveMoney(GuildFormCost);
 						player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "Scripts.Player.Guild.GuildCreated", guildname, player.Group.Leader.Name), eChatType.CT_Guild, eChatLoc.CL_SystemWindow);
 					}
 				}
@@ -1247,13 +1247,6 @@ namespace DOL.GS.Commands
 							if (GuildMgr.DoesGuildExist(guildname))
 							{
 								client.Out.SendMessage(LanguageMgr.GetTranslation(client.Account.Language, "Scripts.Player.Guild.GuildExists"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-								return;
-							}
-							#endregion
-							#region Enoguh money to form Check
-							if (client.Player.Group.Leader.GetCurrentMoney() < GuildFormCost)
-							{
-								client.Out.SendMessage("It cost 1 gold piece to create a guild", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 								return;
 							}
 							#endregion
@@ -2725,7 +2718,7 @@ namespace DOL.GS.Commands
 				player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "Scripts.Player.Guild.EmblemNeedNPC"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
 				return;
 			}
-			if (player.GetCurrentMoney() < GuildMgr.COST_RE_EMBLEM) //200 gold to re-emblem
+			if (false) //200 gold to re-emblem
 			{
 				player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "Scripts.Player.Guild.EmblemNeedGold"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
 				return;
