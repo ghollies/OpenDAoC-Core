@@ -22,8 +22,6 @@ namespace DOL.GS.RealmAbilities
 
         protected override int GetDuration() { return 45000; }
 
-        public override int CostForUpgrade(int currentLevel, GamePlayer player) { return AtlasRAHelpers.GetNewFrontier5LevelRACost(currentLevel);}
-
         protected override int GetEffectiveness()
         {
             switch (Level)

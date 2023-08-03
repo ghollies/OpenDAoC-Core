@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using DOL.Database;
 using DOL.GS;
 using DOL.GS.Spells;
@@ -43,6 +44,12 @@ namespace DOL.GS.RealmAbilities.Statics
             {
 				ISpellHandler stun = ScriptMgr.CreateSpellHandler(m_caster, s, sl);
 				stun.StartSpell(target);
+				var stunImmune = target.effectListComponent.GetAllEffects().FirstOrDefault(immunity =>
+					immunity is ECSImmunityEffect {EffectType: eEffect.Stun or eEffect.StunImmunity});
+				if (stunImmune != null)
+				{
+					EffectService.RequestCancelEffect(stunImmune);
+				}
 			}
 		}
 	}
