@@ -60,6 +60,19 @@ namespace DOL.GS.RealmAbilities
             }
         }
 
+        public static int GetNewFrontier5LevelRACost(int currentLevel)
+        {
+            switch (currentLevel)
+            {
+                case 1: return 5;
+                case 2: return 5;
+                case 3: return 5;
+                case 4: return 7;
+                case 5: return 8;
+                default: return 1000;
+            }
+        }
+
         
         /// <summary>
         /// Shared by almost all passive OF Realm Abilities.
