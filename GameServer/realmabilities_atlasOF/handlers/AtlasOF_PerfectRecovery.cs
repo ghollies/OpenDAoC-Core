@@ -18,9 +18,10 @@ namespace DOL.GS.RealmAbilities
         private bool LastTargetLetRequestExpire = false;
         private const string RESURRECT_CASTER_PROPERTY = "RESURRECT_CASTER";
 
-        public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
-        public override int GetReUseDelay(int level) { return 1800; } // 30 mins
+        public override int MaxLevel { get { return 5; } }
+
+        public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetNewFrontier5LevelRACost(level);}
+        public override int GetReUseDelay(int level) { return 900; } // 30 mins
 
         private void CreateRezSpell(GamePlayer caster)
         {
@@ -40,11 +41,24 @@ namespace DOL.GS.RealmAbilities
             m_dbspell.CastTime = 0;
             m_dbspell.EffectGroup = 0;
             m_dbspell.Range = 1500;
-            m_dbspell.RecastDelay = GetReUseDelay(0); // Spell code is responsible for disabling this ability and will use this value.
-            m_dbspell.ResurrectHealth = 100;
-            m_dbspell.ResurrectMana = 100;
+            m_dbspell.RecastDelay = GetReUseDelay(Level); // Spell code is responsible for disabling this ability and will use this value.
+            m_dbspell.ResurrectHealth = GetRezPotency(Level);
+            m_dbspell.ResurrectMana = GetRezPotency(Level);
             m_spell = new Spell(m_dbspell, caster.Level);
             m_spellline = new SpellLine("RAs", "RealmAbilities", "RealmAbilities", false);
+        }
+
+        private int GetRezPotency(int level)
+        {
+            switch (level)
+            {
+                case 1: return 10;
+                case 2: return 25;
+                case 3: return 50;
+                case 4: return 75;
+                case 5: return 100;
+                default: return 1;
+            }
         }
 
         public override void Execute(GameLiving living)
