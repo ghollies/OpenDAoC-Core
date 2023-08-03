@@ -30,12 +30,13 @@ namespace DOL.GS.PropertyCalc
 			int debuffMalus = Math.Abs(living.DebuffCategory[property]);
 			int itemBonus = living.ItemBonus[property];
 			int abilityBonus = living.AbilityBonus[property];
+			int RABonus = living.BuffBonusCategory4[property];
 			int hardCap = 50;
 			if (living is GameSummonedPet)
 			{
 				buffBonus += living.effectListComponent.GetAllEffects().Count(e => e is ECSGameSpellEffect spellEffect && spellEffect.SpellHandler.Spell.IsBuff) * 4;
 			}
-			return Math.Min(hardCap, (buffBonus - debuffMalus + itemBonus + abilityBonus));
+			return Math.Min(hardCap, (buffBonus - debuffMalus + itemBonus + abilityBonus + RABonus));
 		}
 	}
 }

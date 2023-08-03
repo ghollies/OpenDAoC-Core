@@ -1,4 +1,6 @@
 
+using System;
+
 namespace DOL.GS.Effects
 {
     public class SoldiersBarricadeECSEffect : ECSGameAbilityEffect
@@ -19,7 +21,8 @@ namespace DOL.GS.Effects
             if (OwnerPlayer == null)
                 return;
 
-            OwnerPlayer.BuffBonusCategory4[(int)eProperty.ArmorFactor] += (int)Effectiveness;
+            OwnerPlayer.BuffBonusCategory4[(int)eProperty.ArmorAbsorption] += (int)Effectiveness;
+            OwnerPlayer.BuffBonusCategory4[(int) eProperty.MagicAbsorption] += (int)this.Effectiveness;
             OwnerPlayer.Out.SendUpdateWeaponAndArmorStats();
         }
 
@@ -28,7 +31,8 @@ namespace DOL.GS.Effects
             if (OwnerPlayer == null)
                 return;
 
-            OwnerPlayer.BuffBonusCategory4[(int)eProperty.ArmorFactor] -= (int)Effectiveness;
+            OwnerPlayer.BuffBonusCategory4[(int)eProperty.ArmorAbsorption] -= (int)Effectiveness;
+            OwnerPlayer.BuffBonusCategory4[(int) eProperty.MagicAbsorption] -= (int)this.Effectiveness;
             OwnerPlayer.Out.SendUpdateWeaponAndArmorStats();
         }
     }
