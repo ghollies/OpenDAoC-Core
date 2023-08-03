@@ -2,7 +2,7 @@
 
 
 using System.Collections;
-
+using System.Linq;
 using DOL.Database;
 
 using DOL.GS;
@@ -142,11 +142,12 @@ namespace DOL.GS.Scripts
                     m_buffs.Enqueue(con);
                 }
                 //if the player has sickness it will be removed.
-                GameSpellEffect effect = SpellHandler.FindEffectOnTarget(player, "PveResurrectionIllness");
+                ECSGameEffect effect = player.effectListComponent.GetAllEffects()
+                    .FirstOrDefault(sick => sick is ResurrectionIllnessECSGameEffect);
                 if (effect != null)
                 {
-                    effect.Cancel(false);
-                    player.Out.SendMessage(GetName(0, false) + " cure your resurrection sickness.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
+                    player.effectListComponent.RemoveEffect(effect);
+                    player.Out.SendMessage(GetName(0, false) + " cures your resurrection sickness.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                 }
             }
             if (CurrentSpellHandler == null)
@@ -176,6 +177,21 @@ namespace DOL.GS.Scripts
                     spellHandler.StartSpell(target);
                 }
             }
+            if(target is GamePlayer p) SendPlayerUpdates(p);
+        }
+        
+        private static void SendPlayerUpdates(GamePlayer player)
+        {
+            if (player == null)
+                return;
+
+            player.Out.SendCharStatsUpdate();
+            player.Out.SendCharResistsUpdate();
+            player.Out.SendUpdateWeaponAndArmorStats();
+            player.UpdateEncumberance();
+            player.UpdatePlayerStatus();
+            player.Out.SendUpdatePlayer();
+            player.Group?.UpdateMember(player, true, false);
         }
 
         #region SpellCasting
