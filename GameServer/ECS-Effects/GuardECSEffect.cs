@@ -7,11 +7,14 @@ namespace DOL.GS
 {
     public class GuardECSGameEffect : ECSGameAbilityEffect
     {
-        public GuardECSGameEffect(ECSGameEffectInitParams initParams, GameLiving guardSource, GameLiving guardTarget) : base(initParams)
+        public int GuardDistance = 256;
+        
+        public GuardECSGameEffect(ECSGameEffectInitParams initParams, GameLiving guardSource, GameLiving guardTarget, int distance = 256) : base(initParams)
         {
             m_guardSource = guardSource;
             m_guardTarget = guardTarget;
             EffectType = eEffect.Guard;
+            GuardDistance = distance;
             EffectService.RequestStartEffect(this);
         }
 
@@ -81,7 +84,7 @@ namespace DOL.GS
 
             if (Owner == GuardSource)
             {
-                if (!GuardSource.IsWithinRadius(GuardTarget, GuardAbilityHandler.GUARD_DISTANCE))
+                if (!GuardSource.IsWithinRadius(GuardTarget, GuardDistance))
                 {
                     playerSource?.Out.SendMessage(LanguageMgr.GetTranslation(playerSource.Client, "Effects.GuardEffect.YouAreNowGuardingYBut", GuardTarget.GetName(0, false)), eChatType.CT_System, eChatLoc.CL_SystemWindow);
                     playerTarget?.Out.SendMessage(LanguageMgr.GetTranslation(playerTarget.Client, "Effects.GuardEffect.XIsNowGuardingYouBut", GuardSource.GetName(0, true)), eChatType.CT_System, eChatLoc.CL_SystemWindow);

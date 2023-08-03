@@ -1965,7 +1965,7 @@ namespace DOL.GS
                 !guardSource.IsAlive ||
                 guardSource.IsSitting ||
                 stealthStyle ||
-                !guard.GuardSource.IsWithinRadius(guard.GuardTarget, GuardAbilityHandler.GUARD_DISTANCE))
+                !guard.GuardSource.IsWithinRadius(guard.GuardTarget, guard.GuardDistance))
                 return false;
 
             InventoryItem leftHand = guard.GuardSource.Inventory.GetItem(eInventorySlot.LeftHandWeapon);

@@ -53,8 +53,6 @@ namespace DOL.GS.RealmAbilities
 	            }            	
             }
 
-            DisableSkill(living);
-
             ArrayList targets = new ArrayList();
             if (player.Group == null)
                 {
@@ -74,10 +72,10 @@ namespace DOL.GS.RealmAbilities
                 if (success)
                     if (target != null && target != player)
                     {
-                        new DashingDefenseEffect().Start(player, target, m_duration);
+	                    new GuardECSGameEffect(new ECSGameEffectInitParams(player, m_duration * 1000, 1, null), player, target, m_range);
                     }
             }
-
+            DisableSkill(living);
         }
 
         public override int GetReUseDelay(int level)
