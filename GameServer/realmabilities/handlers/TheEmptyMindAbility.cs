@@ -34,7 +34,7 @@ namespace DOL.GS.RealmAbilities
             int effectiveness = GetEffectiveness();
 
 			//new TheEmptyMindEffect(effectiveness, GetDuration()).Start(living);
-			new StatBuffECSEffect(new ECSGameEffectInitParams(living, 30000, 1, CreateSpell(living)));
+			new StatBuffECSEffect(new ECSGameEffectInitParams(living, GetDuration(), 1, CreateSpell(living)));
 			DisableSkill(living);
 		}
 
@@ -86,7 +86,7 @@ namespace DOL.GS.RealmAbilities
 	        dbspell.Radius = 0;
 	        dbspell.Type = eSpellType.AllMagicResistBuff.ToString();
 	        dbspell.Value = GetEffectiveness();
-	        dbspell.Duration = 30;
+	        dbspell.Duration = GetDuration();
 	        dbspell.Pulse = 0;
 	        dbspell.PulsePower = 0;
 	        dbspell.Power = 0;
