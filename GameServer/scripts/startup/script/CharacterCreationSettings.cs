@@ -131,11 +131,46 @@ namespace DOL.GS.GameEvents
 			{
 				ch.Experience = GamePlayer.GetExperienceAmountForLevel(STARTING_LEVEL - 1);
 				ch.Level = STARTING_LEVEL;
-			}
+				ICharacterClass charClass = ScriptMgr.FindCharacterClass(ch.Class);
 
+				// update Stats
+				for (int i = STARTING_LEVEL; i > 5; i--)
+				{
+					if (charClass.PrimaryStat != eStat.UNDEFINED)
+					{
+						ChangeBaseStat(ch, charClass.PrimaryStat, 1);
+					}
+					if (charClass.SecondaryStat != eStat.UNDEFINED && ((i - 6) % 2 == 0))
+					{ // base level to start adding stats is 6
+						ChangeBaseStat(ch, charClass.SecondaryStat, 1);
+					}
+					if (charClass.TertiaryStat != eStat.UNDEFINED && ((i - 6) % 3 == 0))
+					{ // base level to start adding stats is 6
+						ChangeBaseStat(ch, charClass.TertiaryStat, 1);
+					}
+				}
+			}
 
 			// Default 2 Respec Realm Skill
 			ch.RespecAmountRealmSkill += 2;
+		}
+
+		private static void ChangeBaseStat(DOLCharacters character, eStat stat, short val)
+		{
+			if (character != null)
+			{
+				switch (stat)
+				{
+					case eStat.STR: character.Strength += val; break;
+					case eStat.DEX: character.Dexterity += val; break;
+					case eStat.CON: character.Constitution += val; break;
+					case eStat.QUI: character.Quickness += val; break;
+					case eStat.INT: character.Intelligence += val; break;
+					case eStat.PIE: character.Piety += val; break;
+					case eStat.EMP: character.Empathy += val; break;
+					case eStat.CHR: character.Charisma += val; break;
+				}
+			}
 		}
 	}
 }
