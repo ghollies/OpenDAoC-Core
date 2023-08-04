@@ -11,7 +11,6 @@ namespace DOL.GS.RealmAbilities
         public SpellLine SpellLine { get { return m_spellline; } }
         public Ability Ability { get { return this; } }
 
-        private const int m_dmgValue = 900; // Takii - Temp value. Unclear what the real OF value was.
         private const int m_range = 1875; // bolt range
         private const int m_radius = 500; // post-1.62 nerf value (was 700)
 
@@ -19,12 +18,32 @@ namespace DOL.GS.RealmAbilities
         private Spell m_spell = null;
         private SpellLine m_spellline;
 
-        public override int MaxLevel { get { return 1; } }
-        public override int CostForUpgrade(int level, GamePlayer player) { return 14; }
         public override int GetReUseDelay(int level) { return 900; } // 15 mins
 
         private void CreateSpell(GamePlayer caster)
         {
+            int m_dmgValue = 0;
+            if (ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
+            {
+                switch (Level)
+                {
+                    case 1: m_dmgValue = 200; break;
+                    case 2: m_dmgValue = 350; break;
+                    case 3: m_dmgValue = 500; break;
+                    case 4: m_dmgValue = 625; break;
+                    case 5: m_dmgValue = 750; break;
+                    default: return;
+                }
+            }
+            else
+            {
+                switch (Level)
+                {
+                    case 2: m_dmgValue = 500; break;
+                    case 3: m_dmgValue = 750; break;
+                    default: return;
+                }
+            }
             m_dbspell = new DBSpell();
             m_dbspell.Name = "Volcanic Pillar";
             m_dbspell.Icon = 4253;
@@ -33,13 +52,14 @@ namespace DOL.GS.RealmAbilities
             m_dbspell.DamageType = 13; // heat
             m_dbspell.Target = "Enemy";
             m_dbspell.Radius = m_radius;
-            m_dbspell.Type = eSpellType.DirectDamageNoVariance.ToString();
+            m_dbspell.Type = eSpellType.UnresistableDirectDamageNoVariance.ToString();
             m_dbspell.Value = 0;
             m_dbspell.Duration = 0;
             m_dbspell.Pulse = 0;
             m_dbspell.PulsePower = 0;
             m_dbspell.Power = 0;
-            m_dbspell.CastTime = 0;
+            m_dbspell.CastTime = 2;
+            m_dbspell.Uninterruptible = true;
             m_dbspell.EffectGroup = 0;
             m_dbspell.RecastDelay = GetReUseDelay(0); // Spell code is responsible for disabling this ability and will use this value.
             m_dbspell.Range = m_range;

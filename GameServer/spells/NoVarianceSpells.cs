@@ -86,6 +86,22 @@ namespace DOL.GS.Spells
 namespace DOL.GS.Spells
 {
 	/// <summary>
+	/// 
+	/// </summary>
+	[SpellHandlerAttribute("UnresistableDirectDamageNoVariance")]
+	public class UnresistableDirectDamageNoVarianceSpellHandler : DirectDamageNoVarianceSpellHandler
+	{
+		public override int CalculateSpellResistChance(GameLiving target)
+		{
+			return 0;
+		}
+		public UnresistableDirectDamageNoVarianceSpellHandler(GameLiving caster, Spell spell, SpellLine line) : base(caster, spell, line) { }
+	}
+}
+
+namespace DOL.GS.Spells
+{
+	/// <summary>
 	/// UnresistableStun 
 	/// </summary>
 	[SpellHandlerAttribute("UnresistableStun")]

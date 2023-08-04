@@ -220,6 +220,7 @@ namespace DOL.GS
         DexterityQuicknessShear = 214,
         RandomBuffShear = 215,
         Null = 216,
-        UnresistableDamageSpeedDecreaseNoVariance = 217
+        UnresistableDamageSpeedDecreaseNoVariance = 217,
+        UnresistableDirectDamageNoVariance = 218
 	}
 }
