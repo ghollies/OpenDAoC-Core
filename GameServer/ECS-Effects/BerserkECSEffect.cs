@@ -38,11 +38,11 @@ namespace DOL.GS
                 //TODO differentiate model between Dwarves and other races
                 if (OwnerPlayer.Race == (int)eRace.Dwarf)
                 {
-                    OwnerPlayer.Model = 12;
+                    OwnerPlayer.Model = 2032;  // Mini Vendo Man Form from monsters.csv
                 }
                 else
                 {
-                    OwnerPlayer.Model = 3;
+                    OwnerPlayer.Model = 582;  // Vendo Man from monsters.csv
                 }
             }
         }
