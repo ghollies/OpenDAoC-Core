@@ -71,6 +71,8 @@ namespace DOL.GS.Spells
 			{
 				((GamePlayer)target).styleComponent.NextCombatStyle = null;
 				((GamePlayer)target).styleComponent.NextCombatBackupStyle = null;
+				((GamePlayer)target).RealmAbilityCastTimer?.Stop();
+				((GamePlayer)target).RealmAbilityCastTimer = null;
 			}
 
 			//Amnesia only affects normal spells and not song activation (still affects pulses from songs though)
