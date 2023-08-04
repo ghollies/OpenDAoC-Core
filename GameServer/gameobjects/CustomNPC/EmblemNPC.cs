@@ -46,7 +46,7 @@ namespace DOL.GS
 			var triggers = GameServer.Instance.NpcManager.AmbientBehaviour[base.Name];
 			// If the NPC has no ambient trigger message assigned, then return this message
 			if (triggers == null || triggers.Length == 0)
-				SayTo(player, eChatLoc.CL_ChatWindow, $"for {ServerProperties.Properties.LASTNAME_BP_COST} bounty points, I can put the emblem of your guild on the item. Just hand me the item.");
+				SayTo(player, eChatLoc.CL_ChatWindow, $"for {ServerProperties.Properties.EMBLEM_BP_COST} bounty points, I can put the emblem of your guild on the item. Just hand me the item.");
 
 			return true;
 		}
@@ -100,7 +100,7 @@ namespace DOL.GS
 					return false;
 				}
 				t.TempProperties.setProperty(EMBLEMIZE_ITEM_WEAK, new WeakRef(item));
-				t.Out.SendCustomDialog("Do you agree to put an emblem on this object? this will cost " + ServerProperties.Properties.LASTNAME_BP_COST + " Bounty Points", new CustomDialogResponse(EmblemerDialogResponse));
+				t.Out.SendCustomDialog("Do you agree to put an emblem on this object? this will cost " + ServerProperties.Properties.EMBLEM_BP_COST + " Bounty Points", new CustomDialogResponse(EmblemerDialogResponse));
 			}
 			else
 				t.Out.SendMessage("I can not put an emblem on this item.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
@@ -129,9 +129,9 @@ namespace DOL.GS
 				return;
 			}
 
-			if (player.RemoveBountyPoints(ServerProperties.Properties.LASTNAME_BP_COST))
+			if (player.RemoveBountyPoints(ServerProperties.Properties.EMBLEM_BP_COST))
 			{
-				InventoryLogging.LogInventoryAction(player, this, eInventoryActionType.Merchant, ServerProperties.Properties.LASTNAME_BP_COST);
+				InventoryLogging.LogInventoryAction(player, this, eInventoryActionType.Merchant, ServerProperties.Properties.EMBLEM_BP_COST);
 				player.Out.SendMessage("You don't have enough bounty points.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 				return;
 			}
