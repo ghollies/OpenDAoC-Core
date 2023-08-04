@@ -8,7 +8,7 @@ using DOL.Events;
 namespace DOL.GS.RealmAbilities
 {
 	/// <summary>
-	/// Mastery of Concentration RA
+	/// Decimation Trap RA
 	/// </summary>
 	public class DecimationTrapAbility : TimedRealmAbility
 	{
@@ -57,14 +57,22 @@ namespace DOL.GS.RealmAbilities
 					case 3: effectiveness = 900; break;
 				}
 			}
-
-			if (living.GroundTarget == null)
-				return;
-			if (!living.IsWithinRadius( living.GroundTarget, 1500 ))
-				return;
 			GamePlayer player = living as GamePlayer;
 			if (player == null)
 				return;
+
+			if (player.GroundTarget == null)
+			{
+				player.Out.SendMessage("You must set a ground target to use this spell!", eChatType.CT_SpellResisted, eChatLoc.CL_SystemWindow);
+				return;
+
+
+			}
+			if (!player.IsWithinRadius(living.GroundTarget, 1500))
+			{
+				player.Out.SendMessage("You are too far away from your ground target (range 1500)", eChatType.CT_SpellResisted, eChatLoc.CL_SystemWindow);
+				return;
+			}
 
 			if (player.RealmAbilityCastTimer != null)
 			{
@@ -101,6 +109,9 @@ namespace DOL.GS.RealmAbilities
 			ticktimer.Callback = new ECSGameTimer.ECSTimerCallback(onTick);
 			ticktimer.Start(600000);
 			getTargets();
+			timer.Stop();
+			((GamePlayer)timer.Owner).RealmAbilityCastTimer = null;
+			timer = null;
 			DisableSkill(owner);
 
 			return 0;
@@ -168,7 +179,7 @@ namespace DOL.GS.RealmAbilities
 				mod = 1 - ((double)dist / 350);
 
 			int basedamage = (int)(effectiveness * mod);
-			int resist = (int)(basedamage * target.GetModified(eProperty.Resist_Energy) * -0.01);
+			int resist = (int)(basedamage * target.GetModified(eProperty.Resist_Heat) * -0.01);
 			int damage = basedamage + resist;
 
 
@@ -196,7 +207,7 @@ namespace DOL.GS.RealmAbilities
 			ad.AttackResult = eAttackResult.HitUnstyled;
 			ad.Attacker = owner;
 			ad.Target = target;
-			ad.DamageType = eDamageType.Energy;
+			ad.DamageType = eDamageType.Heat;
 			ad.Damage = damage;
 			target.OnAttackedByEnemy(ad);
 			owner.DealDamage(ad);
@@ -211,7 +222,7 @@ namespace DOL.GS.RealmAbilities
 		{
 			if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
 			{
-				list.Add("Trap that deals the following damage in an 350 radius");
+				list.Add("Trap that deals the following heat damage in an 350 radius");
 				list.Add("Level 1: 300 Damage");
 				list.Add("Level 2: 450 Damage");
 				list.Add("Level 3: 600 Damage");
