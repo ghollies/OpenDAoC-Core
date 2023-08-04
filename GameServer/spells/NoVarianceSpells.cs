@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections;
+using DOL.GS;
 using DOL.GS.Effects;
 using DOL.GS.PacketHandler;
+using DOL.GS.Spells;
 
 namespace DOL.GS.Spells
 {
@@ -43,6 +45,24 @@ namespace DOL.GS.Spells
 }
 
 namespace DOL.GS.Spells
+{
+	/// <summary>
+	/// 
+	/// </summary>
+	/// </summary>
+	[SpellHandlerAttribute("UnresistableDamageSpeedDecreaseNoVariance")]
+	public class UnresistableDamageSpeedDecreaseNoVarianceSpellHandler : DamageSpeedDecreaseNoVarianceSpellHandler
+	{
+		public override int CalculateSpellResistChance(GameLiving target)
+		{
+			return 0;
+		}
+			public UnresistableDamageSpeedDecreaseNoVarianceSpellHandler(GameLiving caster, Spell spell, SpellLine line) : base(caster, spell, line) { }
+		}
+	}
+
+
+	namespace DOL.GS.Spells
 {
     /// <summary>
     /// 

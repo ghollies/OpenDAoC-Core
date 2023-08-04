@@ -6,6 +6,8 @@ using DOL.GS.PacketHandler;
 using DOL.GS.Effects;
 using DOL.Events;
 using DOL.Database;
+using DOL.GS.Spells;
+using System.Net;
 
 namespace DOL.GS.RealmAbilities
 {
@@ -48,7 +50,7 @@ namespace DOL.GS.RealmAbilities
 			}
 			caster.StopCurrentSpellcast();
 
-			/*
+			
 			if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
 			{
 				switch (Level)
@@ -70,10 +72,7 @@ namespace DOL.GS.RealmAbilities
 					case 3: m_dmgValue = 250; m_duration = 30; break;
 					default: return;
 				}
-			}*/
-
-			m_dmgValue = caster.Level * 2;
-			m_duration = 30;
+			}
 
 			foreach (GamePlayer i_player in caster.GetPlayersInRadius(WorldMgr.INFO_DISTANCE))
 			{
@@ -86,7 +85,7 @@ namespace DOL.GS.RealmAbilities
 					i_player.MessageFromArea(caster, caster.Name + " casts a spell!", eChatType.CT_Spell, eChatLoc.CL_SystemWindow);
 				}
 
-				i_player.Out.SendSpellCastAnimation(caster, 7028, 0);
+				i_player.Out.SendSpellCastAnimation(caster, 7028, 20);
 			}
 
 			if (caster.RealmAbilityCastTimer != null)
@@ -98,7 +97,7 @@ namespace DOL.GS.RealmAbilities
 
 			caster.RealmAbilityCastTimer = new ECSGameTimer(caster);
 			caster.RealmAbilityCastTimer.Callback = new ECSGameTimer.ECSTimerCallback(EndCast);
-			caster.RealmAbilityCastTimer.Start(0);
+			caster.RealmAbilityCastTimer.Start(2000);
 		}
 
 		protected virtual int EndCast(ECSGameTimer timer)
@@ -109,6 +108,7 @@ namespace DOL.GS.RealmAbilities
 			twf.CreateStatic(m_player, m_player.GroundTarget, m_duration, 5, 500);
 			DisableSkill(m_player);
 			timer.Stop();
+			((GamePlayer)timer.Owner).RealmAbilityCastTimer = null;
 			timer = null;
 			return 0;
 		}
