@@ -3099,14 +3099,20 @@ namespace DOL.GS.Commands
 				return;
 			}
 
-			var text = new List<string>();
+			List<string> text = new();
+			ABrain brain = targetMob.Brain;
 
-			if (targetMob.Brain != null)
+			if (brain != null)
 			{
-				text.Add(targetMob.Brain.ToString());
+				text.Add(brain.ToString());
 				text.Add("");
-				text.Add($"Brain: {targetMob.Brain.GetType().FullName}");
-				text.Add($"FSM State: {targetMob.Brain.FSM.GetCurrentState()?.GetType().FullName}");
+				text.Add($"Brain: {brain.GetType().FullName}");
+
+				FSMState fsm = brain.FSM?.GetCurrentState();
+
+				if (fsm != null)
+					text.Add($"FSM State: {fsm.GetType().FullName}");
+
 				text.Add("");
 			}
 
@@ -3171,7 +3177,7 @@ namespace DOL.GS.Commands
 				foreach (ECSGameEffect effect in allEffects)
 				{
 					long remaining = effect.IsConcentrationEffect() ? -1 : effect.GetRemainingTimeForClient();
-					text.Add($"{effect.Name}  (remaining: {remaining})  (source: {(effect.SpellHandler == null ? targetMob.Name : effect.SpellHandler.Caster.Name)})");
+					text.Add($"{effect.Name} (type: {effect.GetType()}) (remaining: {remaining}) (source: {(effect.SpellHandler == null ? targetMob.Name : effect.SpellHandler.Caster.Name)})");
 				}
 			}
 
