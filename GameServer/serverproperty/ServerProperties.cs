@@ -2907,6 +2907,12 @@ namespace DOL.GS.ServerProperties
         public static string ALT_CURRENCY_ID;
 
 		#endregion
+
+		#region ARIADOLIS
+		[ServerProperty("ariadolis", "lastname_bp_cost", "The cost to set a player's last name in Bounty Points", 500)]
+		public static int LASTNAME_BP_COST;
+		#endregion
+
 		public static IDictionary<string, object> AllCurrentProperties
 		{
 			get; private set;

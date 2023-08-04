@@ -17,8 +17,6 @@ namespace DOL.GS.Commands
 	public class LastnameCommandHandler : AbstractCommandHandler, ICommandHandler
 	{
 		private const string LASTNAME_WEAK = "new lastname";
-		/* lastname cost: 10 gold pieces*/
-		private const int LASTNAME_FEE = 10;
 
 		/* Max chars in lastname */
 		private const int LASTNAME_MAXLENGTH = 23;
@@ -40,11 +38,10 @@ namespace DOL.GS.Commands
 				client.Out.SendMessage("You must be " + LASTNAME_MIN_LEVEL + "th level or " + LASTNAME_MIN_CRAFTSKILL + " in your primary trade skill to register a last name!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 				return;
 			}
-
-			/* When you don't have a lastname, change is for free, otherwise you need money */
-			if (client.Player.LastName != "" && client.Player.GetCurrentMoney() < Money.GetMoney(0, 0, LASTNAME_FEE, 0, 0))
+			
+			if (client.Player.BountyPoints < ServerProperties.Properties.LASTNAME_BP_COST)
 			{
-				client.Out.SendMessage("Changing your last name costs " + Money.GetString(Money.GetMoney(0, 0, LASTNAME_FEE, 0, 0)) + "!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
+				client.Out.SendMessage("Changing your last name costs " + ServerProperties.Properties.LASTNAME_BP_COST + " Bounty Points!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 				return;
 			}
 
@@ -66,7 +63,7 @@ namespace DOL.GS.Commands
 			if (args.Length < 2)
 			{
 				client.Player.TempProperties.setProperty(LASTNAME_WEAK, "");
-				client.Out.SendCustomDialog("Would you like to clear your last name?", new CustomDialogResponse(LastNameDialogResponse));
+				client.Out.SendCustomDialog("Would you like to clear your last name? This will cost " + ServerProperties.Properties.LASTNAME_BP_COST + " Bounty Points.", new CustomDialogResponse(LastNameDialogResponse));
 				return;
 			}
 
@@ -102,7 +99,7 @@ namespace DOL.GS.Commands
 			}
 
 			client.Player.TempProperties.setProperty(LASTNAME_WEAK, NewLastname);
-			client.Out.SendCustomDialog("Would you like to set your last name to \x000a" + NewLastname + "?", new CustomDialogResponse(LastNameDialogResponse));
+			client.Out.SendCustomDialog("Would you like to set your last name to \x000a" + NewLastname + "? This will cost " + ServerProperties.Properties.LASTNAME_BP_COST + " Bounty Points.", new CustomDialogResponse(LastNameDialogResponse));
 
 			return;
 		}
@@ -141,9 +138,9 @@ namespace DOL.GS.Commands
 			}
 
 			/* Check money only if your lastname is not blank */
-			if (player.LastName != "" && player.GetCurrentMoney() < Money.GetMoney(0, 0, LASTNAME_FEE, 0, 0))
+			if (player.LastName != "" && player.BountyPoints < ServerProperties.Properties.LASTNAME_BP_COST)
 			{
-				player.Out.SendMessage("Changing your last name costs " + Money.GetString(Money.GetMoney(0, 0, LASTNAME_FEE, 0, 0)) + "!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
+				player.Out.SendMessage("Changing your last name costs " + ServerProperties.Properties.LASTNAME_BP_COST + " Bounty Points!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 				return;
 			}
 
@@ -153,11 +150,11 @@ namespace DOL.GS.Commands
 				return;
 			}
 
-			/* Remove money only if your lastname is not blank and is different from the previous one */
-            if (player.LastName != "" && player.LastName != NewLastName)
+			/* Remove money only if your lastname is different from the previous one */
+            if (player.LastName != NewLastName)
             {
-                player.RemoveMoney(Money.GetMoney(0, 0, LASTNAME_FEE, 0, 0), null);
-                InventoryLogging.LogInventoryAction(player, player.TargetObject, eInventoryActionType.Merchant, LASTNAME_FEE * 10000);
+                player.RemoveBountyPoints(ServerProperties.Properties.LASTNAME_BP_COST, null);
+                InventoryLogging.LogInventoryAction(player, player.TargetObject, eInventoryActionType.Merchant, ServerProperties.Properties.LASTNAME_BP_COST);
             }
 
 		    /* Set the new lastname */
