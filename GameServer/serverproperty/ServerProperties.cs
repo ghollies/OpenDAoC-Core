@@ -2911,6 +2911,9 @@ namespace DOL.GS.ServerProperties
 		#region ARIADOLIS
 		[ServerProperty("ariadolis", "lastname_bp_cost", "The cost to set a player's last name in Bounty Points", 500)]
 		public static int LASTNAME_BP_COST;
+
+		[ServerProperty("ariadolis", "emblem_bp_cost", "The cost to use the Guild Emblemeer in Bounty Points", 1000)]
+		public static int EMBLEM_BP_COST;
 		#endregion
 
 		public static IDictionary<string, object> AllCurrentProperties
