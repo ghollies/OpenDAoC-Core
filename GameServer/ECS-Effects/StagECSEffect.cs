@@ -39,8 +39,8 @@ namespace DOL.GS
 			if (OwnerPlayer != null)
 			{
 				if (OwnerPlayer.Race == (int)eRace.Lurikeen)
-					OwnerPlayer.Model = 13;
-				else OwnerPlayer.Model = 4;
+					OwnerPlayer.Model = 859; // Lurikeen Stag Man from monsters.csv
+				else OwnerPlayer.Model = 583; // Stag Man from monsters.csv
 			}
 
 
