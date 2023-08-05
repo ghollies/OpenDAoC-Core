@@ -221,6 +221,7 @@ namespace DOL.GS
         RandomBuffShear = 215,
         Null = 216,
         UnresistableDamageSpeedDecreaseNoVariance = 217,
-        UnresistableDirectDamageNoVariance = 218
+        UnresistableDirectDamageNoVariance = 218,
+        WaterBreathing = 219
 	}
 }

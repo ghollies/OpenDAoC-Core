@@ -415,6 +415,8 @@ namespace DOL.GS
                 case eSpellType.SpeedOfTheRealm:
                 case eSpellType.SpeedEnhancement:
                     return eEffect.MovementSpeedBuff;
+                case eSpellType.WaterBreathing:
+                    return eEffect.WaterSpeedBuff;
                 case eSpellType.HealOverTime:
                     return eEffect.HealOverTime;
                 case eSpellType.CombatHeal:
@@ -768,6 +770,9 @@ namespace DOL.GS
                 case eEffect.MovementSpeedBuff:
                 case eEffect.MovementSpeedDebuff:
                     list.Add(eProperty.MaxSpeed);
+                    return list;
+                case eEffect.WaterSpeedBuff:
+                    list.Add(eProperty.WaterSpeed);
                     return list;
                 case eEffect.MesmerizeDurationBuff:
                     list.Add(eProperty.MesmerizeDurationReduction);
