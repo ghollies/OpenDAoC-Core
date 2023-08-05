@@ -63,7 +63,12 @@ namespace DOL.GS
                             EffectService.RequestDisableEffect(this);
                         }
                     }
-                    
+                    if (EffectType == eEffect.WaterSpeedBuff)
+                    {
+                        Owner.BaseBuffBonusCategory[(int)eProperty.WaterSpeed] += (int)SpellHandler.Spell.Value;
+                        (SpellHandler as WaterBreathingSpellHandler).SendUpdates(Owner);
+                    }
+
                     else
                         ApplyBonus(Owner, eBuffBonusCategory.BaseBuff, prop, SpellHandler.Spell.Value, Effectiveness, false);
                 }
@@ -126,7 +131,12 @@ namespace DOL.GS
                             (SpellHandler as SpeedEnhancementSpellHandler).SendUpdates(Owner);
                         //}
                     }
-                    
+                    if (EffectType == eEffect.WaterSpeedBuff)
+                    {
+                        Owner.BaseBuffBonusCategory[(int)eProperty.WaterSpeed] -= (int)SpellHandler.Spell.Value;
+                        (SpellHandler as WaterBreathingSpellHandler).SendUpdates(Owner);
+                    }
+
                     else
                         ApplyBonus(Owner, eBuffBonusCategory.BaseBuff, prop, SpellHandler.Spell.Value, Effectiveness, true);
 

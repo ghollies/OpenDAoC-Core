@@ -14,6 +14,7 @@ namespace DOL.GS
         MeleeHasteBuff,
         Celerity,
         MovementSpeedBuff,
+        WaterSpeedBuff,
         HealOverTime,
         CombatHeal,
 
