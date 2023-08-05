@@ -26,11 +26,11 @@ namespace DOL.GS.RealmAbilities
 			{
 				switch (Level)
 				{
-					case 1: heal = 375; break;
-					case 2: heal = 525; break;
-					case 3: heal = 750; break;
-					case 4: heal = 1125; break;
-					case 5: heal = 1500; break;
+					case 1: heal = 500; break;
+					case 2: heal = 875; break;
+					case 3: heal = 1250; break;
+					case 4: heal = 1750; break;
+					case 5: heal = 2250; break;
 				}
 			}
 			else
@@ -84,11 +84,11 @@ namespace DOL.GS.RealmAbilities
 		{
 			if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
 			{
-				list.Add("Level 1: Value: 375");
-				list.Add("Level 2: Value: 525");
-				list.Add("Level 3: Value: 750");
-				list.Add("Level 4: Value: 1125");
-				list.Add("Level 5: Value: 1500");
+				list.Add("Level 1: Value: 500");
+				list.Add("Level 2: Value: 875");
+				list.Add("Level 3: Value: 1250");
+				list.Add("Level 4: Value: 1750");
+				list.Add("Level 5: Value: 2250");
 				list.Add("");
 				list.Add("Target: Group");
 				list.Add("Casting time: instant");
