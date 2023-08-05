@@ -232,6 +232,7 @@ namespace DOL.GS.Commands
                             if (newLevel < player.Level || args[1] == "reset")
                             {
                                 player.Reset();
+                                player.RespecRealm(false);
                             }
 
                             int curLevel = player.Level;
