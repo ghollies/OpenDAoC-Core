@@ -1,8 +1,4 @@
-using System;
-using DOL.GS.Effects;
 using DOL.GS.Spells;
-using DOL.GS.PacketHandler;
-using DOL.AI.Brain;
 using DOL.GS.PropertyCalc;
 
 namespace DOL.GS
@@ -67,6 +63,10 @@ namespace DOL.GS
                     {
                         Owner.BaseBuffBonusCategory[(int)eProperty.WaterSpeed] += (int)SpellHandler.Spell.Value;
                         (SpellHandler as WaterBreathingSpellHandler).SendUpdates(Owner);
+                        if (Owner is GamePlayer)
+                        {
+                            ((GamePlayer)Owner).CanBreathUnderWater = true;
+                        }
                     }
 
                     else
@@ -134,6 +134,10 @@ namespace DOL.GS
                     if (EffectType == eEffect.WaterSpeedBuff)
                     {
                         Owner.BaseBuffBonusCategory[(int)eProperty.WaterSpeed] -= (int)SpellHandler.Spell.Value;
+                        if (Owner is GamePlayer)
+                        {
+                            ((GamePlayer)Owner).CanBreathUnderWater = false;
+                        }
                         (SpellHandler as WaterBreathingSpellHandler).SendUpdates(Owner);
                     }
 
