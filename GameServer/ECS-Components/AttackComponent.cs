@@ -2384,7 +2384,7 @@ namespace DOL.GS
                 bool penetrate = false;
 
                 if (stealthStyle)
-                    return eAttackResult.HitUnstyled; // Exit early for stealth to prevent breaking bubble but still register a hit.
+                    penetrate = true; // 1.82 patch, stealthed openers pop bt.
 
                 if (action.RangedAttackType == eRangedAttackType.Long ||
                     (ad.AttackType == AttackData.eAttackType.Ranged && ad.Target != bladeturn.SpellHandler.Caster && playerAttacker?.HasAbility(Abilities.PenetratingArrow) == true))
