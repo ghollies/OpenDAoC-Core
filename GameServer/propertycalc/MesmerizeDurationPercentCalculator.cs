@@ -17,6 +17,7 @@
  *
  */
 using System;
+using DOL.GS.PlayerClass;
 using DOL.GS.RealmAbilities;
 
 namespace DOL.GS.PropertyCalc
@@ -42,7 +43,12 @@ namespace DOL.GS.PropertyCalc
 				- living.AbilityBonus[(int)property];
 
 			if (living.HasAbility(Abilities.Stoicism))
-				percent -= 25;
+			{
+				if (living is GamePlayer {CharacterClass: ClassReaver})
+					percent -= 12;
+				else
+					percent -= 25;
+			}
 
 			return Math.Max(1, percent);
 		}
