@@ -46,7 +46,6 @@ namespace DOL.GS.RealmAbilities
             }
             caster.StopCurrentSpellcast();
 
-            /*
             if(ServerProperties.Properties.USE_NEW_ACTIVES_RAS_SCALING)
             {
 	            switch (Level)
@@ -68,10 +67,7 @@ namespace DOL.GS.RealmAbilities
 					case 3: dmgValue = 360; break;
 					default: return;
 				}
-            }*/
-
-            dmgValue = 240;
-            
+            }
 			duration = 30;
 			foreach (GamePlayer i_player in caster.GetPlayersInRadius(WorldMgr.INFO_DISTANCE))
 			{
