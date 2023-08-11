@@ -2252,9 +2252,33 @@ namespace DOL.GS
 					if (spellEffect != null && spellEffect.SpellHandler.Spell.ID is 2430) // Speed of the Realm
 						EffectService.RequestImmediateCancelEffect(effects[i]);
 				}
-            }
-
-            // Cancel movement speed buffs when attacked only if damaged
+			}
+			// Cancel speed on CC, Nearsight, Buff Shears, resist debuffs
+			Type handlerType = ad.SpellHandler?.GetType();
+			if (handlerType != null)
+			{
+				if (typeof(AbstractResistDebuff).IsAssignableFrom(handlerType))
+				{
+					TryCancelMovementSpeedBuffs(false);
+					return;
+				}
+				if (typeof(NearsightSpellHandler).IsAssignableFrom(handlerType))
+				{
+					TryCancelMovementSpeedBuffs(false);
+					return;
+				}
+				if (typeof(AbstractCCSpellHandler).IsAssignableFrom(handlerType))
+				{
+					TryCancelMovementSpeedBuffs(false);
+					return;
+				}
+				if (typeof(AbstractBuffShear).IsAssignableFrom(handlerType) || typeof(RandomBuffShear).IsAssignableFrom(handlerType))
+				{
+					TryCancelMovementSpeedBuffs(false);
+					return;
+				}
+			}
+			// Cancel movement speed buffs when attacked if damaged
 			if (ad != null & ad.Damage > 0)
 				TryCancelMovementSpeedBuffs(false);
 		}
