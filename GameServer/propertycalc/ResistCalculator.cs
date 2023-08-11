@@ -57,6 +57,7 @@ namespace DOL.GS.PropertyCalc
                     debuff += Math.Abs(living.DebuffCategory[eProperty.MagicAbsorption]);
                     abilityBonus += living.AbilityBonus[eProperty.MagicAbsorption];
                     buffBonus += living.BaseBuffBonusCategory[eProperty.MagicAbsorption];
+                    buffBonus += living.BuffBonusCategory4[eProperty.MagicAbsorption];
                     break;
             }
 
