@@ -23,6 +23,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DOL.AI.Brain;
 using DOL.GS.Effects;
 using DOL.GS.PacketHandler;
@@ -154,42 +155,11 @@ namespace DOL.GS.Spells
 		/// </summary>
 		public override void FinishSpellCast(GameLiving target)
 		{
-			if (Caster == null)
-				return;
-			
-			if (target == null) 
-				return;
-
-			if (Caster == target)
-			{
-				MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
-				return;
-			}
-			
-			if (target is not GamePlayer or GameNPC || (target is GamePlayer playerTarget && playerTarget.Client.Account.PrivLevel > 1))
-			{
-				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
-				return;
-			}
-
-			if (target.Realm == Caster.Realm)
-			{
-				MessageToCaster("You can't attack a member of your realm!", eChatType.CT_Spell);
-				return;
-			}
-
-			if (EffectListService.GetSpellEffectOnTarget(target, eEffect.Shade) != null)
-			{
-				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
-				return;
-			}
-			
 			if (!target.IsAlive)
 			{
 				MessageToCaster("Your target is already dead!", eChatType.CT_Spell);
 				return;
 			}
-			
 			m_caster.Mana -= PowerCost(target);
 			base.FinishSpellCast(target);
 		}
@@ -232,16 +202,15 @@ namespace DOL.GS.Spells
 					MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
 					return;
 				}
-
-				if (effect.SpellHandler.Spell.Value > Spell.Value)
-				{
-					SendEffectAnimation(target, 0, false, 0);
-					MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
-					break;
-				}
-				
 				if (effect.SpellHandler.Spell.SpellType.ToString().Equals(ShearSpellType))
 				{
+
+					if (effect.SpellHandler.Spell.Value > Spell.Value)
+					{
+						SendEffectAnimation(target, 0, false, 0);
+						MessageToCaster($"The target's connection to their enhancement is too strong for you to remove.{effect.SpellHandler.Spell.Value} vs {Spell.Value}", eChatType.CT_SpellResisted);
+						return;
+					}
 					SendEffectAnimation(target, 0, false, 1);
 					EffectService.RequestCancelEffect(effect);
 					MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
@@ -319,36 +288,6 @@ namespace DOL.GS.Spells
 		/// </summary>
 		public override void FinishSpellCast(GameLiving target)
 		{
-			if (Caster == null)
-				return;
-			
-			if (target == null) 
-				return;
-
-			if (Caster == target)
-			{
-				MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
-				return;
-			}
-			
-			if (target is not GamePlayer or GameNPC || (target is GamePlayer playerTarget && playerTarget.Client.Account.PrivLevel > 1))
-			{
-				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
-				return;
-			}
-
-			if (target.Realm == Caster.Realm)
-			{
-				MessageToCaster("You can't attack a member of your realm!", eChatType.CT_Spell);
-				return;
-			}
-
-			if (EffectListService.GetSpellEffectOnTarget(target, eEffect.Shade) != null)
-			{
-				MessageToCaster("You can't attack this target!", eChatType.CT_Spell);
-				return;
-			}
-			
 			if (!target.IsAlive)
 			{
 				MessageToCaster("Your target is already dead!", eChatType.CT_Spell);
@@ -390,30 +329,37 @@ namespace DOL.GS.Spells
 			}
 
 			// Check for spell
-			foreach (ECSGameSpellEffect effect in target.effectListComponent.GetSpellEffects())
+			Random rand = new Random();
+			List<ECSGameSpellEffect> effectList = target.effectListComponent.GetSpellEffects();
+			effectList.Sort((a, b) => rand.Next(-10, 11));
+			foreach (ECSGameSpellEffect effect in effectList)
 			{
 				if (effect.Owner == effect.SpellHandler.Caster)
 				{
 					MessageToCaster("You can't attack yourself!", eChatType.CT_Spell);
 					return;
 				}
-
-				if (effect.SpellHandler.Spell.Value > Spell.Value)
+				if (buffs.Contains(effect.SpellHandler.GetType()))
 				{
-					SendEffectAnimation(target, 0, false, 0);
-					MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
-					break;
+					if (effect.SpellHandler.Spell.Value > Spell.Value)
+					{
+						SendEffectAnimation(target, 0, false, 0);
+						MessageToCaster("The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
+						return;
+					}
+					else
+					{
+						SendEffectAnimation(target, 0, false, 1);
+						EffectService.RequestCancelEffect(effect);
+						MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
+						MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
+						return;
+					}
 				}
-				
-				SendEffectAnimation(target, 0, false, 1);
-				EffectService.RequestCancelEffect(effect);
-				MessageToCaster("Your spell rips away some of your target's enhancing magic.", eChatType.CT_Spell);
-				MessageToLiving(target, "Some of your enhancing magic has been ripped away by a spell!", eChatType.CT_Spell);
-				return;
 			}
-
 			SendEffectAnimation(target, 0, false, 0);
 			MessageToCaster("No enhancement of that type found on the target.", eChatType.CT_SpellResisted);
+			return;
 		}
 
 		private static Type[] buffs = new Type[] { typeof(AcuityBuff), typeof(StrengthBuff), typeof(DexterityBuff), typeof(ConstitutionBuff), typeof(StrengthConBuff), typeof(DexterityQuiBuff),
