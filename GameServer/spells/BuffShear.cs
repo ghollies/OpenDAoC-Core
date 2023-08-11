@@ -205,10 +205,10 @@ namespace DOL.GS.Spells
 				if (effect.SpellHandler.Spell.SpellType.ToString().Equals(ShearSpellType))
 				{
 
-					if (effect.SpellHandler.Spell.Value > Spell.Value)
+					if (effect.Caster == target)
 					{
 						SendEffectAnimation(target, 0, false, 0);
-						MessageToCaster($"The target's connection to their enhancement is too strong for you to remove.{effect.SpellHandler.Spell.Value} vs {Spell.Value}", eChatType.CT_SpellResisted);
+						MessageToCaster($"The target's connection to their enhancement is too strong for you to remove.", eChatType.CT_SpellResisted);
 						return;
 					}
 					SendEffectAnimation(target, 0, false, 1);
