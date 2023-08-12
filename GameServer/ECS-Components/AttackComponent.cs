@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using DOL.AI.Brain;
 using DOL.Database;
+using DOL.GS.API;
 using DOL.GS.Effects;
 using DOL.GS.Keeps;
 using DOL.GS.PacketHandler;
@@ -1341,12 +1342,30 @@ namespace DOL.GS
                     double conversionMod = CalculateTargetConversion(ad.Target, damage * primarySecondaryResistMod);
                     damage = (int) (preConversionDamage * conversionMod);
 
-                    if (action.RangedAttackType == eRangedAttackType.Critical)
-                        damage = Math.Min(damage, (int) (UnstyledDamageCap(weapon) * 2));
-                    else
-                        damage = Math.Min(damage, (int) UnstyledDamageCap(weapon) /* * effectiveness*/);
+                        if (action.RangedAttackType == eRangedAttackType.Critical)
+                        {
+                            if (ad.Target is GameLiving liveTarget && (DateTime.Now <= liveTarget.TempProperties.getProperty("HasBeenCritshotRecently", DateTime.MinValue).AddSeconds(10)))
+                            {
+                                // Prevent a living target from being crit shot multiple times during the same period, fallback to a normal shot damage
+                                if (owner is GamePlayer player)
+                                    player.Out.SendMessage("Your target has recently been hit by a Critical Shot, unable to deal bonus damage", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 
-                    ad.StyleDamage = StyleProcessor.ExecuteStyle(owner, ad.Target, ad.Style, weapon, preResistDamage, ad.ArmorHitLocation, ad.StyleEffects, out int animationId);
+                                damage = Math.Min(damage, (int)UnstyledDamageCap(weapon) /* * effectiveness*/);
+                            }
+                            else
+                            {
+                                damage = Math.Min(damage, (int)(UnstyledDamageCap(weapon) * 2));
+                                if (ad.Target is GameLiving liveCritTarget)
+                                {
+                                    liveCritTarget.TempProperties.setProperty("HasBeenCritshotRecently", DateTime.Now);
+                                }
+
+                            }
+                        }
+                        else
+                            damage = Math.Min(damage, (int) UnstyledDamageCap(weapon) /* * effectiveness*/);
+
+                        ad.StyleDamage = StyleProcessor.ExecuteStyle(owner, ad.Target, ad.Style, weapon, preResistDamage, ad.ArmorHitLocation, ad.StyleEffects, out int animationId);
 
                     if (ad.StyleDamage > 0)
                     {
