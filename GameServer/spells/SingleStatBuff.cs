@@ -527,6 +527,7 @@ namespace DOL.GS.Spells
     [SpellHandler("ResiPierceBuff")]
     public class ResiPierceBuff : SingleStatBuff
     {
+        public override eBuffBonusCategory BonusCategory1 { get { return eBuffBonusCategory.SpecBuff; } }
         public override eProperty Property1 { get { return eProperty.ResistPierce; } }
         public ResiPierceBuff(GameLiving caster, Spell spell, SpellLine line) : base(caster, spell, line) { }
     }
