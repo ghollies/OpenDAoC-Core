@@ -40,8 +40,9 @@ namespace DOL.GS
             {
                 foreach (var prop in EffectService.GetPropertiesFromEffect(EffectType))
                 {
-                    //Console.WriteLine($"Buffing {prop.ToString()}");
                     if (EffectType == eEffect.EnduranceRegenBuff)
+                        Effectiveness = 1;
+                    if (EffectType == eEffect.ResistPierceBuff)
                         Effectiveness = 1;
 
                     if (EffectType == eEffect.MovementSpeedBuff)
@@ -70,7 +71,14 @@ namespace DOL.GS
                     }
 
                     else
-                        ApplyBonus(Owner, eBuffBonusCategory.BaseBuff, prop, SpellHandler.Spell.Value, Effectiveness, false);
+                    {
+                        eBuffBonusCategory buffType= eBuffBonusCategory.BaseBuff;
+                        if (SpellHandler is PropertyChangingSpell properySpell)
+                        {
+                            buffType = properySpell.BonusCategory1;
+                        }
+                        ApplyBonus(Owner, buffType, prop, SpellHandler.Spell.Value, Effectiveness, false);
+                    }
                 }
             }
             
@@ -114,7 +122,8 @@ namespace DOL.GS
             {
                 if (EffectType == eEffect.EnduranceRegenBuff)
                     Effectiveness = 1;
-
+                if (EffectType == eEffect.EnduranceRegenBuff)
+                    Effectiveness = 1;
                 foreach (var prop in EffectService.GetPropertiesFromEffect(EffectType))
                 {
                     //Console.WriteLine($"Canceling {prop.ToString()}");
@@ -142,8 +151,14 @@ namespace DOL.GS
                     }
 
                     else
-                        ApplyBonus(Owner, eBuffBonusCategory.BaseBuff, prop, SpellHandler.Spell.Value, Effectiveness, true);
-
+                    {
+                        eBuffBonusCategory buffType = eBuffBonusCategory.BaseBuff;
+                        if (SpellHandler is PropertyChangingSpell properySpell)
+                        {
+                            buffType = properySpell.BonusCategory1;
+                        }
+                        ApplyBonus(Owner, buffType, prop, SpellHandler.Spell.Value, Effectiveness, true);
+                    }
                 }
             }
             

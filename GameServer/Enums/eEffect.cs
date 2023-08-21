@@ -17,6 +17,7 @@ namespace DOL.GS
         WaterSpeedBuff,
         HealOverTime,
         CombatHeal,
+        ResistPierceBuff,
 
         //stats
         PaladinAf,

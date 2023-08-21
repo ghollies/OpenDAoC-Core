@@ -421,6 +421,8 @@ namespace DOL.GS
                     return eEffect.HealOverTime;
                 case eSpellType.CombatHeal:
                     return eEffect.CombatHeal;
+                case eSpellType.ResiPierceBuff:
+                    return eEffect.ResistPierceBuff;
 
                 // Stats.
                 case eSpellType.StrengthBuff:
@@ -781,7 +783,9 @@ namespace DOL.GS
                 case eEffect.FatigueConsumptionDebuff:
                     list.Add(eProperty.FatigueConsumption);
                     return list;
-
+                case eEffect.ResistPierceBuff:
+                    list.Add(eProperty.ResistPierce);
+                    return list;
                 default:
                     //Console.WriteLine($"Unable to find property mapping for: {e}");
                     return list;

@@ -222,6 +222,7 @@ namespace DOL.GS
         Null = 216,
         UnresistableDamageSpeedDecreaseNoVariance = 217,
         UnresistableDirectDamageNoVariance = 218,
-        WaterBreathing = 219
-	}
+        WaterBreathing = 219,
+        ResiPierceBuff = 220,
+    }
 }
