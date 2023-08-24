@@ -596,6 +596,10 @@ namespace DOL.GS.Keeps
 
 		public override void StartHealthRegeneration()
 		{
+			if (KeepID == 129)
+			{
+				return;
+			}
 			if (!IsAttackableDoor)
 				return;
 
@@ -699,6 +703,11 @@ namespace DOL.GS.Keeps
 						Component = new GameKeepComponent();
 						Component.Keep = keepArea.Keep;
 						keepArea.Keep.Doors.Add(sKey, this);
+						if (Component.Keep.KeepID == 129)
+						{
+							Console.WriteLine("setting keep door from DB health to 0 " + this);
+							Health = 0;
+						}
 					}
 					break;
 				}
@@ -722,7 +731,13 @@ namespace DOL.GS.Keeps
 			component.Keep.Doors[m_templateID] = this;
 
 			m_oldMaxHealth = MaxHealth;
-			m_health = MaxHealth;
+			if (component.Keep.KeepID == 129)
+			{
+				Console.WriteLine("setting keep door from Position health to 0 " + this);
+				Health = 0;
+			}
+			else
+				m_health = MaxHealth;
 			m_name = "Keep Door";
 			m_oldHealthPercent = HealthPercent;
 			m_doorID = GenerateDoorID();

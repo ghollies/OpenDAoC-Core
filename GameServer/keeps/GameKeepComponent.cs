@@ -173,6 +173,10 @@ namespace DOL.GS.Keeps
 		/// </summary>
 		public override void StartHealthRegeneration()
 		{
+			if (Keep.KeepID == 129)
+			{
+				return;
+			}
 			m_repairTimer = new ECSGameTimer(this);
 			m_repairTimer.Callback = new ECSGameTimer.ECSTimerCallback(RepairTimerCallback);
 			m_repairTimer.Interval = repairInterval;
@@ -223,6 +227,11 @@ namespace DOL.GS.Keeps
 			Skin = component.Skin;
 			m_oldMaxHealth = MaxHealth;
 			Health = MaxHealth;
+			if (Keep.KeepID == 129)
+			{
+				Console.WriteLine("setting keep component health to 0 " + this);
+				Health = 0;
+			}
 			//			this.Health = component.Health;
 			m_oldHealthPercent = HealthPercent;
 			CurrentRegion = myregion;
