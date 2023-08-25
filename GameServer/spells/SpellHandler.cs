@@ -606,6 +606,20 @@ namespace DOL.GS.Spells
 				}
 			}
 
+			if (EffectListService.GetAbilityEffectOnTarget(Caster, eEffect.Shade) != null)
+			{
+				// Check for Death Servant, Death Sight, and Painworking baseline + spec
+				if (new[]{ "Death Servant", "Deathsight", "Painworking"}.Contains(m_spellLine.Spec)){
+					// Is necro spell
+					if(m_spell.SpellType != eSpellType.PetSpell)
+					{
+						if (!quiet)
+							MessageToCaster("You can't cast this spell while in shade form! You must use the pet version of the spell (see Death Servant spells)", eChatType.CT_System);
+						return false;
+					}
+				}
+			}
+
 			/*
 			GameSpellEffect Phaseshift = FindEffectOnTarget(Caster, "Phaseshift");
 			if (Phaseshift != null && (Spell.InstrumentRequirement == 0 || Spell.SpellType == eSpellType.Mesmerize))
