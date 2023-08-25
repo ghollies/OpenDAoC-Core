@@ -66,7 +66,7 @@ namespace DOL.GS.Scripts
                     return;
                 }
 
-                killerPlayer = client.Player.TempProperties.getProperty<GamePlayer>(KILLEDBY);
+                killerPlayer = client.Player.TempProperties.GetProperty<GamePlayer>(KILLEDBY);
 
                 amount = minBountyReward;
 

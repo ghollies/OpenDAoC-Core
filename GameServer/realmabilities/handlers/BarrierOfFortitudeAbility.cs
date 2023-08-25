@@ -38,7 +38,7 @@ namespace DOL.GS.RealmAbilities
 				if (!playerInGroup.IsAlive)
 					continue;
 
-				success = !playerInGroup.TempProperties.getProperty(BofBaSb, false);
+				success = !playerInGroup.TempProperties.GetProperty(BofBaSb, false);
 
 				if (success)
 					new BunkerOfFaithECSEffect(new ECSGameEffectInitParams(playerInGroup, m_duration, 1, CreateSpell(player)));

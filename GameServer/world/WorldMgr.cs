@@ -1343,14 +1343,15 @@ namespace DOL.GS
 		{
 			if (exactMatch)
 			{
-				var client = GetClientByPlayerNameAndRealm(playerName, 0, activeRequired).FirstOrDefault();
+				GameClient client = GetClientByPlayerNameAndRealm(playerName, 0, activeRequired).FirstOrDefault();
+
+				if (client == null)
+					return null;
+
 				return client.Player.Name.ToLower() == playerName.ToLower() ? client : null; //only return if it's an exact match
 			}
 			else
-			{
-				int x = 0;
-				return GuessClientByPlayerNameAndRealm(playerName, 0, activeRequired, out x);
-			}
+				return GuessClientByPlayerNameAndRealm(playerName, 0, activeRequired, out _);
 		}
 
 		/// <summary>
@@ -1562,17 +1563,17 @@ namespace DOL.GS
 			return obj;
 		}
 
-		public static HashSet<GamePlayer> GetPlayersCloseToSpot(ushort regionid, int x, int y, int z, ushort radiusToCheck)
+		public static List<GamePlayer> GetPlayersCloseToSpot(ushort regionid, int x, int y, int z, ushort radiusToCheck)
 		{
 			return GetPlayersCloseToSpot(regionid, new Point3D(x, y ,z), radiusToCheck);
 		}
 
-		public static HashSet<GamePlayer> GetPlayersCloseToSpot(IGameLocation location, ushort radiusToCheck)
+		public static List<GamePlayer> GetPlayersCloseToSpot(IGameLocation location, ushort radiusToCheck)
 		{
 			return GetPlayersCloseToSpot(location.RegionID, location.X, location.Y, location.Z, radiusToCheck);
 		}
 
-		public static HashSet<GamePlayer> GetPlayersCloseToSpot(ushort regionid, Point3D point, ushort radiusToCheck)
+		public static List<GamePlayer> GetPlayersCloseToSpot(ushort regionid, Point3D point, ushort radiusToCheck)
 		{
 			Region reg = GetRegion(regionid);
 
@@ -1582,12 +1583,12 @@ namespace DOL.GS
 			return reg.GetPlayersInRadius(point, radiusToCheck);
 		}
 
-		public static HashSet<GameNPC> GetNPCsCloseToSpot(ushort regionid, int x, int y, int z, ushort radiusToCheck)
+		public static List<GameNPC> GetNPCsCloseToSpot(ushort regionid, int x, int y, int z, ushort radiusToCheck)
 		{
 			return GetNPCsCloseToSpot(regionid, new Point3D( x, y, z), radiusToCheck);
 		}
 
-		public static HashSet<GameNPC> GetNPCsCloseToSpot(ushort regionid, Point3D point, ushort radiusToCheck)
+		public static List<GameNPC> GetNPCsCloseToSpot(ushort regionid, Point3D point, ushort radiusToCheck)
 		{
 			Region reg = GetRegion(regionid);
 
@@ -1597,7 +1598,7 @@ namespace DOL.GS
 			return reg.GetNPCsInRadius(point, radiusToCheck);
 		}
 
-		public static HashSet<GameStaticItem> GetItemsCloseToSpot(ushort regionid, int x, int y, int z, ushort radiusToCheck)
+		public static List<GameStaticItem> GetItemsCloseToSpot(ushort regionid, int x, int y, int z, ushort radiusToCheck)
 		{
 			Region reg = GetRegion(regionid);
 

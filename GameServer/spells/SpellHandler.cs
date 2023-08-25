@@ -589,7 +589,7 @@ namespace DOL.GS.Spells
 
 			if (m_caster is GamePlayer playerCaster)
 			{
-				long nextSpellAvailTime = m_caster.TempProperties.getProperty<long>(GamePlayer.NEXT_SPELL_AVAIL_TIME_BECAUSE_USE_POTION);
+				long nextSpellAvailTime = m_caster.TempProperties.GetProperty<long>(GamePlayer.NEXT_SPELL_AVAIL_TIME_BECAUSE_USE_POTION);
 
 				if (nextSpellAvailTime > m_caster.CurrentRegion.Time && Spell.CastTime > 0) // instant spells ignore the potion cast delay
 				{
@@ -1643,7 +1643,7 @@ namespace DOL.GS.Spells
 				QuickCastECSGameEffect quickcast = (QuickCastECSGameEffect)EffectListService.GetAbilityEffectOnTarget(m_caster, eEffect.QuickCast);
 				if (quickcast != null && Spell.CastTime > 0)
 				{
-					m_caster.TempProperties.setProperty(GamePlayer.QUICK_CAST_CHANGE_TICK, m_caster.CurrentRegion.Time);
+					m_caster.TempProperties.SetProperty(GamePlayer.QUICK_CAST_CHANGE_TICK, m_caster.CurrentRegion.Time);
 					((GamePlayer)m_caster).DisableSkill(SkillBase.GetAbility(Abilities.Quickcast), QuickCastAbilityHandler.DISABLE_DURATION);
 					//EffectService.RequestImmediateCancelEffect(quickcast, false);
 					quickcast.Cancel(false);
@@ -2287,22 +2287,18 @@ namespace DOL.GS.Spells
 
             if (Caster is GamePlayer && (Caster as GamePlayer).CharacterClass.ID == (int)eCharacterClass.Warlock && m_spell.IsSecondary)
 			{
-				Spell uninterruptibleSpell = Caster.TempProperties.getProperty<Spell>(UninterruptableSpellHandler.WARLOCK_UNINTERRUPTABLE_SPELL);
+				Spell uninterruptibleSpell = Caster.TempProperties.GetProperty<Spell>(UninterruptableSpellHandler.WARLOCK_UNINTERRUPTABLE_SPELL);
 
 				if (uninterruptibleSpell != null && uninterruptibleSpell.Value > 0)
 				{
 					double nerf = uninterruptibleSpell.Value;
 					effectiveness *= (1 - (nerf * 0.01));
-					Caster.TempProperties.removeProperty(UninterruptableSpellHandler.WARLOCK_UNINTERRUPTABLE_SPELL);
+					Caster.TempProperties.RemoveProperty(UninterruptableSpellHandler.WARLOCK_UNINTERRUPTABLE_SPELL);
 				}
 			}
 
 			foreach (GameLiving t in targets)
 			{
-				// Aggressive NPCs will aggro on every target they hit with an AoE spell, whether it landed or was resisted.
-				if (Spell.Radius > 0 && Spell.Target.ToLower() == "enemy" && Caster is GameNPC casterNpc && casterNpc.Brain is IOldAggressiveBrain casterNpcBrain)
-					casterNpcBrain.AddToAggroList(t, 1);
-
 				if (CheckSpellResist(t))
 					continue;
 
@@ -2468,13 +2464,9 @@ namespace DOL.GS.Spells
 
 			// Apply effect for Duration Spell.
 			if ((Spell.Duration > 0 && Spell.Target.ToLower() != "area") || Spell.Concentration > 0)
-			{
 				OnDurationEffectApply(target, effectiveness);
-			}
 			else
-			{
 				OnDirectEffect(target, effectiveness);
-			}
 				
 			if (!HasPositiveEffect)
 			{
@@ -2491,21 +2483,11 @@ namespace DOL.GS.Spells
 				m_lastAttackData = ad;
 				Caster.OnAttackEnemy(ad);
 
-				// Treat non-damaging effects as attacks to trigger an immediate response and BAF
-				if (ad.Damage == 0 && ad.Target is GameNPC)
-				{
-					IOldAggressiveBrain aggroBrain = ((GameNPC)ad.Target).Brain as IOldAggressiveBrain;
-					if (aggroBrain != null)
-						aggroBrain.AddToAggroList(Caster, 1);
-				}
-
 				// Harmful spells that deal no damage (ie. debuffs) should still trigger OnAttackedByEnemy.
 				// Exception for DoTs here since the initial landing of the DoT spell reports 0 damage
 				// and the first tick damage is done by the pulsing effect, which takes care of firing OnAttackedByEnemy.
 				if (ad.Damage == 0 && ad.SpellHandler.Spell.SpellType != eSpellType.DamageOverTime)
-				{
 					target.OnAttackedByEnemy(ad);
-				}
 			}
 		}
 
@@ -2674,7 +2656,7 @@ namespace DOL.GS.Spells
 
 				if (m_spellLine.KeyName == GlobalSpellsLines.Combat_Styles_Effect || m_spellLine.KeyName.StartsWith(GlobalSpellsLines.Champion_Lines_StartWith))
 				{
-					AttackData lastAD = playerCaster.TempProperties.getProperty<AttackData>("LastAttackData", null);
+					AttackData lastAD = playerCaster.TempProperties.GetProperty<AttackData>("LastAttackData", null);
 					spellLevel = (lastAD != null && lastAD.Style != null) ? lastAD.Style.Level : Math.Min(playerCaster.MaxLevel, target.Level);
 				}
 			}
@@ -2791,13 +2773,10 @@ namespace DOL.GS.Spells
 			SendSpellResistNotification(target);
 			StartSpellResistInterruptTimer(target);
 			StartSpellResistLastAttackTimer(target);
+
 			// Treat resists as attacks to trigger an immediate response and BAF
 			if (target is GameNPC)
 			{
-				IOldAggressiveBrain aggroBrain = ((GameNPC)target).Brain as IOldAggressiveBrain;
-				if (aggroBrain != null)
-					aggroBrain.AddToAggroList(Caster, 1);
-
 				if (Caster.Realm == 0 || target.Realm == 0)
 				{
 					target.LastAttackedByEnemyTickPvE = GameLoop.GameLoopTime;
@@ -3701,8 +3680,8 @@ namespace DOL.GS.Spells
 
 			if (ad.Damage == 0 && ad.Target is GameNPC targetNpc)
 			{
-				if (targetNpc.Brain is IOldAggressiveBrain aggroBrain)
-					aggroBrain.AddToAggroList(Caster, 0);
+				if (targetNpc.Brain is IOldAggressiveBrain brain)
+					brain.AddToAggroList(Caster, 1);
 
 				if (this is not DoTSpellHandler and not StyleBleeding)
 				{

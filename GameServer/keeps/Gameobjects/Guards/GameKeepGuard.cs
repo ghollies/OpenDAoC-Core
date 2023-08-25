@@ -643,7 +643,7 @@ namespace DOL.GS.Keeps
 				Inventory.ClearInventory();
 			Inventory = null;
 			Position = null;
-			TempProperties.removeAllProperties();
+			TempProperties.RemoveAllProperties();
 
 			base.Delete();
 
@@ -658,7 +658,7 @@ namespace DOL.GS.Keeps
 			if (HookPoint != null && Component != null)
 				Component.Keep.Guards.Remove(m_templateID); //Remove(this.ObjectID); LoadFromPosition() uses position.TemplateID as the insertion key
 
-			TempProperties.removeAllProperties();
+			TempProperties.RemoveAllProperties();
 
 			base.Delete();
 		}

@@ -53,7 +53,7 @@ namespace DOL.GS
     /// <summary>
     /// This class represents a player inside the game
     /// </summary>
-    public class GamePlayer : GameLiving, IManagedEntity
+    public class GamePlayer : GameLiving
     {
         private const int SECONDS_TO_QUIT_ON_LINKDEATH = 60;
 
@@ -71,7 +71,6 @@ namespace DOL.GS
         public double NonCombatNonSprintRegen { get; set; }
         public double CombatRegen { get; set; }
         public double SpecLock { get; set; }
-        public EntityManagerId EntityManagerId { get; set; } = new(EntityManager.EntityType.Player, false);
         public long LastWorldUpdate { get; set; }
 
         public ECSGameTimer EnduRegenTimer { get { return m_enduRegenerationTimer; } }
@@ -379,7 +378,9 @@ namespace DOL.GS
         }
 
         #region Object Caches
-        public ConcurrentDictionary<GameObject, long>[] ObjectUpdateCaches { get; private set; } = new ConcurrentDictionary<GameObject, long>[Enum.GetValues(typeof(eGameObjectType)).Length];
+        public ConcurrentDictionary<GameNPC, ClientService.CachedNpcValues> NpcUpdateCache { get; private set; } = new();
+        public ConcurrentDictionary<GameStaticItem, long> ItemUpdateCache { get; private set; } = new();
+        public ConcurrentDictionary<GameDoorBase, long> DoorUpdateCache { get; private set; } = new();
         public ConcurrentDictionary<House, long> HouseUpdateCache { get; private set; } = new();
         #endregion
 
@@ -1022,7 +1023,6 @@ namespace DOL.GS
                 IsOnHorse = false;
 
             GameEventMgr.RemoveAllHandlersForObject(m_inventory);
-            EntityManager.Remove(this);
 
             if (CraftTimer != null)
             {
@@ -1041,7 +1041,7 @@ namespace DOL.GS
             if (Group != null)
                 Group.RemoveMember(this);
 
-            BattleGroup myBattlegroup = (BattleGroup)TempProperties.getProperty<object>(BattleGroup.BATTLEGROUP_PROPERTY, null);
+            BattleGroup myBattlegroup = TempProperties.GetProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null);
             if (myBattlegroup != null)
                 myBattlegroup.RemoveBattlePlayer(this);
 
@@ -1054,7 +1054,7 @@ namespace DOL.GS
             if (Mission != null)
                 Mission.ExpireMission();
 
-            ChatGroup mychatgroup = (ChatGroup)TempProperties.getProperty<object>(ChatGroup.CHATGROUP_PROPERTY, null);
+            ChatGroup mychatgroup = TempProperties.GetProperty<ChatGroup>(ChatGroup.CHATGROUP_PROPERTY, null);
             if (mychatgroup != null)
                 mychatgroup.RemovePlayer(this);
 
@@ -1107,19 +1107,19 @@ namespace DOL.GS
                 {
                     List<string> registeredTempProp = null;
 
-                    foreach (string property in TempProperties.getAllProperties())
+                    foreach (string property in TempProperties.GetAllProperties())
                     {
                         if (property == "")
                             continue;
 
-                        int occurences = 0;
+                        int occurrences = 0;
                         registeredTempProp = Util.SplitCSV(Properties.TEMPPROPERTIES_TO_REGISTER).ToList();
-                        occurences = (from j in registeredTempProp where property.Contains(j) select j).Count();
+                        occurrences = (from j in registeredTempProp where property.Contains(j) select j).Count();
 
-                        if (occurences == 0)
+                        if (occurrences == 0)
                             continue;
 
-                        object propertyValue = TempProperties.getProperty<object>(property, null);
+                        object propertyValue = TempProperties.GetProperty<object>(property, null);
 
                         if (propertyValue == null)
                             continue;
@@ -1130,7 +1130,7 @@ namespace DOL.GS
                                 log.Debug("On Disconnection found and was saved: " + property + " with value: " + propertyValue.ToString() + " for player: " + Name);
 
                             TempPropertiesManager.TempPropContainerList.Add(new TempPropertiesManager.TempPropContainer(DBCharacter.ObjectId, property, propertyValue.ToString()));
-                            TempProperties.removeProperty(property);
+                            TempProperties.RemoveProperty(property);
                         }
                         else if (Properties.ACTIVATE_TEMP_PROPERTIES_MANAGER_CHECKUP_DEBUG)
                             log.Debug("On Disconnection found but was not saved (not a long value): " + property + " with value: " + propertyValue.ToString() + " for player: " + Name);
@@ -1344,7 +1344,7 @@ namespace DOL.GS
             }
 
             //60 second rebind timer
-            long lastBindTick = TempProperties.getProperty<long>(LAST_BIND_TICK, 0);
+            long lastBindTick = TempProperties.GetProperty<long>(LAST_BIND_TICK, 0);
             long changeTime = CurrentRegion.Time - lastBindTick;
             if (Client.Account.PrivLevel <= (uint)ePrivLevel.Player && changeTime < BindAllowInterval)
             {
@@ -1434,7 +1434,7 @@ namespace DOL.GS
                     }
                 }
 
-                TempProperties.setProperty(LAST_BIND_TICK, CurrentRegion.Time);
+                TempProperties.SetProperty(LAST_BIND_TICK, CurrentRegion.Time);
                 Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.Bind.Bound"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
             }
             else
@@ -1838,8 +1838,8 @@ namespace DOL.GS
                 {
                     // actual lost exp, needed for 2nd stage deaths
                     long lostExp = Experience;
-                    long lastDeathExpLoss = TempProperties.getProperty<long>(DEATH_EXP_LOSS_PROPERTY);
-                    TempProperties.removeProperty(DEATH_EXP_LOSS_PROPERTY);
+                    long lastDeathExpLoss = TempProperties.GetProperty<long>(DEATH_EXP_LOSS_PROPERTY);
+                    TempProperties.RemoveProperty(DEATH_EXP_LOSS_PROPERTY);
 
                     GainExperience(eXPSource.Other, -lastDeathExpLoss);
                     lostExp -= Experience;
@@ -1874,7 +1874,7 @@ namespace DOL.GS
 
             if (Level >= ServerProperties.Properties.PVE_CON_LOSS_LEVEL)
             {
-                int deathConLoss = TempProperties.getProperty<int>(DEATH_CONSTITUTION_LOSS_PROPERTY); // get back constitution lost at death
+                int deathConLoss = TempProperties.GetProperty<int>(DEATH_CONSTITUTION_LOSS_PROPERTY); // get back constitution lost at death
                 if (deathConLoss > 0)
                 {
                     TotalConstitutionLostAtDeath += deathConLoss;
@@ -1948,7 +1948,7 @@ namespace DOL.GS
 
             //Set property indicating that we are releasing to another region; used for Released event
             if (oldRegion != CurrentRegionID)
-                TempProperties.setProperty(RELEASING_PROPERTY, true);
+                TempProperties.SetProperty(RELEASING_PROPERTY, true);
             else
             {
                 // fire the player revive event
@@ -1956,7 +1956,7 @@ namespace DOL.GS
                 Notify(GamePlayerEvent.Released, this);
             }
 
-            TempProperties.removeProperty(DEATH_CONSTITUTION_LOSS_PROPERTY);
+            TempProperties.RemoveProperty(DEATH_CONSTITUTION_LOSS_PROPERTY);
 
             //Reset last valide position array to prevent /stuck avec /release
             lock (m_lastUniqueLocations)
@@ -2037,10 +2037,10 @@ namespace DOL.GS
             bool applyRezSick = true;
 
             // Used by spells like Perfect Recovery
-            if (TempProperties.getAllProperties().Contains(RESURRECT_REZ_SICK_EFFECTIVENESS) && TempProperties.getProperty<double>(RESURRECT_REZ_SICK_EFFECTIVENESS) == 0)
+            if (TempProperties.GetAllProperties().Contains(RESURRECT_REZ_SICK_EFFECTIVENESS) && TempProperties.GetProperty<double>(RESURRECT_REZ_SICK_EFFECTIVENESS) == 0)
             {
                 applyRezSick = false;
-                TempProperties.removeProperty(RESURRECT_REZ_SICK_EFFECTIVENESS);
+                TempProperties.RemoveProperty(RESURRECT_REZ_SICK_EFFECTIVENESS);
             }
             else if (player.Level < ServerProperties.Properties.RESS_SICKNESS_LEVEL)
             {
@@ -2763,7 +2763,7 @@ namespace DOL.GS
             }
             else
             {
-                long lastmove = TempProperties.getProperty<long>(PlayerPositionUpdateHandler.LASTMOVEMENTTICK);
+                long lastmove = TempProperties.GetProperty<long>(PlayerPositionUpdateHandler.LASTMOVEMENTTICK);
                 if ((lastmove > 0 && lastmove + 5000 < CurrentRegion.Time) //cancel sprint after 5sec without moving?
                     || Endurance - 5 <= 0)
                     Sprint(false);
@@ -5163,13 +5163,13 @@ namespace DOL.GS
                     this.Out.SendMessage("This kill was not hardcore enough to gain experience.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
             }
 
-            if (this.TempProperties.getProperty<object>(BattleGroup.BATTLEGROUP_PROPERTY, null) != null)
+            if (this.TempProperties.GetProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null) != null)
             {
                 Out.SendMessage($"You may not gain experience while in a battlegroup.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                 return;
             }
 
-            int numCurrentLoyalDays = this.TempProperties.getProperty<int>(CURRENT_LOYALTY_KEY);
+            int numCurrentLoyalDays = this.TempProperties.GetProperty<int>(CURRENT_LOYALTY_KEY);
             //check for cached loyalty days, and grab value if needed
             if (numCurrentLoyalDays == 0)
             {
@@ -5189,11 +5189,11 @@ namespace DOL.GS
                     numCurrentLoyalDays = realmLoyalty.LoyalDays;
                 }
 
-                this.TempProperties.setProperty(CURRENT_LOYALTY_KEY, numCurrentLoyalDays);
+                this.TempProperties.SetProperty(CURRENT_LOYALTY_KEY, numCurrentLoyalDays);
             }
 
             //check for realm loyalty
-            var loyaltyCheck = this.TempProperties.getProperty<DateTime>(REALM_LOYALTY_KEY);
+            var loyaltyCheck = this.TempProperties.GetProperty<DateTime>(REALM_LOYALTY_KEY);
             if (loyaltyCheck == null)
                 loyaltyCheck = DateTime.UnixEpoch;
 
@@ -5241,8 +5241,8 @@ namespace DOL.GS
                     GameServer.Database.AddObject(newLoyalty);
                 }
 
-                this.TempProperties.setProperty(REALM_LOYALTY_KEY, DateTime.Now);
-                this.TempProperties.setProperty(CURRENT_LOYALTY_KEY, numCurrentLoyalDays);
+                this.TempProperties.SetProperty(REALM_LOYALTY_KEY, DateTime.Now);
+                this.TempProperties.SetProperty(CURRENT_LOYALTY_KEY, numCurrentLoyalDays);
             }
 
             // if (xpSource == eXPSource.Player && !this.CurrentZone.IsBG)
@@ -6048,7 +6048,7 @@ namespace DOL.GS
             {
                 if (ActiveWeapon.Item_Type == (int)eInventorySlot.DistanceWeapon 
                     && rangeAttackComponent.RangedAttackState != eRangedAttackState.None 
-                    && GameLoop.GameLoopTime - this.TempProperties.getProperty<long>(RangeAttackComponent.RANGED_ATTACK_START) > 100
+                    && GameLoop.GameLoopTime - this.TempProperties.GetProperty<long>(RangeAttackComponent.RANGED_ATTACK_START) > 100
                     && attackComponent.attackAction != null)
                 {
                     attackComponent.attackAction.StartTime = 1000;
@@ -7112,7 +7112,7 @@ namespace DOL.GS
                             if (ServerProperties.Properties.PVP_DEATH_CON_LOSS)
                             {
                                 conpenalty = 3;
-                                TempProperties.setProperty(DEATH_CONSTITUTION_LOSS_PROPERTY, conpenalty);
+                                TempProperties.SetProperty(DEATH_CONSTITUTION_LOSS_PROPERTY, conpenalty);
                             }
                             break;
                     }
@@ -7139,7 +7139,7 @@ namespace DOL.GS
                         m_deathtype = eDeathType.PvE;
                         long xpLoss = (ExperienceForNextLevel - ExperienceForCurrentLevel) * xpLossPercent / 1000;
                         GainExperience(eXPSource.Other, -xpLoss, 0, 0, 0, 0, false, true);
-                        TempProperties.setProperty(DEATH_EXP_LOSS_PROPERTY, xpLoss);
+                        TempProperties.SetProperty(DEATH_EXP_LOSS_PROPERTY, xpLoss);
                     }
 
                     if (Level >= ServerProperties.Properties.PVE_CON_LOSS_LEVEL)
@@ -7149,7 +7149,7 @@ namespace DOL.GS
                             conLoss = 3;
                         else if (conLoss < 1)
                             conLoss = 1;
-                        TempProperties.setProperty(DEATH_CONSTITUTION_LOSS_PROPERTY, conLoss);
+                        TempProperties.SetProperty(DEATH_CONSTITUTION_LOSS_PROPERTY, conLoss);
                     }
 
                     if (realmDeath)
@@ -7323,8 +7323,8 @@ namespace DOL.GS
             Duel.Start();
 
             //Get PvP Combat ticks before duel.
-            TempProperties.setProperty(DUEL_PREVIOUS_LASTATTACKTICKPVP, LastAttackTickPvP);
-            TempProperties.setProperty(DUEL_PREVIOUS_LASTATTACKEDBYENEMYTICKPVP, LastAttackedByEnemyTickPvP);
+            TempProperties.SetProperty(DUEL_PREVIOUS_LASTATTACKTICKPVP, LastAttackTickPvP);
+            TempProperties.SetProperty(DUEL_PREVIOUS_LASTATTACKEDBYENEMYTICKPVP, LastAttackedByEnemyTickPvP);
         }
 
         /// <summary>
@@ -7339,8 +7339,8 @@ namespace DOL.GS
             Duel = null;
 
             //Set PvP Combat ticks to that they were before duel.
-            LastAttackTickPvP = TempProperties.getProperty<long>(DUEL_PREVIOUS_LASTATTACKTICKPVP);
-            LastAttackedByEnemyTickPvP = TempProperties.getProperty<long>(DUEL_PREVIOUS_LASTATTACKEDBYENEMYTICKPVP);
+            LastAttackTickPvP = TempProperties.GetProperty<long>(DUEL_PREVIOUS_LASTATTACKTICKPVP);
+            LastAttackedByEnemyTickPvP = TempProperties.GetProperty<long>(DUEL_PREVIOUS_LASTATTACKEDBYENEMYTICKPVP);
         }
         #endregion
 
@@ -7819,43 +7819,33 @@ namespace DOL.GS
 
             lock (Inventory)
             {
-                InventoryItem useItem = Inventory.GetItem((eInventorySlot)slot);
+                InventoryItem useItem = Inventory.GetItem((eInventorySlot) slot);
                 UseItem = useItem;
 
                 if (useItem == null)
                 {
-                    if ((slot >= Slot.FIRSTQUIVER) && (slot <= Slot.FOURTHQUIVER))
-                    {
-                        Out.SendMessage("The quiver slot " + (slot - (Slot.FIRSTQUIVER) + 1) + " is empty!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                    }
+                    if (slot is >= Slot.FIRSTQUIVER and <= Slot.FOURTHQUIVER)
+                        Out.SendMessage($"The quiver slot {slot - Slot.FIRSTQUIVER + 1} is empty!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                     else
-                    {
-                        // don't allow using empty slots
                         Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.IllegalSourceObject", slot), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                    }
+
                     return;
                 }
 
-                if (useItem is IGameInventoryItem)
+                if (useItem is IGameInventoryItem inventoryItem)
                 {
-                    if ((useItem as IGameInventoryItem).Use(this))
-                    {
+                    if (inventoryItem.Use(this))
                         return;
-                    }
                 }
 
-                if (useItem.Item_Type >= (int)eInventorySlot.LeftFrontSaddleBag && useItem.Item_Type <= (int)eInventorySlot.RightRearSaddleBag)
+                if (useItem.Item_Type is >= ((int) eInventorySlot.LeftFrontSaddleBag) and <= ((int) eInventorySlot.RightRearSaddleBag))
                 {
                     UseSaddleBag(useItem);
                     return;
                 }
 
                 if (useItem.Item_Type != Slot.RANGED && (slot != Slot.HORSE || type != 0))
-                {
                     Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.AttemptToUse", useItem.GetName(0, false)), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                }
-
-                #region Non-backpack/vault slots
 
                 switch (slot)
                 {
@@ -7863,129 +7853,121 @@ namespace DOL.GS
                     case Slot.HORSEBARDING:
                         return;
                     case Slot.HORSE:
-                        if (type == 0)
+                    {
+                        if (type != 0)
+                            break;
+
+                        if (IsOnHorse)
+                            IsOnHorse = false;
+                        else
                         {
-                            if (IsOnHorse)
-                                IsOnHorse = false;
-                            else
+                            if (Level < useItem.Level)
                             {
-                                if (Level < useItem.Level)
-                                {
-                                    Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.SummonHorseLevel", useItem.Level), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                    return;
-                                }
-
-                                string reason = GameServer.ServerRules.ReasonForDisallowMounting(this);
-                                if (!String.IsNullOrEmpty(reason))
-                                {
-                                    Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, reason), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                    return;
-                                }
-
-                                if (IsSummoningMount)
-                                {
-                                    Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.StopCallingMount"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                    StopWhistleTimers();
-                                    return;
-                                }
-                                Out.SendTimerWindow("Summoning Mount", 5);
-                                foreach (GamePlayer plr in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
-                                {
-                                    if (plr == null) continue;
-                                    plr.Out.SendEmoteAnimation(this, eEmote.Horse_whistle);
-                                }
-                                // vampiir ~
-                                GameSpellEffect effects = SpellHandler.FindEffectOnTarget(this, "VampiirSpeedEnhancement");
-                                //GameSpellEffect effect = SpellHandler.FindEffectOnTarget(this, "SpeedEnhancement");
-                                ECSGameEffect effect = EffectListService.GetEffectOnTarget(this, eEffect.MovementSpeedBuff);
-                                if (effects != null)
-                                    effects.Cancel(false);
-                                if (effect != null)
-                                    EffectService.RequestImmediateCancelEffect(effect);
-                                    //effect.Cancel(false);
-                                Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.WhistleMount"), eChatType.CT_Emote, eChatLoc.CL_SystemWindow);
-                                m_whistleMountTimer = new ECSGameTimer(this);
-                                m_whistleMountTimer.Callback = new ECSGameTimer.ECSTimerCallback(WhistleMountTimerCallback);
-                                m_whistleMountTimer.Start(5000);
+                                Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.SummonHorseLevel", useItem.Level), eChatType.CT_System, eChatLoc.CL_SystemWindow);
+                                return;
                             }
+
+                            string reason = GameServer.ServerRules.ReasonForDisallowMounting(this);
+
+                            if (!string.IsNullOrEmpty(reason))
+                            {
+                                Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, reason), eChatType.CT_System, eChatLoc.CL_SystemWindow);
+                                return;
+                            }
+
+                            if (IsSummoningMount)
+                            {
+                                Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.StopCallingMount"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
+                                StopWhistleTimers();
+                                return;
+                            }
+
+                            Out.SendTimerWindow("Summoning Mount", 5);
+
+                            foreach (GamePlayer plr in GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
+                            {
+                                if (plr == null)
+                                    continue;
+                                plr.Out.SendEmoteAnimation(this, eEmote.Horse_whistle);
+                            }
+
+                            GameSpellEffect effects = SpellHandler.FindEffectOnTarget(this, "VampiirSpeedEnhancement");
+                            ECSGameEffect effect = EffectListService.GetEffectOnTarget(this, eEffect.MovementSpeedBuff);
+
+                            if (effects != null)
+                                effects.Cancel(false);
+
+                            if (effect != null)
+                                EffectService.RequestImmediateCancelEffect(effect);
+
+                            Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.WhistleMount"), eChatType.CT_Emote, eChatLoc.CL_SystemWindow);
+                            m_whistleMountTimer = new(this, new ECSGameTimer.ECSTimerCallback(WhistleMountTimerCallback), 5000);
                         }
+
                         break;
+                    }
                     case Slot.RIGHTHAND:
                     case Slot.LEFTHAND:
-                        if (type != 0) break;
-                        if (ActiveWeaponSlot == eActiveWeaponSlot.Standard)
+                    {
+                        if (type != 0 || ActiveWeaponSlot == eActiveWeaponSlot.Standard)
                             break;
+
                         SwitchWeapon(eActiveWeaponSlot.Standard);
                         Notify(GamePlayerEvent.UseSlot, this, new UseSlotEventArgs(slot, type));
                         return;
-
+                    }
                     case Slot.TWOHAND:
-                        if (type != 0) break;
-                        if (ActiveWeaponSlot == eActiveWeaponSlot.TwoHanded)
+                    {
+                        if (type != 0 || ActiveWeaponSlot == eActiveWeaponSlot.TwoHanded)
                             break;
+
                         SwitchWeapon(eActiveWeaponSlot.TwoHanded);
                         Notify(GamePlayerEvent.UseSlot, this, new UseSlotEventArgs(slot, type));
                         return;
-
+                    }
                     case Slot.RANGED:
+                    {
                         bool newAttack = false;
-                        ///Volley TempProperties to not allow shot during volley and cancel aim animation
-                        ECSGameEffect volley = EffectListService.GetEffectOnTarget(this, eEffect.Volley);//check if player got volley
-                       /* var IsReadyToFire = TempProperties.getProperty<bool>("volley_IsReadyToFire");
-                        if(!IsReadyToFire && volley != null)
-                        {
-                            return;//dont shot until it's ready to fire
-                        }
-                        if(IsReadyToFire && volley != null && type == 0)//type == 0 means player click icon
-                            TempProperties.removeProperty("volley_IsReadyToFire");
-                        if(volley == null)//dont have volley so remove property
-                          TempProperties.removeProperty("volley_IsReadyToFire");*/
-                        ///////////////////////////////////////////////////////////////////////////////////
+                        ECSGameEffect volley = EffectListService.GetEffectOnTarget(this, eEffect.Volley);
+
                         if (ActiveWeaponSlot != eActiveWeaponSlot.Distance)
                         {
                             SwitchWeapon(eActiveWeaponSlot.Distance);
-                            if(useItem.Object_Type == (int)eObjectType.Instrument) return;
+
+                            if(useItem.Object_Type == (int) eObjectType.Instrument)
+                                return;
                         }
-                        else if (!attackComponent.AttackState && useItem.Object_Type != (int)eObjectType.Instrument && volley == null)//volley check
+                        else if (!attackComponent.AttackState && useItem.Object_Type != (int) eObjectType.Instrument && volley == null)
                         {
                             StopCurrentSpellcast();
                             attackComponent.RequestStartAttack(TargetObject);
                             newAttack = true;
                         }
 
-                        //Clean up range attack state/type if we are not in combat mode
-                        //anymore
-                        if (!attackComponent.AttackState && volley == null)//volley check
+                        if (!attackComponent.AttackState && volley == null)
                         {
                             rangeAttackComponent.RangedAttackState = eRangedAttackState.None;
                             rangeAttackComponent.RangedAttackType = eRangedAttackType.Normal;
                         }
 
-                        if (!newAttack && rangeAttackComponent.RangedAttackState != eRangedAttackState.None && volley == null)//volley check
+                        if (!newAttack && rangeAttackComponent.RangedAttackState != eRangedAttackState.None && volley == null)
                         {
                             if (rangeAttackComponent.RangedAttackState == eRangedAttackState.ReadyToFire)
                             {
+                                rangeAttackComponent.AutoFireTarget = null;
                                 rangeAttackComponent.RangedAttackState = eRangedAttackState.Fire;
                                 StopCurrentSpellcast();
-                                //m_attackAction.Start(1);
-                                attackComponent.attackAction.StartTime = 1;
                             }
                             else if (rangeAttackComponent.RangedAttackState == eRangedAttackState.Aim)
                             {
                                 if (!TargetInView)
                                 {
-                                    // Don't store last target if it's not visible
-                                    if(volley == null)//volley check
+                                    if (volley == null)
                                         Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.CantSeeTarget"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
                                 }
                                 else
                                 {
-                                    if (rangeAttackComponent.AutoFireTarget == null)
-                                    {
-                                        //set new target only if there was no target before
-                                        rangeAttackComponent.AutoFireTarget = TargetObject;
-                                    }
-
+                                    rangeAttackComponent.AutoFireTarget = TargetObject;
                                     rangeAttackComponent.RangedAttackState = eRangedAttackState.AimFire;
                                     Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.AutoReleaseShot"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
                                 }
@@ -8001,80 +7983,74 @@ namespace DOL.GS
                                 Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.NoAutoReleaseShotReload"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
                             }
                         }
+
                         break;
-                    case Slot.FIRSTQUIVER: SwitchQuiver(eActiveQuiverSlot.First, false); break;
-                    case Slot.SECONDQUIVER: SwitchQuiver(eActiveQuiverSlot.Second, false); break;
-                    case Slot.THIRDQUIVER: SwitchQuiver(eActiveQuiverSlot.Third, false); break;
-                    case Slot.FOURTHQUIVER: SwitchQuiver(eActiveQuiverSlot.Fourth, false); break;
+                    }
+                    case Slot.FIRSTQUIVER: SwitchQuiver(eActiveQuiverSlot.First, false);
+                        break;
+                    case Slot.SECONDQUIVER: SwitchQuiver(eActiveQuiverSlot.Second, false);
+                        break;
+                    case Slot.THIRDQUIVER: SwitchQuiver(eActiveQuiverSlot.Third, false);
+                        break;
+                    case Slot.FOURTHQUIVER: SwitchQuiver(eActiveQuiverSlot.Fourth, false);
+                        break;
                 }
 
-                #endregion
-
-                if (useItem.SpellID != 0 || useItem.SpellID1 != 0 || useItem.PoisonSpellID != 0) // don't return without firing events
+                if (useItem.SpellID != 0 || useItem.SpellID1 != 0 || useItem.PoisonSpellID != 0)
                 {
-                    if (IsSitting && useItem.Object_Type != (int)eObjectType.Poison)
+                    if (IsSitting && useItem.Object_Type != (int) eObjectType.Poison)
                     {
                         Out.SendMessage("You can't use an item while sitting!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                         return;
                     }
 
                     // Item with a non-charge ability.
-
-                    if (useItem.Object_Type == (int)eObjectType.Magical
-                        && useItem.Item_Type == (int)eInventorySlot.FirstBackpack
-                        && useItem.SpellID > 0
-                        && useItem.MaxCharges == 0)
+                    if (useItem.Object_Type == (int) eObjectType.Magical &&
+                        useItem.Item_Type == (int) eInventorySlot.FirstBackpack &&
+                        useItem.SpellID > 0 &&
+                        useItem.MaxCharges == 0)
                     {
                         UseMagicalItem(useItem, type);
                         return;
                     }
 
                     // Artifacts don't require charges.
-
                     if ((type < 2 && useItem.SpellID > 0 && useItem.Charges < 1 && useItem.MaxCharges > -1) ||
                         (type == 2 && useItem.SpellID1 > 0 && useItem.Charges1 < 1 && useItem.MaxCharges1 > -1) ||
                         (useItem.PoisonSpellID > 0 && useItem.PoisonCharges < 1))
                     {
-                        Out.SendMessage("The " + useItem.Name + " is out of charges.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
+                        Out.SendMessage($"The {useItem.Name} is out of charges.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                         return;
                     }
                     else
                     {
-                        if (useItem.Object_Type == (int)eObjectType.Poison)
+                        if (useItem.Object_Type == (int) eObjectType.Poison)
                         {
                             InventoryItem mainHand = ActiveWeapon;
                             InventoryItem leftHand = Inventory.GetItem(eInventorySlot.LeftHandWeapon);
+
                             if (mainHand != null && mainHand.PoisonSpellID == 0)
-                            {
                                 ApplyPoison(useItem, mainHand);
-                            }
                             else if (leftHand != null && leftHand.PoisonSpellID == 0)
-                            {
                                 ApplyPoison(useItem, leftHand);
-                            }
                         }
-                        else if (useItem.SpellID > 0 && useItem.Charges > 0 && useItem.Object_Type == (int)eObjectType.Magical && (useItem.Item_Type == (int)eInventorySlot.FirstBackpack || useItem.Item_Type == 41))
+                        else if (useItem.SpellID > 0 && useItem.Charges > 0 && useItem.Object_Type == (int) eObjectType.Magical && (useItem.Item_Type == (int) eInventorySlot.FirstBackpack || useItem.Item_Type == 41))
                         {
                             SpellLine potionEffectLine = SkillBase.GetSpellLine(GlobalSpellsLines.Potions_Effects);
 
                             if (useItem.Item_Type == 41)
-                            {
                                 potionEffectLine = SkillBase.GetSpellLine(GlobalSpellsLines.Item_Effects);
-                            }
 
                             Spell spell = SkillBase.FindSpell(useItem.SpellID, potionEffectLine);
 
                             if (spell != null)
                             {
                                 // For potions most can be used by any player level except a few higher level ones.
-                                // So for the case of potions we will only restrict the level of usage if LevelRequirement is >0 for the item
-
-                                long nextPotionAvailTime = TempProperties.getProperty<long>(NEXT_POTION_AVAIL_TIME + "_Type" + (spell.SharedTimerGroup));
+                                // So for the case of potions we will only restrict the level of usage if LevelRequirement is >0 for the item.
+                                long nextPotionAvailTime = TempProperties.GetProperty<long>($"{NEXT_POTION_AVAIL_TIME}_Type{spell.SharedTimerGroup}");
 
                                 if (Client.Account.PrivLevel == 1 && nextPotionAvailTime > CurrentRegion.Time)
-                                {
                                     Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.MustWaitBeforeUse", (nextPotionAvailTime - CurrentRegion.Time) / 1000), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                }
                                 else
                                 {
                                     if (potionEffectLine != null)
@@ -8084,38 +8060,27 @@ namespace DOL.GS
                                         if (requiredLevel <= Level)
                                         {
                                             if (spell.CastTime > 0 && attackComponent.AttackState)
-                                            {
                                                 Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.CantUseInCombat"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                            }
-                                            //Eden
                                             else if ((IsStunned && !(Steed != null && Steed.Name == "Forceful Zephyr")) || IsMezzed || !IsAlive)
-                                            {
                                                 Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.CantUseState", useItem.GetName(0, false)), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                            }
                                             else if (spell.CastTime > 0 && IsCasting)
-                                            {
                                                 Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.CantUseCast", useItem.GetName(0, false)), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                            }
                                             else
                                             {
-                                                SpellHandler spellHandler = ScriptMgr.CreateSpellHandler(this, spell, potionEffectLine) as SpellHandler;
-                                                if (spellHandler != null)
+                                                if (ScriptMgr.CreateSpellHandler(this, spell, potionEffectLine) is SpellHandler spellHandler)
                                                 {
                                                     GameLiving target = TargetObject as GameLiving;
+
                                                     if (spellHandler is AllStatsBarrel)
                                                         target = this;
 
                                                     if (spellHandler is AllRegenBuff)
                                                         target = this;
 
-                                                    // Tobz: make sure we have the appropriate target for our charge spell,
-                                                    // otherwise don't waste a charge.
-                                                    if (spell.Target.ToLower() == "enemy")
+                                                    if (spell.Target.Equals("enemy", StringComparison.OrdinalIgnoreCase))
                                                     {
-                                                        // we need an enemy target.
                                                         if (!GameServer.ServerRules.IsAllowedToAttack(this, target, true))
                                                         {
-                                                            // not allowed to attack, so they are not an enemy.
                                                             Out.SendMessage("You need a target for this ability!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                                                             return;
                                                         }
@@ -8129,15 +8094,14 @@ namespace DOL.GS
 
                                                     Stealth(false);
 
-                                                    if (useItem.Item_Type == (int)eInventorySlot.FirstBackpack)
+                                                    if (useItem.Item_Type == (int) eInventorySlot.FirstBackpack)
                                                     {
                                                         Emote(eEmote.Drink);
 
                                                         if (spell.CastTime > 0)
-                                                            TempProperties.setProperty(NEXT_SPELL_AVAIL_TIME_BECAUSE_USE_POTION, 6 * 1000 + CurrentRegion.Time);
+                                                            TempProperties.SetProperty(NEXT_SPELL_AVAIL_TIME_BECAUSE_USE_POTION, 6 * 1000 + CurrentRegion.Time);
                                                     }
 
-                                                    //Spell
                                                     if (spellHandler.StartSpell(target, useItem))
                                                     {
                                                         if (useItem.Count > 1)
@@ -8148,89 +8112,70 @@ namespace DOL.GS
                                                         else
                                                         {
                                                             useItem.Charges--;
+
                                                             if (useItem.Charges < 1)
                                                             {
                                                                 Inventory.RemoveCountFromStack(useItem, 1);
                                                                 InventoryLogging.LogInventoryAction(this, "(potion)", eInventoryActionType.Other, useItem.Template);
                                                             }
                                                         }
-                                                        Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.Used", useItem.GetName(0, false)), eChatType.CT_System, eChatLoc.CL_SystemWindow);
 
-                                                        TempProperties.setProperty(NEXT_POTION_AVAIL_TIME + "_Type" + (spell.SharedTimerGroup), useItem.CanUseEvery * 1000 + CurrentRegion.Time);
-                                                    }
-                                                    else
-                                                    {
-                                                        // StartItemSpell is responsible for sending failure message to player
+                                                        Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.Used", useItem.GetName(0, false)), eChatType.CT_System, eChatLoc.CL_SystemWindow);
+                                                        TempProperties.SetProperty($"{NEXT_POTION_AVAIL_TIME}_Type{spell.SharedTimerGroup}", useItem.CanUseEvery * 1000 + CurrentRegion.Time);
                                                     }
                                                 }
                                                 else
-                                                {
-                                                    Out.SendMessage("Potion effect ID " + spell.ID + " is not implemented yet.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                                }
+                                                    Out.SendMessage($"Potion effect ID {spell.ID} is not implemented yet.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                                             }
                                         }
                                         else
-                                        {
                                             Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.NotEnouthPower"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                        }
                                     }
                                     else
-                                    {
                                         Out.SendMessage("Potion effect line not found", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                    }
                                 }
                             }
                             else
-                            {
-                                Out.SendMessage("Potion effect spell ID " + useItem.SpellID + " not found.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                            }
+                                Out.SendMessage($"Potion effect spell ID {useItem.SpellID} not found.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                         }
                         else if (type > 0)
                         {
                             if (!Inventory.EquippedItems.Contains(useItem))
-                            {
                                 Out.SendMessage(LanguageMgr.GetTranslation(Client.Account.Language, "GamePlayer.UseSlot.CantUseFromBackpack"), eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                            }
                             else
                             {
-                                long lastChargedItemUseTick = TempProperties.getProperty<long>(LAST_CHARGED_ITEM_USE_TICK);
+                                long lastChargedItemUseTick = TempProperties.GetProperty<long>(LAST_CHARGED_ITEM_USE_TICK);
                                 long changeTime = CurrentRegion.Time - lastChargedItemUseTick;
-                                long delay = TempProperties.getProperty<long>(ITEM_USE_DELAY, 0L);
-                                long itemdelay = TempProperties.getProperty<long>("ITEMREUSEDELAY" + useItem.Id_nb);
-                                long itemreuse = (long)useItem.CanUseEvery * 1000;
-                                if (itemdelay == 0) itemdelay = CurrentRegion.Time - itemreuse;
+                                long delay = TempProperties.GetProperty(ITEM_USE_DELAY, 0L);
+                                long itemDelay = TempProperties.GetProperty<long>("ITEMREUSEDELAY" + useItem.Id_nb);
+                                long itemReuse = (long)useItem.CanUseEvery * 1000;
+
+                                if (itemDelay == 0)
+                                    itemDelay = CurrentRegion.Time - itemReuse;
 
                                 if ((IsStunned && !(Steed != null && Steed.Name == "Forceful Zephyr")) || IsMezzed || !IsAlive)
-                                {
                                     Out.SendMessage("In your state you can't discharge any object.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                }
-                                else if ((type == 1 && SelfBuffChargeIDs.Contains(useItem.SpellID)) || 
-                                         (type == 2 && SelfBuffChargeIDs.Contains(useItem.SpellID1)))
-                                {
+                                else if ((type == 1 && SelfBuffChargeIDs.Contains(useItem.SpellID)) || (type == 2 && SelfBuffChargeIDs.Contains(useItem.SpellID1)))
                                     UseItemCharge(useItem, type);
-                                }
-                                else if (Client.Account.PrivLevel == 1 && (changeTime < delay || (CurrentRegion.Time - itemdelay) < itemreuse)) //2 minutes reuse timer
+                                else if (Client.Account.PrivLevel == 1 && (changeTime < delay || (CurrentRegion.Time - itemDelay) < itemReuse)) //2 minutes reuse timer
                                 {
-                                    if ((CurrentRegion.Time - itemdelay) < itemreuse)
-                                    {
-                                        Out.SendMessage("You must wait " + (itemreuse - (CurrentRegion.Time - itemdelay)) / 1000 + " more second before discharge " + useItem.Name + "!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                    }
+                                    if ((CurrentRegion.Time - itemDelay) < itemReuse)
+                                        Out.SendMessage($"You must wait {(itemReuse - (CurrentRegion.Time - itemDelay)) / 1000} more second before discharge {useItem.Name}!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
                                     else
-                                    {
-                                        Out.SendMessage("You must wait " + (delay - changeTime) / 1000 + " more second before discharge another object!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
-                                    }
+                                        Out.SendMessage($"You must wait {(delay - changeTime) / 1000} more second before discharge another object!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
+
                                     return;
                                 }
                                 else
                                 {
-                                    if (type == 1) //use1
+                                    if (type == 1)
                                     {
                                         if (useItem.SpellID == 0)
                                             return;
 
                                         UseItemCharge(useItem, type);
                                     }
-                                    else if (type == 2) //use2
+                                    else if (type == 2)
                                     {
                                         if (useItem.SpellID1 == 0)
                                             return;
@@ -8242,7 +8187,7 @@ namespace DOL.GS
                         }
                     }
                 }
-                // notify event handlers about used slot
+
                 Notify(GamePlayerEvent.UseSlot, this, new UseSlotEventArgs(slot, type));
             }
         }
@@ -8462,9 +8407,9 @@ namespace DOL.GS
 
                         if (castOk)
                         {
-                            TempProperties.setProperty(LAST_CHARGED_ITEM_USE_TICK, CurrentRegion.Time);
-                            TempProperties.setProperty(ITEM_USE_DELAY, (long)(60000 * 2));
-                            TempProperties.setProperty("ITEMREUSEDELAY" + useItem.Id_nb, CurrentRegion.Time);
+                            TempProperties.SetProperty(LAST_CHARGED_ITEM_USE_TICK, CurrentRegion.Time);
+                            TempProperties.SetProperty(ITEM_USE_DELAY, (long)(60000 * 2));
+                            TempProperties.SetProperty("ITEMREUSEDELAY" + useItem.Id_nb, CurrentRegion.Time);
                         }
                     }
                 }
@@ -8559,7 +8504,7 @@ namespace DOL.GS
                     if (spellHandler != null && spellHandler.CheckBeginCast(TargetObject as GameLiving))
                     {
                         castingComponent.RequestStartCastSpell(spell, itemSpellLine);
-                        TempProperties.setProperty(LAST_USED_ITEM_SPELL, item);
+                        TempProperties.SetProperty(LAST_USED_ITEM_SPELL, item);
                         //CurrentSpellHandler = spellHandler;
                         //CurrentSpellHandler.CastingCompleteEvent += new CastingCompleteCallback(OnAfterSpellCastSequence);
                         //spellHandler.CastSpell(item);
@@ -8749,7 +8694,7 @@ namespace DOL.GS
             if (GameServer.ServerRules.IsAllowedToUnderstand(source, this))
             {
                 // If GM/Admin uses '/alert send on', receive audio alert for all sends
-                if (Client != source.Client && Client.Account.PrivLevel != 1 && TempProperties.getProperty<bool>("SendAlert") == false)
+                if (Client != source.Client && Client.Account.PrivLevel != 1 && TempProperties.GetProperty<bool>("SendAlert") == false)
                     Out.SendSoundEffect(2567, 0, 0, 0, 0, 0); // 2567 = Cat_Meow_08.wav
                 if (source.Client.Account.PrivLevel > 1)
                     // Message: {0} [TEAM] sends, "{1}"
@@ -8765,7 +8710,7 @@ namespace DOL.GS
                 return true;
             }
 
-            var afkmessage = TempProperties.getProperty<string>(AFK_MESSAGE);
+            var afkmessage = TempProperties.GetProperty<string>(AFK_MESSAGE);
             if (afkmessage != null)
             {
                 if (afkmessage == "")
@@ -9195,9 +9140,9 @@ namespace DOL.GS
 
             if (CurrentRegion.GetZone(X, Y) == null)
             {
-                if (Client.Account.PrivLevel < 3 && !TempProperties.getProperty("isbeingbanned", false))
+                if (Client.Account.PrivLevel < 3 && !TempProperties.GetProperty("isbeingbanned", false))
                 {
-                    TempProperties.setProperty("isbeingbanned", true);
+                    TempProperties.SetProperty("isbeingbanned", true);
                     MoveToBind();
                 }
             }
@@ -9228,7 +9173,7 @@ namespace DOL.GS
         {
             CleanupOnDisconnect();
             Group?.RemoveMember(this);
-            BattleGroup mybattlegroup = (BattleGroup) TempProperties.getProperty<object>(BattleGroup.BATTLEGROUP_PROPERTY, null);
+            BattleGroup mybattlegroup = TempProperties.GetProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null);
             mybattlegroup?.RemoveBattlePlayer(this);
             m_guild?.RemoveOnlineMember(this);
             GroupMgr.RemovePlayerLooking(this);
@@ -9309,7 +9254,7 @@ namespace DOL.GS
                     hasPetToMove = true;
             }
 
-            HashSet<GamePlayer> playersInRadius = GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE);
+            List<GamePlayer> playersInRadius = GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE);
 
             CurrentSpeed = 0;
             movementComponent.MovementStartTick = GameLoop.GameLoopTime;
@@ -9320,7 +9265,7 @@ namespace DOL.GS
             Heading = heading;
 
             // Remove the last update tick property to prevent speedhack messages during zoning and teleporting.
-            TempProperties.removeProperty(PlayerPositionUpdateHandler.LASTMOVEMENTTICK);
+            TempProperties.RemoveProperty(PlayerPositionUpdateHandler.LASTMOVEMENTTICK);
 
             if (regionID != CurrentRegionID)
             {
@@ -9787,7 +9732,7 @@ namespace DOL.GS
 
                 if (attackComponent.AttackState && ActiveWeaponSlot != eActiveWeaponSlot.Distance)
                 {
-                    AttackData ad = TempProperties.getProperty<object>(LAST_ATTACK_DATA, null) as AttackData;
+                    AttackData ad = TempProperties.GetProperty<AttackData>(LAST_ATTACK_DATA, null);
                     if (ad != null && ad.IsMeleeAttack && (ad.AttackResult == eAttackResult.TargetNotVisible || ad.AttackResult == eAttackResult.OutOfRange))
                     {
                         //Does the target can be attacked ?
@@ -10162,7 +10107,7 @@ namespace DOL.GS
                 }
                 else
                 {
-                    AttackData ad = TempProperties.getProperty<AttackData>(LAST_ATTACK_DATA, null);
+                    AttackData ad = TempProperties.GetProperty<AttackData>(LAST_ATTACK_DATA, null);
 
                     if (ad != null && ad.IsMeleeAttack && (ad.AttackResult == eAttackResult.TargetNotVisible || ad.AttackResult == eAttackResult.OutOfRange))
                     {
@@ -10554,7 +10499,7 @@ namespace DOL.GS
             //Check null on client.player bypass region change
             if (Client.Account.PrivLevel == (uint)ePrivLevel.Player && Client.Player != null && Client.Player.ObjectState == eObjectState.Active)
                 if (item.SpellID > 0 || item.SpellID1 > 0)
-                    TempProperties.setProperty("ITEMREUSEDELAY" + item.Id_nb, CurrentRegion.Time);
+                    TempProperties.SetProperty("ITEMREUSEDELAY" + item.Id_nb, CurrentRegion.Time);
 
             /*
             //max 2 charges
@@ -11146,7 +11091,7 @@ namespace DOL.GS
                     }
 
                     Group group = Group;
-                    BattleGroup mybattlegroup = (BattleGroup)TempProperties.getProperty<object>(BattleGroup.BATTLEGROUP_PROPERTY, null);
+                    BattleGroup mybattlegroup = TempProperties.GetProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null);
                     if (mybattlegroup != null && mybattlegroup.GetBGLootType() == true && mybattlegroup.GetBGTreasurer() != null)
                     {
                         GamePlayer theTreasurer = mybattlegroup.GetBGTreasurer();
@@ -11793,8 +11738,8 @@ namespace DOL.GS
             
 
             //set that date as our temp property for reference on kill
-            this.TempProperties.setProperty(REALM_LOYALTY_KEY, lastRealmLoyaltyUpdateTime);
-            this.TempProperties.setProperty(CURRENT_LOYALTY_KEY, loyaltyDays);
+            this.TempProperties.SetProperty(REALM_LOYALTY_KEY, lastRealmLoyaltyUpdateTime);
+            this.TempProperties.SetProperty(CURRENT_LOYALTY_KEY, loyaltyDays);
             */
 
             AccountXMoney MoneyForRealm = DOLDB<AccountXMoney>.SelectObject(DB.Column("AccountID").IsEqualTo(this.Client.Account.ObjectId).And(DB.Column("Realm").IsEqualTo(this.Realm)));
@@ -12055,7 +12000,7 @@ namespace DOL.GS
                 }
                 else
                 {
-                    realmLoyalty.LastLoyaltyUpdate = this.TempProperties.getProperty<DateTime>(REALM_LOYALTY_KEY);
+                    realmLoyalty.LastLoyaltyUpdate = this.TempProperties.GetProperty<DateTime>(REALM_LOYALTY_KEY);
                     GameServer.Database.SaveObject(realmLoyalty);
                 }
 
@@ -12426,24 +12371,24 @@ namespace DOL.GS
         // UncoverStealthAction is what unstealths player if they are too close to mobs.
         public void StartStealthUncoverAction()
         {
-            UncoverStealthAction action = (UncoverStealthAction)TempProperties.getProperty<object>(UNCOVER_STEALTH_ACTION_PROP, null);
+            UncoverStealthAction action = TempProperties.GetProperty<UncoverStealthAction>(UNCOVER_STEALTH_ACTION_PROP, null);
             //start the uncover timer
             if (action == null)
                 action = new UncoverStealthAction(this);
             action.Interval = 1000;
             action.Start(1000);
-            TempProperties.setProperty(UNCOVER_STEALTH_ACTION_PROP, action);
+            TempProperties.SetProperty(UNCOVER_STEALTH_ACTION_PROP, action);
         }
 
         // UncoverStealthAction is what unstealths player if they are too close to mobs.
         public void StopStealthUncoverAction()
         {
-            UncoverStealthAction action = (UncoverStealthAction)TempProperties.getProperty<object>(UNCOVER_STEALTH_ACTION_PROP, null);
+            UncoverStealthAction action = TempProperties.GetProperty<UncoverStealthAction>(UNCOVER_STEALTH_ACTION_PROP, null);
             //stop the uncover timer
             if (action != null)
             {
                 action.Stop();
-                TempProperties.removeProperty(UNCOVER_STEALTH_ACTION_PROP);
+                TempProperties.RemoveProperty(UNCOVER_STEALTH_ACTION_PROP);
             }
         }
 
@@ -15210,11 +15155,6 @@ namespace DOL.GS
             LoadFromDatabase(dbChar);
             CreateStatistics();
 
-            for (int i = 0; i < ObjectUpdateCaches.Length; i++)
-                ObjectUpdateCaches[i] = new();
-
-            EntityManager.Add(this);
-
             m_combatTimer = new ECSGameTimer(this, new ECSGameTimer.ECSTimerCallback(_ =>
             {
                 Out.SendUpdateMaxSpeed();
@@ -15399,7 +15339,7 @@ namespace DOL.GS
                 if (IsMoving)
                     return false;
 
-                long lastMovementTick = TempProperties.getProperty<long>("PLAYERPOSITION_LASTMOVEMENTTICK");
+                long lastMovementTick = TempProperties.GetProperty<long>("PLAYERPOSITION_LASTMOVEMENTTICK");
                 return (CurrentRegion.Time - lastMovementTick > 3000);
             }
         }

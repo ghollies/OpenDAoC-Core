@@ -1,11 +1,10 @@
 using System.Collections;
-using DOL.GS.Effects;
 using DOL.Database;
 using DOL.GS.PacketHandler;
+using DOL.GS.Effects;
 
 namespace DOL.GS.RealmAbilities
 {
-
 	public class SoldiersBarricadeAbility : TimedRealmAbility
 	{
 		public SoldiersBarricadeAbility(DBAbility dba, int level) : base(dba, level) { }
@@ -23,7 +22,7 @@ namespace DOL.GS.RealmAbilities
 			if (CheckPreconditions(living, DEAD | SITTING | MEZZED | STUNNED)) return;
 			GamePlayer player = living as GamePlayer;
 			
- 			if (player.TempProperties.getProperty(BofBaSb, false))
+ 			if (player.TempProperties.GetProperty(BofBaSb, false))
  			{
 				player.Out.SendMessage("You already an effect of that type!", eChatType.CT_SpellResisted, eChatLoc.CL_SystemWindow);
  				return;
@@ -48,7 +47,7 @@ namespace DOL.GS.RealmAbilities
 			{
 				//send spelleffect
 				if (!target.IsAlive) continue;
-				success = !target.TempProperties.getProperty(BofBaSb, false);
+				success = !target.TempProperties.GetProperty(BofBaSb, false);
 				foreach (GamePlayer visPlayer in target.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE))
 					visPlayer.Out.SendSpellEffectAnimation(player, target, 7015, 0, false, System.Convert.ToByte(success));
 				if (success)

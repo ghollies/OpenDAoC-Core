@@ -196,7 +196,7 @@ namespace DOL.GS
 			get => base.Level;
 			set
 			{
-				bool bMaxHealth = (m_health == MaxHealth);
+				bool bMaxHealth = m_health >= MaxHealth;
 
 				if (Level != value)
 				{
@@ -243,7 +243,7 @@ namespace DOL.GS
 				Intelligence = NPCTemplate.Intelligence;
 				Empathy = NPCTemplate.Empathy;
 				Piety = NPCTemplate.Piety;
-				Charisma = NPCTemplate.Strength;
+				Charisma = NPCTemplate.Charisma;
 			}
 			else
 			{
@@ -264,19 +264,33 @@ namespace DOL.GS
 					Piety = mob.Piety;
 					Charisma = mob.Charisma;
 				}
-				else
-				{
-					if (Level > 1)
-					{
-						int levelMinusOne = Level - 1;
-						Strength = (short) (Properties.MOB_AUTOSET_STR_BASE + levelMinusOne * Properties.MOB_AUTOSET_STR_MULTIPLIER);
-						Constitution = (short) (Properties.MOB_AUTOSET_CON_BASE + levelMinusOne * Properties.MOB_AUTOSET_CON_MULTIPLIER);
-						Quickness = (short) (Properties.MOB_AUTOSET_QUI_BASE + levelMinusOne * Properties.MOB_AUTOSET_QUI_MULTIPLIER);
-						Dexterity = (short) (Properties.MOB_AUTOSET_DEX_BASE + levelMinusOne * Properties.MOB_AUTOSET_DEX_MULTIPLIER);
-						Intelligence = (short) (Properties.MOB_AUTOSET_INT_BASE + levelMinusOne * Properties.MOB_AUTOSET_INT_MULTIPLIER);
-					}
-				}
 			}
+
+			int levelMinusOne = Level - 1;
+
+			if (Strength < 1)
+				Strength = (short) (Properties.MOB_AUTOSET_STR_BASE + levelMinusOne * Properties.MOB_AUTOSET_STR_MULTIPLIER);
+
+			if (Constitution < 1)
+				Constitution = (short) (Properties.MOB_AUTOSET_CON_BASE + levelMinusOne * Properties.MOB_AUTOSET_CON_MULTIPLIER);
+
+			if (Quickness < 1)
+				Quickness = (short) (Properties.MOB_AUTOSET_QUI_BASE + levelMinusOne * Properties.MOB_AUTOSET_QUI_MULTIPLIER);
+
+			if (Dexterity < 1)
+				Dexterity = (short) (Properties.MOB_AUTOSET_DEX_BASE + levelMinusOne * Properties.MOB_AUTOSET_DEX_MULTIPLIER);
+
+			if (Intelligence < 1)
+				Intelligence = (short) (Properties.MOB_AUTOSET_INT_BASE + levelMinusOne * Properties.MOB_AUTOSET_INT_MULTIPLIER);
+
+			if (Empathy < 1)
+				Empathy = (short) (30 + levelMinusOne);
+
+			if (Piety < 1)
+				Piety = (short) (30 + levelMinusOne);
+
+			if (Charisma < 1)
+				Charisma = (short) (30 + levelMinusOne);
 		}
 
 		/*
@@ -1088,6 +1102,7 @@ namespace DOL.GS
 			m_databaseLevel = dbMob.Level;
 			AutoSetStats(dbMob);
 			Level = dbMob.Level;
+			m_health = MaxHealth;
 			MeleeDamageType = (eDamageType)dbMob.MeleeDamageType;
 
 			if (MeleeDamageType == 0)
@@ -1269,7 +1284,7 @@ namespace DOL.GS
 			mob.EquipmentTemplateID = EquipmentTemplateID;
 
 			if (m_faction != null)
-				mob.FactionID = m_faction.ID;
+				mob.FactionID = m_faction.Id;
 
 			mob.MeleeDamageType = (int) MeleeDamageType;
 
@@ -2117,7 +2132,7 @@ namespace DOL.GS
 
 			Notify(GameObjectEvent.MoveTo, this, new MoveToEventArgs(regionID, x, y, z, heading));
 
-			HashSet<GamePlayer> playersInRadius = GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE);
+			List<GamePlayer> playersInRadius = GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE);
 
 			m_x = x;
 			m_y = y;
@@ -2173,7 +2188,7 @@ namespace DOL.GS
 
 			Brain.Stop();
 			StopFollowing();
-			TempProperties.removeProperty(CHARMED_TICK_PROP);
+			TempProperties.RemoveProperty(CHARMED_TICK_PROP);
 			base.Delete();
 		}
 
@@ -2798,7 +2813,7 @@ namespace DOL.GS
 		{
 			get
 			{
-				if (CurrentRegion == null || CurrentRegion.Time - CHARMED_NOEXP_TIMEOUT < TempProperties.getProperty<long>(CHARMED_TICK_PROP))
+				if (CurrentRegion == null || CurrentRegion.Time - CHARMED_NOEXP_TIMEOUT < TempProperties.GetProperty<long>(CHARMED_TICK_PROP))
 					return false;
 				if (this.Brain is IControlledBrain)
 					return false;
@@ -2933,7 +2948,7 @@ namespace DOL.GS
 				}
 
 				Delete();
-				TempProperties.removeAllProperties();
+				TempProperties.RemoveAllProperties();
 				StartRespawn();
 			}
 			finally
@@ -3447,15 +3462,15 @@ namespace DOL.GS
 
 				GamePlayer playerAttacker = null;
 				BattleGroup activeBG = null;
-				if (killer is GamePlayer playerKiller &&
-					playerKiller.TempProperties.getProperty<object>(BattleGroup.BATTLEGROUP_PROPERTY, null) != null)
-					activeBG = playerKiller.TempProperties.getProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null);
+
+				if (killer is GamePlayer playerKiller && activeBG != null)
+					activeBG = playerKiller.TempProperties.GetProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null);
 				
 				foreach (GameObject gainer in XPGainerList.Keys)
 				{
 					//if a battlegroup killed the mob, filter out any non BG players
 					if (activeBG != null && gainer is GamePlayer p &&
-						p.TempProperties.getProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null) != activeBG)
+						p.TempProperties.GetProperty<BattleGroup>(BattleGroup.BATTLEGROUP_PROPERTY, null) != activeBG)
 						continue;
 					
 					if (gainer is GamePlayer)
@@ -4276,7 +4291,7 @@ namespace DOL.GS
 			{
 				case "b": // Broadcast message without "[Broadcast] {0}:" string start
 				{
-					foreach (GamePlayer player in CurrentRegion.GetPlayersInRadius(this, 25000, false))
+					foreach (GamePlayer player in GetPlayersInRadius(25000))
 					{
 					  player.Out.SendMessage(text, eChatType.CT_Broadcast, eChatLoc.CL_ChatWindow);
 					}

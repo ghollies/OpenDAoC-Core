@@ -625,7 +625,7 @@ namespace DOL.GS
                     return;
                 }
 
-                long vanishTimeout = player.TempProperties.getProperty<long>(VanishEffect.VANISH_BLOCK_ATTACK_TIME_KEY);
+                long vanishTimeout = player.TempProperties.GetProperty<long>(VanishEffect.VANISH_BLOCK_ATTACK_TIME_KEY);
                 if (vanishTimeout > 0 && vanishTimeout > GameLoop.GameLoopTime)
                 {
                     player.Out.SendMessage(
@@ -635,7 +635,7 @@ namespace DOL.GS
                     return;
                 }
 
-                long VanishTick = player.TempProperties.getProperty<long>(VanishEffect.VANISH_BLOCK_ATTACK_TIME_KEY);
+                long VanishTick = player.TempProperties.GetProperty<long>(VanishEffect.VANISH_BLOCK_ATTACK_TIME_KEY);
                 long changeTime = GameLoop.GameLoopTime - VanishTick;
                 if (changeTime < 30000 && VanishTick > 0)
                 {
@@ -803,7 +803,7 @@ namespace DOL.GS
                         player.Out.SendAttackMode(AttackState);
                     else
                     {
-                        player.TempProperties.setProperty(RangeAttackComponent.RANGED_ATTACK_START, GameLoop.GameLoopTime);
+                        player.TempProperties.SetProperty(RangeAttackComponent.RANGED_ATTACK_START, GameLoop.GameLoopTime);
 
                         string typeMsg = "shot";
                         if (attackWeapon.Object_Type == (int) eObjectType.Thrown)
@@ -1344,7 +1344,7 @@ namespace DOL.GS
 
                         if (action.RangedAttackType == eRangedAttackType.Critical)
                         {
-                            if (ad.Target is GameLiving liveTarget && (DateTime.Now <= liveTarget.TempProperties.getProperty("HasBeenCritshotRecently", DateTime.MinValue).AddSeconds(10)))
+                            if (ad.Target is GameLiving liveTarget && (DateTime.Now <= liveTarget.TempProperties.GetProperty("HasBeenCritshotRecently", DateTime.MinValue).AddSeconds(10)))
                             {
                                 // Prevent a living target from being crit shot multiple times during the same period, fallback to a normal shot damage
                                 if (owner is GamePlayer player)
@@ -1357,7 +1357,7 @@ namespace DOL.GS
                                 damage = Math.Min(damage, (int)(UnstyledDamageCap(weapon) * 2));
                                 if (ad.Target is GameLiving liveCritTarget)
                                 {
-                                    liveCritTarget.TempProperties.setProperty("HasBeenCritshotRecently", DateTime.Now);
+                                    liveCritTarget.TempProperties.SetProperty("HasBeenCritshotRecently", DateTime.Now);
                                 }
 
                             }
@@ -1365,11 +1365,10 @@ namespace DOL.GS
                         else
                             damage = Math.Min(damage, (int) UnstyledDamageCap(weapon) /* * effectiveness*/);
 
-                        ad.StyleDamage = StyleProcessor.ExecuteStyle(owner, ad.Target, ad.Style, weapon, preResistDamage, ad.ArmorHitLocation, ad.StyleEffects, out int animationId);
 
-                    if (ad.StyleDamage > 0)
+                    if (StyleProcessor.ExecuteStyle(owner, ad.Target, ad.Style, weapon, preResistDamage, ad.ArmorHitLocation, ad.StyleEffects, out int styleDamage, out int animationId))
                     {
-                        double preResistStyleDamage = ad.StyleDamage;
+                        double preResistStyleDamage = styleDamage;
                         double preConversionStyleDamage = preResistStyleDamage * primarySecondaryResistMod;
                         ad.StyleDamage = (int) (preConversionStyleDamage * conversionMod);
 
@@ -2192,7 +2191,7 @@ namespace DOL.GS
             GameSpellEffect grapple = null;
             GameSpellEffect brittleguard = null;
 
-            AttackData lastAD = owner.TempProperties.getProperty<AttackData>(LAST_ATTACK_DATA, null);
+            AttackData lastAD = owner.TempProperties.GetProperty<AttackData>(LAST_ATTACK_DATA, null);
             bool defenseDisabled = ad.Target.IsMezzed | ad.Target.IsStunned | ad.Target.IsSitting;
 
             GamePlayer playerOwner = owner as GamePlayer;

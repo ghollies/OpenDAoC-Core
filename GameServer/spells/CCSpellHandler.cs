@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using DOL.AI.Brain;
 using DOL.Events;
@@ -43,7 +44,7 @@ namespace DOL.GS.Spells
                 return;
             }
 
-            if (target.EffectList.GetOfType<ChargeEffect>() != null || target.TempProperties.getProperty("Charging", false) || target.effectListComponent.Effects.ContainsKey(eEffect.SpeedOfSound))
+            if (target.EffectList.GetOfType<ChargeEffect>() != null || target.TempProperties.GetProperty("Charging", false) || target.effectListComponent.Effects.ContainsKey(eEffect.SpeedOfSound))
             {
                 MessageToCaster(target.Name + " is moving too fast for this spell to have any effect!", eChatType.CT_SpellResisted);
                 return;
@@ -73,8 +74,6 @@ namespace DOL.GS.Spells
                 if (player.Group != null)
                     player.Group.UpdateMember(player, false, false);
             }
-            else if (effect.Owner is GameNPC npc && npc.Brain is IOldAggressiveBrain aggroBrain)
-                aggroBrain.AddToAggroList(Caster, 1);
 
             effect.Owner.Notify(GameLivingEvent.CrowdControlExpired, effect.Owner);
             return (effect.Name == "Pet Stun") ? 0 : 60000;

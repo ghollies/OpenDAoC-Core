@@ -16,6 +16,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+
 using System;
 using DOL.Database;
 using DOL.GS.PacketHandler;
@@ -99,7 +100,7 @@ namespace DOL.GS
 					t.Out.SendMessage("You do not have enough privileges for that.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 					return false;
 				}
-				t.TempProperties.setProperty(EMBLEMIZE_ITEM_WEAK, new WeakRef(item));
+				t.TempProperties.SetProperty(EMBLEMIZE_ITEM_WEAK, new WeakRef(item));
 				t.Out.SendCustomDialog("Do you agree to put an emblem on this object? this will cost " + ServerProperties.Properties.EMBLEM_BP_COST + " Bounty Points", new CustomDialogResponse(EmblemerDialogResponse));
 			}
 			else
@@ -110,12 +111,8 @@ namespace DOL.GS
 
 		protected void EmblemerDialogResponse(GamePlayer player, byte response)
 		{
-			WeakReference itemWeak =
-				(WeakReference) player.TempProperties.getProperty<object>(
-					EMBLEMIZE_ITEM_WEAK,
-					new WeakRef(null)
-					);
-			player.TempProperties.removeProperty(EMBLEMIZE_ITEM_WEAK);
+			WeakReference itemWeak = player.TempProperties.GetProperty<WeakReference>(EMBLEMIZE_ITEM_WEAK, new WeakRef(null));
+			player.TempProperties.RemoveProperty(EMBLEMIZE_ITEM_WEAK);
 
 			if (response != 0x01)
 				return; //declined
