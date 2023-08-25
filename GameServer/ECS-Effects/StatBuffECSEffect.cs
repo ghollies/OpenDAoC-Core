@@ -133,11 +133,19 @@ namespace DOL.GS
                     {
                         //if (Owner.BuffBonusMultCategory1.Get((int)eProperty.MaxSpeed) == SpellHandler.Spell.Value / 100 || Owner.InCombat)
                         //{
-                            //Console.WriteLine($"Value before: {Owner.BuffBonusMultCategory1.Get((int)eProperty.MaxSpeed)}");
-                            //e.Owner.BuffBonusMultCategory1.Remove((int)eProperty.MaxSpeed, e.SpellHandler);
+                        //Console.WriteLine($"Value before: {Owner.BuffBonusMultCategory1.Get((int)eProperty.MaxSpeed)}");
+                        //e.Owner.BuffBonusMultCategory1.Remove((int)eProperty.MaxSpeed, e.SpellHandler);
+
+                        // As the effect is requested to be canceled, and trigged on tick, another effect may have already taken place.
+                        // For example a music speed buff could overwrite a caster speed buff, Only canceling speed the expected value is still present.
+                        // Doesnt solve the race condition, just narrows it.
+                        if (SpellHandler.Spell.Value / 100.0 == Owner.BuffBonusMultCategory1.Get((int)eProperty.MaxSpeed))
+                        {
                             Owner.BuffBonusMultCategory1.Remove((int)eProperty.MaxSpeed, EffectType);
                             //Console.WriteLine($"Value after: {Owner.BuffBonusMultCategory1.Get((int)eProperty.MaxSpeed)}");
                             (SpellHandler as SpeedEnhancementSpellHandler).SendUpdates(Owner);
+                        }
+
                         //}
                     }
                     if (EffectType == eEffect.WaterSpeedBuff)
