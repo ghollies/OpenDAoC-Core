@@ -824,7 +824,8 @@ namespace DOL.GS
                 bInstaQuit = true;
             else if (ServerProperties.Properties.DISABLE_QUIT_TIMER && Client.Player.InCombat == false)  // Players can only insta quit if they aren't in combat
                 bInstaQuit = true;
-
+            else if (Client.Player.CurrentRegionID == 91)  // Instant Quit from Celetius
+                bInstaQuit = true;
             if (bInstaQuit == false)
             {
                 if (CraftTimer != null && CraftTimer.IsAlive)
