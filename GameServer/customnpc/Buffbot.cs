@@ -92,6 +92,8 @@ namespace DOL.GS.Scripts
                     m_otherSpells.Add(BotHasteBuff);
                     m_otherSpells.Add(BotHPRegenBuff);
                     m_otherSpells.Add(BotEndRegenBuff);
+                    m_otherSpells.Add(BotWaterBreathingBuff);
+
                 }
                 return m_otherSpells;
             }
@@ -247,6 +249,8 @@ namespace DOL.GS.Scripts
         private static Spell m_hpRegen;
         private static Spell m_endRegen;
         private static Spell m_heal;
+        private static Spell m_waterBreathing;
+
 
         #region Spells
 
@@ -678,6 +682,37 @@ namespace DOL.GS.Scripts
                     m_heal = new Spell(spell, 50);
                 }
                 return m_heal;
+            }
+        }
+
+        /// <summary>
+        /// Bot End Regen buff
+        /// </summary>
+        public static Spell BotWaterBreathingBuff
+        {
+            get
+            {
+                if (m_waterBreathing == null)
+                {
+                    DBSpell spell = new DBSpell();
+                    spell.AllowAdd = false;
+                    spell.CastTime = 0;
+                    spell.ClientEffect = 1197;
+                    spell.Icon = 8107;
+                    spell.TooltipId = 1800;
+                    spell.Duration = 65535;
+                    spell.Value = 200;
+                    spell.Name = "Water Breathing Buff";
+                    spell.Description = "Target can move freely and breath under water.";
+                    spell.Range = WorldMgr.VISIBILITY_DISTANCE;
+                    spell.SpellID = 2000014;
+                    spell.Target = "Realm";
+                    spell.Type = "WaterBreathing";
+                    spell.PackageID = "BuffBotSpells";
+                    GameServer.Database.AddObject(spell);
+                    m_waterBreathing = new Spell(spell, 50);
+                }
+                return m_waterBreathing;
             }
         }
 

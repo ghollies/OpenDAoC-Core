@@ -405,7 +405,7 @@ namespace DOL.GS.ServerRules
 				return false;
 
 			// Celetius is a safe zone for Ariadolis server
-			if (playerDefender != null && playerDefender.CurrentRegionID == 91)
+			if (playerDefender != null && playerDefender.CurrentRegionID == 91 && (playerDefender.DuelTarget ==null || playerDefender.DuelTarget != playerAttacker))
 			{
 				if (quiet == false) MessageToLiving(attacker, "You can't attack players in Celestius.");
 				return false;

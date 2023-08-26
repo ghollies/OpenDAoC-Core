@@ -187,9 +187,8 @@ namespace DOL.GS
 
                                             break;
                                         }
-
                                         // New Effect is better than the current enabled effect so disable the current Effect and add the new effect.
-                                        if (newSpell.Value > existingSpell.Value || newSpell.Damage > existingSpell.Damage)
+                                        if (newSpell.Value * newSpellEffect.Effectiveness > existingSpell.Value * existingEffect.Effectiveness || newSpell.Damage * newSpellEffect.Effectiveness > existingSpell.Damage * existingEffect.Effectiveness)
                                         {
                                             /*
                                             if (newSpell.IsHelpful&& (newSpellHandler.Caster != existingSpellHandler.Caster

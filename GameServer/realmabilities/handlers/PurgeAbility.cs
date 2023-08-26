@@ -66,7 +66,7 @@ namespace DOL.GS.RealmAbilities
             	{
 	                PurgeTimer timer = new PurgeTimer(living, this, seconds);
 	                timer.Interval = 1000;
-	                timer.Start(1);
+	                timer.Start();
 	                DisableSkill(living);            		
             	}
             	else
