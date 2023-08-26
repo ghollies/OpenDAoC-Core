@@ -20,7 +20,7 @@ namespace DOL.GS.RealmAbilities
 
         public override int MaxLevel { get { return 5; } }
 
-        public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetNewFrontier5LevelRACost(level);}
+        public override int CostForUpgrade(int level, GamePlayer player) { return AtlasRAHelpers.GetNewFrontier5LevelRACost(level+1);}
         public override int GetReUseDelay(int level) { return 900; } // 30 mins
 
         private void CreateRezSpell(GamePlayer caster)
