@@ -21,6 +21,8 @@ using System.Collections;
 using System.Linq;
 using DOL.AI.Brain;
 using DOL.Database;
+using DOL.Events;
+using DOL.GS.API;
 using DOL.GS.Keeps;
 using DOL.GS.PacketHandler;
 using DOL.GS.ServerProperties;
@@ -34,7 +36,14 @@ namespace DOL.GS.ServerRules
 	[ServerRules(eGameServerType.GST_Normal)]
 	public class NormalServerRules : AbstractServerRules
 	{
-		public override string RulesDescription()
+
+        PvPServerRules PvPServerRules { get; set; }
+		override public void Initialize()
+        {
+			base.Initialize();
+            PvPServerRules = (PvPServerRules)ScriptMgr.CreateServerRules(eGameServerType.GST_PvP);
+        }
+        public override string RulesDescription()
 		{
 			return "standard Normal server rules";
 		}
@@ -52,6 +61,10 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsAllowedToAttack(GameLiving attacker, GameLiving defender, bool quiet)
 		{
+			if (attacker.CurrentRegionID == 51)
+			{
+				return PvPServerRules.IsAllowedToAttack(attacker, defender, quiet);
+            }
 			if (!base.IsAllowedToAttack(attacker, defender, quiet))
 				return false;
 
@@ -106,7 +119,11 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsSameRealm(GameLiving source, GameLiving target, bool quiet)
 		{
-			if(source == null || target == null) 
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.IsSameRealm(source, target, quiet);
+            }
+            if (source == null || target == null) 
 				return false;
 
 			// if controlled NPC - do checks for owner instead
@@ -166,7 +183,11 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsAllowedToGroup(GamePlayer source, GamePlayer target, bool quiet)
 		{
-			if(source == null || target == null) return false;
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.IsAllowedToGroup(source, target, quiet);
+            }
+            if (source == null || target == null) return false;
 			
 			if (source.Realm != target.Realm)
 			{
@@ -200,8 +221,11 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsAllowedToTrade(GameLiving source, GameLiving target, bool quiet)
 		{
-
-			if(source == null || target == null) return false;
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.IsAllowedToTrade(source, target, quiet);
+            }
+            if (source == null || target == null) return false;
 			
 			// clients with priv level > 1 are allowed to trade with anyone
 			if(source is GamePlayer && target is GamePlayer)
@@ -243,7 +267,11 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsAllowedToUnderstand(GameLiving source, GamePlayer target)
 		{
-			if(source == null || target == null) return false;
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.IsAllowedToUnderstand(source, target);
+            }
+            if (source == null || target == null) return false;
 			
 			if(Properties.EVENT_CROSS_REALM_GROUPS) return true;
 
@@ -270,8 +298,12 @@ namespace DOL.GS.ServerRules
 		/// <param name="point"></param>
 		/// <returns></returns>
 		public override bool IsAllowedToBind(GamePlayer player, BindPoint point)
-		{
-			if (point.Realm == 0) return true;
+        {
+            if (player.CurrentRegionID == 51)
+            {
+                return PvPServerRules.IsAllowedToBind(player, point);
+            }
+            if (point.Realm == 0) return true;
 			return player.Realm == (eRealm)point.Realm;
 		}
 
@@ -289,7 +321,11 @@ namespace DOL.GS.ServerRules
 		/// <returns>The color handling</returns>
 		public override byte GetColorHandling(GameClient client)
 		{
-			if (client.Player?.CurrentRegionID == 27)
+            if (client.Player?.CurrentRegionID == 51)
+            {
+                return PvPServerRules.GetColorHandling(client);
+            }
+            if (client.Player?.CurrentRegionID == 27)
 				return 1;
 			else
 				return base.GetColorHandling(client);
@@ -370,7 +406,12 @@ namespace DOL.GS.ServerRules
 		/// <returns>The name of the target</returns>
 		public override string GetPlayerName(GamePlayer source, GamePlayer target)
 		{
-			if (IsSameRealm(source, target, true))
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.GetPlayerName(source, target);
+            }
+
+            if (IsSameRealm(source, target, true))
 				return target.Name;
 			if (Properties.EVENT_PVP && source.CurrentRegionID == 27)
 				return target.Name;
@@ -386,7 +427,11 @@ namespace DOL.GS.ServerRules
 		/// <returns>The last name of the target</returns>
 		public override string GetPlayerLastName(GamePlayer source, GamePlayer target)
 		{
-			if (IsSameRealm(source, target, true))
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.GetPlayerLastName(source, target);
+            }
+            if (IsSameRealm(source, target, true))
 				return target.LastName;
 			if (Properties.EVENT_PVP && source.CurrentRegionID == 27)
 				return target.LastName;
@@ -402,7 +447,11 @@ namespace DOL.GS.ServerRules
 		/// <returns>The guild name of the target</returns>
 		public override string GetPlayerGuildName(GamePlayer source, GamePlayer target)
 		{
-			if (IsSameRealm(source, target, true))
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.GetPlayerGuildName(source, target);
+            }
+            if (IsSameRealm(source, target, true))
 				return target.GuildName;
 			if (Properties.EVENT_PVP && source.CurrentRegionID == 27)
 				return target.RealmRankTitle(source.Client.Account.Language);
@@ -417,7 +466,11 @@ namespace DOL.GS.ServerRules
 		/// <returns>The custom title of the target</returns>
 		public override string GetPlayerTitle(GamePlayer source, GamePlayer target)
 		{
-			if (IsSameRealm(source, target, true))
+            if (source.CurrentRegionID == 51)
+            {
+                return PvPServerRules.GetPlayerTitle(source, target);
+            }
+            if (IsSameRealm(source, target, true))
 				return target.CurrentTitle.GetValue(source, target);
 			
 			return string.Empty;
@@ -445,5 +498,17 @@ namespace DOL.GS.ServerRules
 			}
 			*/
 		}
-	}
+        public override void OnReleased(DOLEvent e, object sender, EventArgs args)
+        {
+            GamePlayer player = (GamePlayer)sender;
+
+            if (player.CurrentRegionID == 51)
+            {
+                PvPServerRules.OnReleased(e,sender,args);
+            } else
+			{
+				base.OnReleased(e,sender,args);
+			}
+        }
+    }
 }

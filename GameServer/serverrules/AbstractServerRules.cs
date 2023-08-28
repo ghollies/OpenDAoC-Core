@@ -405,49 +405,53 @@ namespace DOL.GS.ServerRules
 				return false;
 
 			// Celetius is a safe zone for Ariadolis server
-			if (playerDefender != null && playerDefender.CurrentRegionID == 91 && (playerDefender.DuelTarget ==null || playerDefender.DuelTarget != playerAttacker))
+			if (playerDefender != null && playerDefender.CurrentRegionID == 91 && (playerDefender.DuelTarget == null || playerDefender.DuelTarget != playerAttacker))
 			{
 				if (quiet == false) MessageToLiving(attacker, "You can't attack players in Celestius.");
 				return false;
 			}
 
-			//flame - Commenting out Safe Area check as it was causing lots of lock contention in the GetAreasOfSpot() code. We currently dont have safe-areas so this doesnt affect anything
+			// Re-enable safe area checks in avalon
+			if (playerDefender != null && playerDefender.CurrentRegionID == 51) {
 
-			// // Safe area support for defender
-			// if (defender.CurrentAreas is not null)
-			// {
-			// 	var defenderAreas = defender.CurrentAreas.ToList();
-			// 	foreach (AbstractArea area in defenderAreas)
-			// 	{
-			// 		if (area is null) continue;
+				//flame - Commenting out Safe Area check as it was causing lots of lock contention in the GetAreasOfSpot() code. We currently dont have safe-areas so this doesnt affect anything
 
-			// 		if (!area.IsSafeArea)
-			// 			continue;
+				// Safe area support for defender
+				if (defender.CurrentAreas is not null)
+				{
+					var defenderAreas = defender.CurrentAreas.ToList();
+					foreach (AbstractArea area in defenderAreas)
+					{
+						if (area is null) continue;
 
-			// 		if (defender is not GamePlayer) continue;
-			// 		if (quiet == false) MessageToLiving(attacker, "You can't attack someone in a safe area!");
-			// 		return false;
-			// 	}
-			// }		
+						if (!area.IsSafeArea)
+							continue;
 
-			// //safe area support for attacker
-			// var attackerAreas = attacker.CurrentAreas.ToList();
-			// foreach (AbstractArea area in attackerAreas)
-			// {
-			// 	if ((area.IsSafeArea) && (defender is GamePlayer) && (attacker is GamePlayer))
-			// 	{
-			// 		if (quiet == false) MessageToLiving(attacker, "You can't attack someone in a safe area!");
-			// 		return false;
-			// 	}
+						if (defender is not GamePlayer) continue;
+						if (quiet == false) MessageToLiving(attacker, "You can't attack someone in a safe area!");
+						return false;
+					}
+				}		
 
-			// 	if ((area.IsSafeArea) && (attacker is GamePlayer))
-			// 	{
-			// 		if (quiet == false) MessageToLiving(attacker, "You can't attack someone in a safe area!");
-			// 		return false;
-			// 	}
-			// }
+				//safe area support for attacker
+				var attackerAreas = attacker.CurrentAreas.ToList();
+				foreach (AbstractArea area in attackerAreas)
+				{
+					if ((area.IsSafeArea) && (defender is GamePlayer) && (attacker is GamePlayer))
+					{
+						if (quiet == false) MessageToLiving(attacker, "You can't attack someone in a safe area!");
+						return false;
+					}
 
-			if (attacker is GameNPC attacknpc && defender is GameNPC defendnpc)
+					if ((area.IsSafeArea) && (attacker is GamePlayer))
+					{
+						if (quiet == false) MessageToLiving(attacker, "You can't attack someone in a safe area!");
+						return false;
+					}
+				}
+			}
+
+                if (attacker is GameNPC attacknpc && defender is GameNPC defendnpc)
 			{
 				// Mobs can't attack keep guards
 				if (defender is GameKeepGuard && attacker.Realm == 0)
