@@ -27,6 +27,7 @@ using DOL.GS.Keeps;
 using DOL.GS.PacketHandler;
 using DOL.GS.ServerProperties;
 using DOL.GS.Styles;
+using static DOL.GS.Area;
 
 namespace DOL.GS.ServerRules
 {
@@ -61,6 +62,7 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsAllowedToAttack(GameLiving attacker, GameLiving defender, bool quiet)
 		{
+			// Allow pvp ruleset in Avalon/Goth
 			if (attacker.CurrentRegionID == 51)
 			{
 				return PvPServerRules.IsAllowedToAttack(attacker, defender, quiet);
@@ -110,7 +112,27 @@ namespace DOL.GS.ServerRules
 					return FactionMgr.CanLivingAttack(attacker, defender);
 				}
 
-				if(quiet == false) MessageToLiving(attacker, "You can't attack a member of your realm!");
+				// Ariadolis FFA zone
+				// Allow players on the same realm to attack each other if they are in a FFA zone, and they are not in the same group
+				if (attacker is GamePlayer atackerPlayer && defender is GamePlayer defenderPlayer)
+				{
+					if (atackerPlayer.TempProperties.GetProperty("InFreeForAllArea", false) && (bool)defenderPlayer.TempProperties.GetProperty(FreeForAllArea.FFA_PROPERTY, false))
+					{
+						//check group
+						if (atackerPlayer.Group != null && atackerPlayer.Group.IsInTheGroup(defenderPlayer))
+						{
+							if (!quiet) MessageToLiving(atackerPlayer, "You can't attack your group members.");
+							return false;
+						}
+						else
+						{
+							return true;
+						}
+					}
+
+				}
+
+				if (quiet == false) MessageToLiving(attacker, "You can't attack a member of your realm!");
 				return false;
 			}
 
