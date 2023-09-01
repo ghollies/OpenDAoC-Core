@@ -540,5 +540,34 @@ namespace DOL.GS
 				m_safeArea = true;
 			}
 		}
+		public class FreeForAllArea : Circle
+		{
+			public static string FFA_PROPERTY = "InFreeForAllArea";
+
+			public FreeForAllArea()
+				: base()
+			{
+				m_safeArea = true;
+			}
+
+			public FreeForAllArea(string desc, int x, int y, int z, int radius)
+				: base
+				(desc, x, y, z, radius)
+			{
+				m_safeArea = true;
+			}
+			public override void OnPlayerEnter(GamePlayer player)
+			{
+				base.OnPlayerEnter(player);
+				player.TempProperties.SetProperty(FFA_PROPERTY, true);
+
+			}
+			public override void OnPlayerLeave(GamePlayer player)
+			{
+				base.OnPlayerLeave(player);
+				player.TempProperties.SetProperty(FFA_PROPERTY, false);
+			}
+
+		}
 	}
 }

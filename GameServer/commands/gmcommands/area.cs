@@ -63,6 +63,7 @@ namespace DOL.GS.Commands
 							case "safearea": area.ClassType = "DOL.GS.Area+SafeArea"; break;
 							case "bind":
 							case "bindarea": area.ClassType = "DOL.GS.Area+BindArea"; break;
+							case "ffa": area.ClassType = "DOL.GS.Area+FreeForAllArea"; break;
 							default:
 								{
 									DisplaySyntax(client);
