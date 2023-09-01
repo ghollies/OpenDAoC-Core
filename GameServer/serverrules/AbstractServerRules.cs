@@ -2311,13 +2311,17 @@ namespace DOL.GS.ServerRules
 		/// <returns>byte code of realm</returns>
 		public virtual byte GetLivingRealm(GamePlayer player, GameLiving target)
 		{
+
 			if (player == null || target == null) return 0;
 
 			// clients with priv level > 1 are considered friendly by anyone
 			GamePlayer playerTarget = target as GamePlayer;
 			if (playerTarget != null && playerTarget.Client.Account.PrivLevel > 1) return (byte)player.Realm;
 
+			if (Area.FreeForAllArea.isPlayerInFFAArea(player))
+				return 0;
 			return (byte)target.Realm;
+
 		}
 
 		/// <summary>
