@@ -26,7 +26,7 @@ namespace DOL.GS
 		{
 			if (!base.Interact(player)) return false;
 			TurnTo(player.X, player.Y);
-			player.Out.SendMessage("Hello " + player.Name + "! Would you like to port to [Thidranki] or return to the [Main Setup]?", eChatType.CT_Say,eChatLoc.CL_PopupWindow);
+			player.Out.SendMessage("Hello " + player.Name + "! Would you like to port to [Thidranki] or PvP area [Gothwait] or return to [Main Setup]?", eChatType.CT_Say,eChatLoc.CL_PopupWindow);
 			return true;
 		}
 		public override bool WhisperReceive(GameLiving source, string str)
@@ -38,10 +38,19 @@ namespace DOL.GS
 			TurnTo(t.X,t.Y);
 			switch(str)
 			{
-                case "Main Setup":    
+                case "Gothwait":    
                     if (!t.InCombat)
                     {
                         // Say("I'm now teleporting you to the Main Setup area");
+                        t.MoveTo(51, 515855, 516294, 3424, 3579);
+                    }
+                    else { t.Client.Out.SendMessage("You can't port while in combat.", eChatType.CT_Say, eChatLoc.CL_PopupWindow); }
+                    break;
+
+                case "Main Setup":    
+                    if (!t.InCombat)
+                    {
+                        // Say("I'm now teleporting you to the Gothwait area");
                         t.MoveTo(91, 31885, 32181, 15844, 2049);
                     }
                     else { t.Client.Out.SendMessage("You can't port while in combat.", eChatType.CT_Say, eChatLoc.CL_PopupWindow); }
