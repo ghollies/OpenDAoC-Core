@@ -64,7 +64,17 @@ namespace DOL.GS
             return result;
         }
 
-        public void SetProperty(string key, object value)
+        public T GetOrAdd<T>(string key, T valueToAdd)
+        {
+			object value = _properties.GetOrAdd(key, valueToAdd);
+			if (value is not T result)
+			{
+                return default(T);
+			}
+			return result;
+		}
+
+		public void SetProperty(string key, object value)
         {
             if (value == null)
                 _properties.TryRemove(key, out _);

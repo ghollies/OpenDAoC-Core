@@ -191,9 +191,13 @@ namespace DOL.GS
 		/// <param name="player"></param>
 		public virtual void OnPlayerLeave(GamePlayer player)
 		{
-            if (m_displayMessage && Description != null && Description != "")
-                player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "AbstractArea.Left", Description),
-                    eChatType.CT_System, eChatLoc.CL_SystemWindow);
+				OnPlayerLeave(player, false);
+		}
+		public virtual void OnPlayerLeave(GamePlayer player, bool quiet)
+		{
+			if (!quiet && m_displayMessage && Description != null && Description != "")
+				player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "AbstractArea.Left", Description),
+					eChatType.CT_System, eChatLoc.CL_SystemWindow);
 
 			player.Notify(AreaEvent.PlayerLeave, this, new AreaEventArgs(this, player));
 		}
@@ -204,27 +208,32 @@ namespace DOL.GS
 		/// <param name="player"></param>
 		public virtual void OnPlayerEnter(GamePlayer player)
 		{
-			if (m_displayMessage && Description != null && Description != "")
+			OnPlayerEnter(player, false);
+		}
+
+		public virtual void OnPlayerEnter(GamePlayer player, bool quiet)
+		{
+			if (!quiet && m_displayMessage && Description != null && Description != "")
 			{
-                string description = Description;
-                string screenDescription = description;
+				string description = Description;
+				string screenDescription = description;
 
-                var translation = LanguageMgr.GetTranslation(player, this) as DBLanguageArea;
-                if (translation != null)
-                {
-                    if (!Util.IsEmpty(translation.Description))
-                        description = translation.Description;
+				var translation = LanguageMgr.GetTranslation(player, this) as DBLanguageArea;
+				if (translation != null)
+				{
+					if (!Util.IsEmpty(translation.Description))
+						description = translation.Description;
 
-                    if (!Util.IsEmpty(translation.ScreenDescription))
-                        screenDescription = translation.ScreenDescription;
-                }
+					if (!Util.IsEmpty(translation.ScreenDescription))
+						screenDescription = translation.ScreenDescription;
+				}
 
-                player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "AbstractArea.Entered", description),
-                    eChatType.CT_System, eChatLoc.CL_SystemWindow);
+				player.Out.SendMessage(LanguageMgr.GetTranslation(player.Client.Account.Language, "AbstractArea.Entered", description),
+					eChatType.CT_System, eChatLoc.CL_SystemWindow);
 
 				//Changed by Apo 9. August 2010: Areas never send an screen description, but we will support it with an server property
-                if (ServerProperties.Properties.DISPLAY_AREA_ENTER_SCREEN_DESC)
-                    player.Out.SendMessage(screenDescription, eChatType.CT_ScreenCenterSmaller, eChatLoc.CL_SystemWindow);
+				if (ServerProperties.Properties.DISPLAY_AREA_ENTER_SCREEN_DESC)
+					player.Out.SendMessage(screenDescription, eChatType.CT_ScreenCenterSmaller, eChatLoc.CL_SystemWindow);
 			}
 			if (Sound != 0)
 			{

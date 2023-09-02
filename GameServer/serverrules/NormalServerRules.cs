@@ -116,7 +116,7 @@ namespace DOL.GS.ServerRules
 				// Allow players on the same realm to attack each other if they are in a FFA zone, and they are not in the same group
 				if (attacker is GamePlayer atackerPlayer && defender is GamePlayer defenderPlayer)
 				{
-					if (atackerPlayer.TempProperties.GetProperty("InFreeForAllArea", false) && (bool)defenderPlayer.TempProperties.GetProperty(FreeForAllArea.FFA_PROPERTY, false))
+					if (FreeForAllArea.isPlayerInFFAArea(atackerPlayer) && FreeForAllArea.isPlayerInFFAArea(defenderPlayer))
 					{
 						//check group
 						if (atackerPlayer.Group != null && atackerPlayer.Group.IsInTheGroup(defenderPlayer))
@@ -129,9 +129,7 @@ namespace DOL.GS.ServerRules
 							return true;
 						}
 					}
-
 				}
-
 				if (quiet == false) MessageToLiving(attacker, "You can't attack a member of your realm!");
 				return false;
 			}
@@ -186,7 +184,26 @@ namespace DOL.GS.ServerRules
 				if ((((GameNPC)source).Flags & GameNPC.eFlags.PEACE) != 0)
 					return true;
 
-			if(source.Realm != target.Realm)
+
+			// Ariadolis FFA zone
+			// Allow players on the same realm to attack each other if they are in a FFA zone, and they are not in the same group
+			if (source is GamePlayer atackerPlayer && target is GamePlayer defenderPlayer)
+			{
+				if (FreeForAllArea.isPlayerInFFAArea(atackerPlayer) && FreeForAllArea.isPlayerInFFAArea(defenderPlayer))
+				{
+					//check group
+					if (atackerPlayer.Group != null && atackerPlayer.Group.IsInTheGroup(defenderPlayer))
+					{
+						if (!quiet) MessageToLiving(atackerPlayer, "You can't attack your group members.");
+						return false;
+					}
+					else
+					{
+						return true;
+					}
+				}
+			}
+			if (source.Realm != target.Realm)
 			{
 				if(quiet == false) MessageToLiving(source, target.GetName(0, true) + " is not a member of your realm!");
 				return false;

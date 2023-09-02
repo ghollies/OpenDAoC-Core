@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using DOL.Events;
-using DOL.GS.PacketHandler;
 using DOL.Database;
 
 namespace DOL.GS
@@ -558,14 +556,47 @@ namespace DOL.GS
 			}
 			public override void OnPlayerEnter(GamePlayer player)
 			{
-				base.OnPlayerEnter(player);
-				player.TempProperties.SetProperty(FFA_PROPERTY, true);
+				AtomicInteger value = player.TempProperties.GetOrAdd(FFA_PROPERTY, new AtomicInteger(0));
+				int updated = value.Increment();
+				if(updated == 1) {
+					base.OnPlayerEnter(player);
+
+					List<GamePlayer> playersInRadius = player.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE);
+					foreach (GamePlayer other in playersInRadius)
+					{
+						if (player != other)
+							player.Out.SendPlayerCreate(other);
+					}
+				}
+				else
+				{
+					base.OnPlayerEnter(player, true);
+				}
 
 			}
 			public override void OnPlayerLeave(GamePlayer player)
 			{
-				base.OnPlayerLeave(player);
-				player.TempProperties.SetProperty(FFA_PROPERTY, false);
+				AtomicInteger value = player.TempProperties.GetProperty(FFA_PROPERTY, new AtomicInteger(0));
+				int updated = value.Decrement();
+				if (updated == 0)
+				{
+					base.OnPlayerLeave(player);
+					List<GamePlayer> playersInRadius = player.GetPlayersInRadius(WorldMgr.VISIBILITY_DISTANCE);
+					foreach (GamePlayer other in playersInRadius)
+					{
+						if (player != other)
+							player.Out.SendPlayerCreate(other);
+					}
+				}
+				else
+				{
+					base.OnPlayerLeave(player, true);
+				}
+			}
+			public static bool isPlayerInFFAArea(GamePlayer player)
+			{
+				AtomicInteger value = player.TempProperties.GetOrAdd(FFA_PROPERTY, new AtomicInteger(0));
+				return value.GetValue() > 0;
 			}
 
 		}
