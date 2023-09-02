@@ -13,8 +13,8 @@ namespace DOL.GS.Scripts
 
         public override bool AddToWorld()
         {
-            Model = 2026;
-            Name = "PvP TELEPORTER";
+            Model = 2002;
+            Name = "Daddy Mike";
             GuildName = "PvP Teleporter";
             Level = 50;
             Size = 60;
