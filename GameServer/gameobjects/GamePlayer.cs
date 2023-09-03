@@ -29,6 +29,7 @@ using DOL.AI;
 using DOL.AI.Brain;
 using DOL.Database;
 using DOL.Events;
+using DOL.GS.API;
 using DOL.GS.Effects;
 using DOL.GS.Housing;
 using DOL.GS.Keeps;
@@ -10866,6 +10867,33 @@ namespace DOL.GS
                 }
             }
         }
+        protected virtual void EnforceGroupRestrictions(DOLEvent e, object sender, EventArgs args)
+        {
+            if (!(sender is GamePlayer)) return;
+            GamePlayer player = sender as GamePlayer;
+
+            if (player.CurrentRegionID == 51 && player.Group != null)
+            {
+                if (player.Group.MemberCount > 2)
+                {
+                    player.Out.SendMessage("Max group size is 2 while any member is in Gothwait! Removing you from the group", eChatType.CT_System, eChatLoc.CL_PopupWindow);
+                    player.Group.RemoveMember(player);
+                }
+            }
+
+            if (player.CurrentRegionID != 51 && player.Group != null)
+            {
+                foreach (GamePlayer member in player.Group.GetPlayersInTheGroup())
+                {
+                    if (member.Realm != player.Realm)
+                    {
+                        player.Out.SendMessage("Only Gothwait allows for cross-realm groups! Removing you from the group", eChatType.CT_System, eChatLoc.CL_PopupWindow);
+                        player.Group.RemoveMember(player);
+                        break;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Handles a bonus change on an item.
@@ -15144,7 +15172,7 @@ namespace DOL.GS
             GameEventMgr.AddHandler(m_inventory, PlayerInventoryEvent.ItemEquipped, new DOLEventHandler(OnItemEquipped));
             GameEventMgr.AddHandler(m_inventory, PlayerInventoryEvent.ItemUnequipped, new DOLEventHandler(OnItemUnequipped));
             GameEventMgr.AddHandler(m_inventory, PlayerInventoryEvent.ItemBonusChanged, new DOLEventHandler(OnItemBonusChanged));
-
+            GameEventMgr.AddHandler(this, GamePlayerEvent.RegionChanged, new DOLEventHandler(EnforceGroupRestrictions));
             m_enteredGame = false;
             m_customDialogCallback = null;
             m_sitting = false;

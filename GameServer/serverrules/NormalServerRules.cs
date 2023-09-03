@@ -222,7 +222,7 @@ namespace DOL.GS.ServerRules
 
 		public override bool IsAllowedToGroup(GamePlayer source, GamePlayer target, bool quiet)
 		{
-            if (source.CurrentRegionID == 51)
+            if (source.CurrentRegionID == 51 && target.CurrentRegionID == 51)
             {
                 return PvPServerRules.IsAllowedToGroup(source, target, quiet);
             }

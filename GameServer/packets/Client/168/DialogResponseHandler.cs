@@ -233,10 +233,18 @@ namespace DOL.GS.PacketHandler.Client.v168
 								if (groupLeader.Group != null)
 								{
 									if (groupLeader.Group.Leader != groupLeader) return 0;
-                                    if (groupLeader.Group.MemberCount >= ServerProperties.Properties.GROUP_MAX_MEMBER)
+									if (groupLeader.Group.MemberCount >= ServerProperties.Properties.GROUP_MAX_MEMBER)
 									{
 										player.Out.SendMessage("The group is full.", eChatType.CT_System, eChatLoc.CL_SystemWindow);
 										return 0;
+									}
+									foreach (var member in groupLeader.Group.GetPlayersInTheGroup())
+									{
+										if (member.CurrentRegionID == 51 && groupLeader.Group.MemberCount >= 2)
+										{
+											player.Out.SendMessage("The group is full. Max group size is 2 while any member is in Gothwait!", eChatType.CT_System, eChatLoc.CL_SystemWindow);
+											return 0;
+										}
 									}
 									groupLeader.Group.AddMember(player);
 									GameEventMgr.Notify(GamePlayerEvent.AcceptGroup, player);
