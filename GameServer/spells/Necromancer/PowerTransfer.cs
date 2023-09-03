@@ -30,23 +30,17 @@ namespace DOL.GS.Spells
 	[SpellHandlerAttribute("PowerTransferPet")]
 	class PowerTransferPet : PowerTransfer
 	{
-		public override void OnDirectEffect(GameLiving target, double effectiveness)
-		{
-			if (!(Caster is NecromancerPet))
-				return;
-			base.OnDirectEffect(target, effectiveness);
-		}
-		
-				/// <summary>
+		/// <summary>
 		/// Returns a reference to the shade.
 		/// </summary>
 		/// <returns></returns>
 		protected override GamePlayer Owner()
 		{
-			if (!(Caster is NecromancerPet))
-				return null;
-
-			return (((Caster as NecromancerPet).Brain) as IControlledBrain).Owner as GamePlayer;
+            if (Caster is NecromancerPet pet)
+            {
+                return ((IControlledBrain)pet.Brain).Owner as GamePlayer;
+            }
+          return Caster as GamePlayer;
 		}
 
 		/// <summary>

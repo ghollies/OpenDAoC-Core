@@ -31,7 +31,8 @@ namespace DOL.GS.PlayerClass
 		{
 			m_profession = "PlayerClass.Profession.PathofFocus";
 			m_specializationMultiplier = 20;
-			m_primaryStat = eStat.DEX;
+            m_wsbase = 400;
+            m_primaryStat = eStat.DEX;
 			m_secondaryStat = eStat.QUI;
 			m_tertiaryStat = eStat.STR;
 			m_manaStat = eStat.DEX;

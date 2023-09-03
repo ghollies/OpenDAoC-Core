@@ -6701,6 +6701,9 @@ namespace DOL.GS
                     case eObjectType.HandToHand:
                         return (GetModified(eProperty.Strength) + GetModified(eProperty.Dexterity)) >> 1;
                 }
+                // Ariadolis custom necro uses Int for WS instead of stength
+                if (CharacterClass is ClassNecromancer && ((eObjectType)weapon.Object_Type) == eObjectType.TwoHandedWeapon)
+                    return GetModified(eProperty.Intelligence);
             }
             // STR modifier for others
             return GetModified(eProperty.Strength);
