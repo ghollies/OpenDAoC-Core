@@ -38,50 +38,43 @@ namespace DOL.GS.Spells
 		/// <param name="effectiveness">Effectiveness of the spell (0..1, equalling 0-100%).</param>
 		public override void OnDirectEffect(GameLiving target, double effectiveness)
 		{
-            if (!target.IsAlive || target.ObjectState != GameLiving.eObjectState.Active) return;
-            base.OnDirectEffect(target, effectiveness);
-            Console.WriteLine(" OnDirectEffect " );
+			if (!target.IsAlive || target.ObjectState != GameLiving.eObjectState.Active) return;
+			base.OnDirectEffect(target, effectiveness);
 
-        }
+		}
 
-        public override void DamageTarget(AttackData ad, bool showEffectAnimation)
-        {
-            Console.WriteLine(" DamageTarget " + ad);
-
-            DamageTarget(ad, showEffectAnimation, 0x14); // Spell damage attack result.
-            DrainPower(ad);
-
-        }
-        /// <summary>
-        /// Use a percentage of the damage to refill caster's power.
-        /// </summary>
-        /// <param name="ad">Attack data.</param>
-        public virtual void DrainPower(AttackData ad)
+		public override void DamageTarget(AttackData ad, bool showEffectAnimation)
 		{
-            Console.WriteLine(" DrainPower " + ad);
-            Console.WriteLine(" m_caster " + m_caster);
 
-            if (ad == null || !m_caster.IsAlive)
+			DamageTarget(ad, showEffectAnimation, 0x14); // Spell damage attack result.
+			DrainPower(ad);
+
+		}
+		/// <summary>
+		/// Use a percentage of the damage to refill caster's power.
+		/// </summary>
+		/// <param name="ad">Attack data.</param>
+		public virtual void DrainPower(AttackData ad)
+		{
+			if (ad == null || !m_caster.IsAlive)
 				return;
 
 			GameLiving powerRecipient = powerTarget();
-			Console.WriteLine(" got owner " + powerRecipient);
 			if (powerRecipient == null)
 				return;
-            Console.WriteLine(" updated owner " + powerRecipient);
 
-            int powerGain = (ad.Damage + ad.CriticalDamage) * m_spell.LifeDrainReturn / 100;
+			int powerGain = (ad.Damage + ad.CriticalDamage) * m_spell.LifeDrainReturn / 100;
 			powerGain = powerRecipient.ChangeMana(m_caster, eManaChangeType.Spell, powerGain);
 
 			if (powerRecipient is GamePlayer playerTarget)
 			{
 				if (powerGain > 0)
-                    powerRecipient.MessageToSelf(String.Format("Your power drain channels {0} power to you!", powerGain), eChatType.CT_Spell);
+					powerRecipient.MessageToSelf(String.Format("Your power drain channels {0} power to you!", powerGain), eChatType.CT_Spell);
 				else
-                    powerRecipient.MessageToSelf("You cannot absorb any more power.", eChatType.CT_SpellResisted);
+					powerRecipient.MessageToSelf("You cannot absorb any more power.", eChatType.CT_SpellResisted);
 			}
 		}
-		
+
 		/// <summary>
 		/// The target of the drain. Generally the caster, except for necropet
 		/// </summary>

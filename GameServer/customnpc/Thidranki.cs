@@ -9,8 +9,8 @@ using System.Numerics;
 namespace DOL.GS
 {
     public class ThidrankiTeleporter : GameNPC
-	{
-		private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+    {
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public override bool AddToWorld()
         {
@@ -22,23 +22,30 @@ namespace DOL.GS
             Flags |= GameNPC.eFlags.PEACE;
             return base.AddToWorld();
         }
-		public override bool Interact(GamePlayer player)
-		{
-			if (!base.Interact(player)) return false;
-			TurnTo(player.X, player.Y);
-			player.Out.SendMessage("Hello " + player.Name + "! Would you like to port to [Thidranki] or PvP area [Gothwait] or return to [Main Setup]?", eChatType.CT_Say,eChatLoc.CL_PopupWindow);
-			return true;
-		}
-		public override bool WhisperReceive(GameLiving source, string str)
+        public override bool Interact(GamePlayer player)
+        {
+            if (!base.Interact(player)) return false;
+            TurnTo(player.X, player.Y);
+            var avalonPlayerCount = WorldMgr.GetClientsOfRegionCount(51);
+            var thidPlayerCount = WorldMgr.GetClientsOfRegionCount(238);
+            var celestiusPlayerCount = WorldMgr.GetClientsOfRegionCount(91);
 
-		{
-			if(!base.WhisperReceive(source,str)) return false;
-		  	if(!(source is GamePlayer)) return false;
-			GamePlayer t = (GamePlayer) source;
-			TurnTo(t.X,t.Y);
-			switch(str)
-			{
-                case "Gothwait":    
+            player.Out.SendMessage($"Hello {player.Name}! Would you like to port to:\n" +
+                $"[Thidranki Battlegound] ({thidPlayerCount} players)\n" +
+                $"[Gothwait PvP area]         ({avalonPlayerCount} players)\n" +
+                $"[Return to Main Setup]   ({celestiusPlayerCount} players)?", eChatType.CT_Say, eChatLoc.CL_PopupWindow);
+            return true;
+        }
+        public override bool WhisperReceive(GameLiving source, string str)
+
+        {
+            if (!base.WhisperReceive(source, str)) return false;
+            if (!(source is GamePlayer)) return false;
+            GamePlayer t = (GamePlayer)source;
+            TurnTo(t.X, t.Y);
+            switch (str)
+            {
+                case "Gothwait PvP area":
                     if (!t.InCombat)
                     {
                         // Say("I'm now teleporting you to the Main Setup area");
@@ -47,7 +54,7 @@ namespace DOL.GS
                     else { t.Client.Out.SendMessage("You can't port while in combat.", eChatType.CT_Say, eChatLoc.CL_PopupWindow); }
                     break;
 
-                case "Main Setup":    
+                case "Return to Main Setup":
                     if (!t.InCombat)
                     {
                         // Say("I'm now teleporting you to the Gothwait area");
@@ -56,7 +63,7 @@ namespace DOL.GS
                     else { t.Client.Out.SendMessage("You can't port while in combat.", eChatType.CT_Say, eChatLoc.CL_PopupWindow); }
                     break;
 
-                case "Thidranki":
+                case "Thidranki Battlegound":
                     if (!t.InCombat)
                     {
 
