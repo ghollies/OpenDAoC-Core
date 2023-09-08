@@ -34,7 +34,7 @@ namespace DOL.GS.PlayerClass
 			m_tertiaryStat = eStat.QUI;
 			m_manaStat = eStat.INT;
             m_wsbase = 400;
-            m_baseHP = 720;
+            m_baseHP = 1020;
 
         }
 

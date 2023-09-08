@@ -9,6 +9,7 @@ using DOL.GS.API;
 using DOL.GS.Effects;
 using DOL.GS.Keeps;
 using DOL.GS.PacketHandler;
+using DOL.GS.PlayerClass;
 using DOL.GS.RealmAbilities;
 using DOL.GS.ServerProperties;
 using DOL.GS.SkillHandler;
@@ -1266,17 +1267,20 @@ namespace DOL.GS
                         weaponForSpecModifier.Object_Type = weapon.Object_Type;
                         weaponForSpecModifier.SlotPosition = weapon.SlotPosition;
 
-                        if (owner is GamePlayer && owner.Realm == eRealm.Albion && Properties.ENABLE_ALBION_ADVANCED_WEAPON_SPEC &&
-                            (GameServer.ServerRules.IsObjectTypesEqual((eObjectType) weapon.Object_Type, eObjectType.TwoHandedWeapon) ||
-                            GameServer.ServerRules.IsObjectTypesEqual((eObjectType) weapon.Object_Type, eObjectType.PolearmWeapon)))
-                        {
-                            // Albion dual spec penalty, which sets minimum damage to the base damage spec.
-                            if (weapon.Type_Damage == (int) eDamageType.Crush)
-                                weaponForSpecModifier.Object_Type = (int) eObjectType.CrushingWeapon;
-                            else if (weapon.Type_Damage == (int) eDamageType.Slash)
-                                weaponForSpecModifier.Object_Type = (int) eObjectType.SlashingWeapon;
-                            else
-                                weaponForSpecModifier.Object_Type = (int) eObjectType.ThrustWeapon;
+                            if (owner is GamePlayer && owner.Realm == eRealm.Albion && Properties.ENABLE_ALBION_ADVANCED_WEAPON_SPEC &&
+                                (GameServer.ServerRules.IsObjectTypesEqual((eObjectType) weapon.Object_Type, eObjectType.TwoHandedWeapon) ||
+                                GameServer.ServerRules.IsObjectTypesEqual((eObjectType ) weapon.Object_Type, eObjectType.PolearmWeapon)))
+                            {
+                                // Ariadolis Allow necros to use 2h without penalty for sub spec
+                                if (((GamePlayer)owner).CharacterClass is not ClassNecromancer) {
+                                    // Albion dual spec penalty, which sets minimum damage to the base damage spec.
+                                    if (weapon.Type_Damage == (int)eDamageType.Crush)
+                                        weaponForSpecModifier.Object_Type = (int)eObjectType.CrushingWeapon;
+                                    else if (weapon.Type_Damage == (int)eDamageType.Slash)
+                                        weaponForSpecModifier.Object_Type = (int)eObjectType.SlashingWeapon;
+                                    else
+                                        weaponForSpecModifier.Object_Type = (int)eObjectType.ThrustWeapon;
+                            }
                         }
                     }
 
