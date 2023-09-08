@@ -68,7 +68,7 @@ namespace DOL.GS.Scripts
 				case "PvP":
 					if (!player.InCombat)
 					{
-						int RandPvP = Util.Random(1, locations.Length);//Creates a random number between 1 and 17
+						int RandPvP = Util.Random(0, locations.Length-1);//Creates a random number between 1 and 17
 						Group playerGroup = player.Group;
 						if (playerGroup == null) // Solo port	
 							player.MoveTo((ushort)locations[RandPvP, 0], locations[RandPvP, 1], locations[RandPvP, 2], locations[RandPvP, 3], (ushort)locations[RandPvP, 4]);
